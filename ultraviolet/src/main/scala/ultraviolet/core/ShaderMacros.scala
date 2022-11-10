@@ -442,6 +442,9 @@ object ShaderMacros:
         case Literal(UnitConstant()) =>
           ShaderAST.Empty()
 
+        case Literal(NullConstant()) =>
+          ShaderAST.Empty()
+
         case Literal(constant) =>
           throw new Exception("Shaders do not support constant type: " + constant.show)
 

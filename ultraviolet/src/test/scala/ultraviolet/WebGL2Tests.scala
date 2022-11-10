@@ -10,11 +10,13 @@ class WebGL2Tests extends munit.FunSuite {
     @SuppressWarnings(Array("scalafix:DisableSyntax.var"))
     case class Env(var outColor: vec4)
 
+    @SuppressWarnings(Array("scalafix:DisableSyntax.var", "scalafix:DisableSyntax.null"))
     inline def fragment: Shader[Env, Unit] =
       Shader { env =>
 
         @out val foo: vec4 = vec4(1.0f)
         @in val bar: vec4 = vec4(1.0f)
+        @out var outColor: vec4 = null;
 
         def main: Unit = 
           env.outColor = vec4(1.0f, 0.0f, 0.5f, 1.0f)
