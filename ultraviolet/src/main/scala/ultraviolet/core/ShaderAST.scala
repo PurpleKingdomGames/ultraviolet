@@ -24,6 +24,7 @@ object ShaderAST:
         case v: Switch       => Expr(v)
         case v: DataTypes    => Expr(v)
         case v: Val          => Expr(v)
+        case v: Annotated    => Expr(v)
   }
 
   final case class Empty() extends ShaderAST
@@ -162,6 +163,13 @@ object ShaderAST:
         '{ Val(${ Expr(x.id) }, ${ Expr(x.value) }, ${ Expr(x.typeOf) }) }
     }
 
+  final case class Annotated(name: String, value: ShaderAST) extends ShaderAST
+  object Annotated:
+    given ToExpr[Annotated] with {
+      def apply(x: Annotated)(using Quotes): Expr[Annotated] =
+        '{ Annotated(${ Expr(x.name) }, ${ Expr(x.value) }) }
+    }
+
   enum DataTypes extends ShaderAST:
     case closure(body: ShaderAST, typeOf: Option[String])
     case ident(id: String)
@@ -260,6 +268,7 @@ object ShaderAST:
               case While(_, b)              => rec(b :: xs)
               case Switch(_, cs)            => rec(cs.map(_._2) ++ xs)
               case Val(_, body, _)          => rec(body :: xs)
+              case Annotated(_, body)       => rec(body :: xs)
               case v: DataTypes.closure     => rec(v.body :: xs)
               case v: DataTypes.ident       => rec(xs)
               case v: DataTypes.float       => rec(xs)
@@ -296,6 +305,7 @@ object ShaderAST:
         case v @ While(c, b)                          => f(While(c, f(b)))
         case v @ Switch(c, cs)                        => f(Switch(c, cs.map(p => p._1 -> f(p._2))))
         case v @ Val(id, value, typeOf)               => f(Val(id, f(value), typeOf))
+        case v @ Annotated(id, value)                 => f(Annotated(id, f(value)))
         case v @ DataTypes.closure(body, typeOf)      => f(DataTypes.closure(f(body), typeOf))
         case v @ DataTypes.float(_)                   => f(v)
         case v @ DataTypes.int(_)                     => f(v)
@@ -321,6 +331,7 @@ object ShaderAST:
         case While(_, _)                  => None
         case Switch(_, _)                 => None
         case Val(id, value, typeOf)       => typeOf.map(t => ShaderAST.DataTypes.ident(t))
+        case Annotated(_, value)          => value.typeIdent
         case n @ DataTypes.ident(_)       => Option(n)
         case DataTypes.closure(_, typeOf) => typeOf.map(t => ShaderAST.DataTypes.ident(t))
         case DataTypes.float(_)           => Option(ShaderAST.DataTypes.ident("float"))
@@ -352,6 +363,7 @@ object ShaderAST:
           case While(_, _)                  => None
           case Switch(_, _)                 => None
           case Val(id, value, typeOf)       => typeOf
+          case Annotated(id, value)         => decideType(value)
           case n @ DataTypes.ident(_)       => None
           case DataTypes.closure(_, typeOf) => typeOf
           case DataTypes.float(v)           => Option("float")
@@ -499,5 +511,13 @@ object ShaderAST:
 
           case Val(id, value, typeOf) =>
             s"""${typeOf.getOrElse("void")} $id=${value.render}"""
+
+          case Annotated(label, value) =>
+            label match
+              case "in" | "out" =>
+                s"""$label ${value.render}"""
+
+              case _ =>
+                s"""${value.render}"""
 
       res

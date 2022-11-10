@@ -41,6 +41,7 @@ object ShaderMacros:
       case v: ShaderAST.While             => None
       case v: ShaderAST.Switch            => None
       case v: ShaderAST.Val               => findReturnType(v.value)
+      case v: ShaderAST.Annotated         => findReturnType(v.value)
       case v: ShaderAST.DataTypes.closure => v.typeIdent
       case v: ShaderAST.DataTypes.ident   => v.typeIdent
       case v: ShaderAST.DataTypes.float   => v.typeIdent
@@ -115,9 +116,15 @@ object ShaderMacros:
           proxies.add(name, fnName, fnOutType)
           ShaderAST.Empty()
 
-        case ValDef(name, typ, Some(term)) =>
+        case v @ ValDef(name, typ, Some(term)) =>
           val typeOf = extractInferredType(typ)
           val body   = walkTerm(term)
+
+          val maybeAnnotation: Option[ShaderAST.DataTypes.ident] =
+            v.symbol.annotations.headOption.map(walkTerm).flatMap {
+              case a: ShaderAST.DataTypes.ident => Option(a)
+              case _                            => None
+            }
 
           body match
             case ShaderAST.Block(List(ShaderAST.FunctionRef(id, rt))) =>
@@ -125,7 +132,11 @@ object ShaderMacros:
               ShaderAST.Empty()
 
             case _ =>
-              ShaderAST.Val(name, body, typeOf)
+              maybeAnnotation match
+                case None =>
+                  ShaderAST.Val(name, body, typeOf)
+                case Some(label) =>
+                  ShaderAST.Annotated(label.render, ShaderAST.Val(name, body, typeOf))
 
         case ValDef(name, _, None) =>
           throw new Exception("Shaders do not support val's with no values.")
@@ -177,17 +188,8 @@ object ShaderMacros:
         case TypeIdent("Int") =>
           ShaderAST.DataTypes.ident("int")
 
-        case TypeIdent("vec2") =>
-          ShaderAST.DataTypes.ident("vec2")
-
-        case TypeIdent("vec3") =>
-          ShaderAST.DataTypes.ident("vec3")
-
-        case TypeIdent("vec4") =>
-          ShaderAST.DataTypes.ident("vec4")
-
         case TypeIdent(name) =>
-          throw new Exception(s"Could not identify type: $name")
+          ShaderAST.DataTypes.ident(name)
 
         case PackageClause(_, _) =>
           throw new Exception("Shaders do not support packages.")
@@ -292,6 +294,11 @@ object ShaderMacros:
           val (fnName, _) = proxies.lookUp(defRef)
           val args        = List(ShaderAST.DataTypes.ident(fnName))
           ShaderAST.CallFunction(name, args, args.map(_.render), None)
+
+        // Annotations
+
+        case Apply(Select(New(tree), _), List()) =>
+          walkTree(tree)
 
         //
 

@@ -2,6 +2,8 @@ package ultraviolet
 
 import ultraviolet.core.ShaderDSLOps
 
+import scala.annotation.StaticAnnotation
+
 object syntax extends ShaderDSLOps:
 
   extension (f: Float)
@@ -22,5 +24,8 @@ object syntax extends ShaderDSLOps:
 
   type Shader[In, Out] = ultraviolet.core.Shader[In, Out]
   val Shader: ultraviolet.core.Shader.type = ultraviolet.core.Shader
+
+  final class out extends StaticAnnotation
+  final class in  extends StaticAnnotation
 
 end syntax
