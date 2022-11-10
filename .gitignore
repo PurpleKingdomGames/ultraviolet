@@ -1,0 +1,44 @@
+
+*.class
+*.log
+.DS_Store
+
+# Windows specific
+null/
+
+# mill specific
+out
+publish.sh
+credentials.sh
+
+# sbt specific
+sbt
+.sbt-local
+.cache
+.history
+.lib
+dist
+target
+lib_managed
+src_managed
+credentials.sbt
+
+# IDE specific
+.idea
+*.iml
+.vscode/
+.vim
+.dotty-ide-disabled
+*.swp
+
+node_modules
+elm-stuff
+.metals/
+.bloop
+metals.sbt
+.bsp/
+.ammonite
+.coursier
+
+indigo/site/public/
+website/build/
