@@ -510,7 +510,13 @@ object ShaderAST:
             s"${genType.render}.$swizzle"
 
           case Val(id, value, typeOf) =>
-            s"""${typeOf.getOrElse("void")} $id=${value.render}"""
+            val tOf = typeOf.getOrElse("void")
+            value match
+              case Empty() =>
+                s"""$tOf $id"""
+
+              case _ =>
+                s"""$tOf $id=${value.render}"""
 
           case Annotated(label, value) =>
             label match
