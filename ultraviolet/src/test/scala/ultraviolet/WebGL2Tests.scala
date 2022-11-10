@@ -1,5 +1,6 @@
 package ultraviolet
 
+import ultraviolet.core.DebugAST
 import ultraviolet.syntax.*
 
 class WebGL2Tests extends munit.FunSuite {
@@ -11,12 +12,19 @@ class WebGL2Tests extends munit.FunSuite {
 
     inline def fragment: Shader[Env, Unit] =
       Shader { env =>
+
+        @out val foo: vec4 = vec4(1.0f)
+        @in val bar: vec4 = vec4(1.0f)
+
         def main: Unit = 
           env.outColor = vec4(1.0f, 0.0f, 0.5f, 1.0f)
       }
 
     val actual =
       fragment.toGLSL
+
+    // DebugAST.toAST(fragment)
+    // println(actual)
 
     val expected: String =
       """
