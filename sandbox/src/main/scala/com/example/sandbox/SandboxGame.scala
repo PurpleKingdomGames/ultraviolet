@@ -3,7 +3,7 @@ package com.example.sandbox
 import com.example.sandbox.scenes.*
 import indigo.*
 import indigo.json.Json
-import indigo.scenes._
+import indigo.scenes.*
 import indigo.syntax.*
 import indigoextras.geometry.Polygon
 import indigoextras.geometry.Vertex

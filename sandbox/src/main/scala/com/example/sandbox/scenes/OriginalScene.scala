@@ -5,9 +5,9 @@ import com.example.sandbox.SandboxGameModel
 import com.example.sandbox.SandboxStartupData
 import com.example.sandbox.SandboxView
 import com.example.sandbox.SandboxViewModel
-import indigo.ShaderPrimitive._
-import indigo._
-import indigo.scenes._
+import indigo.ShaderPrimitive.*
+import indigo.*
+import indigo.scenes.*
 
 object OriginalScene extends Scene[SandboxStartupData, SandboxGameModel, SandboxViewModel] {
 

@@ -5,9 +5,10 @@ import com.example.sandbox.SandboxGameModel
 import com.example.sandbox.SandboxStartupData
 import com.example.sandbox.SandboxView
 import com.example.sandbox.SandboxViewModel
-import indigo.ShaderPrimitive._
-import indigo._
-import indigo.scenes._
+import com.example.sandbox.shaders.ShaderPrograms
+import indigo.ShaderPrimitive.*
+import indigo.*
+import indigo.scenes.*
 
 object ShadersScene extends Scene[SandboxStartupData, SandboxGameModel, SandboxViewModel] {
 
@@ -81,38 +82,13 @@ final case class CustomShader(x: Int, y: Int, width: Int, height: Int, depth: De
   def eventHandler: ((CustomShader, GlobalEvent)) => Option[GlobalEvent] = Function.const(None)
 
 object CustomShader:
-  import ultraviolet.core.Shader
-  import ultraviolet.core.IndigoEntityFragment as FragEnv
-  import ultraviolet.syntax.*
 
   val shaderId: ShaderId =
     ShaderId("custom shader")
 
-  inline def fragment1: Shader[FragEnv, vec4] =
-    Shader { env =>
-      val zero  = 0.0f
-      val alpha = 1.0f
-      vec4(env.UV, zero, alpha)
-    }
-
-  inline def fragment2: Shader[FragEnv, Unit] =
-    Shader { env =>
-      def circleSdf(p: vec2, r: Float): Float =
-        length(p) - r
-
-      def calculateColour(uv: vec2, sdf: Float): vec4 =
-        val fill       = vec4(uv, 0.0f, 1.0f)
-        val fillAmount = (1.0f - step(0.0f, sdf)) * fill.w
-        vec4(fill.xyz * fillAmount, fillAmount)
-
-      def fragment: Unit =
-        val sdf = circleSdf(env.UV - 0.5f, 0.5f)
-        env.COLOR = calculateColour(env.UV, sdf)
-    }
-
-  // println(fragment2.toGLSL)
+  // println(ShaderPrograms.frag2)
 
   val shader: EntityShader.Source =
     EntityShader
       .Source(shaderId)
-      .withFragmentProgram(fragment2.toGLSL)
+      .withFragmentProgram(ShaderPrograms.frag2)

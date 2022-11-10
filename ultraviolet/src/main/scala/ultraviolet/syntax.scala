@@ -20,4 +20,7 @@ object syntax extends ShaderDSLOps:
     def *(v: vec4): vec4 = vec4(f * v.x, f * v.y, f * v.z, f * v.w)
     def /(v: vec4): vec4 = vec4(f / v.x, f / v.y, f / v.z, f / v.w)
 
+  type Shader[In, Out] = ultraviolet.core.Shader[In, Out]
+  val Shader: ultraviolet.core.Shader.type = ultraviolet.core.Shader
+
 end syntax
