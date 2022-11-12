@@ -9,13 +9,13 @@ import scala.deriving.Mirror
 
 object EnvReader:
 
-  inline private def summonPrecision[T <: Tuple]: List[String] =
+  inline private def summonPrecision[T <: Tuple]: List[Option[String]] =
     inline erasedValue[T] match
       case _: EmptyTuple =>
         Nil
 
       case _: (t *: ts) =>
-        FindPrecision.findPrecision[t].getOrElse("") :: summonPrecision[ts]
+        FindPrecision.findPrecision[t] :: summonPrecision[ts]
 
   inline private def summonLabels[T <: Tuple]: List[String] =
     inline erasedValue[T] match
@@ -43,7 +43,7 @@ object EnvReader:
       constValue[m.MirroredLabel],
       precisions
         .zip(labels.zip(typeOfs.map(_.typeOf)))
-        .map(p => UBOField(p._1, p._2._1, p._2._2))
+        .map(p => UBOField(p._1, p._2._2, p._2._1))
     )
 
   trait ShaderTypeOf[A]:
@@ -66,5 +66,15 @@ object EnvReader:
     given ShaderTypeOf[vec4] with
       def typeOf: String = "vec4"
 
-  final case class UBODef(name: String, fields: List[UBOField])
-  final case class UBOField(precision: String, name: String, typeOf: String)
+  final case class UBODef(name: String, fields: List[UBOField]):
+    def render: String =
+      s"""
+      |layout (std140) uniform $name {
+      |${fields.map(f => "  " + f.render).mkString("\n")}
+      |};
+      |""".stripMargin.trim
+
+  final case class UBOField(precision: Option[String], typeOf: String, name: String):
+    def render: String =
+      val p = precision.map(_ + " ").getOrElse("")
+      s"$p$typeOf $name;"

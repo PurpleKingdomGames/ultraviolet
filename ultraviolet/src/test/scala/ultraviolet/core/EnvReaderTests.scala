@@ -21,11 +21,11 @@ class EnvReaderTests extends munit.FunSuite {
       EnvReader.UBODef(
         "FragEnv",
         List(
-          EnvReader.UBOField("", "alpha", "float"),
-          EnvReader.UBOField("", "count", "int"),
-          EnvReader.UBOField("", "UV", "vec2"),
-          EnvReader.UBOField("", "pos", "vec3"),
-          EnvReader.UBOField("", "COLOR", "vec4")
+          EnvReader.UBOField(None, "float", "alpha"),
+          EnvReader.UBOField(None, "int", "count"),
+          EnvReader.UBOField(None, "vec2", "UV"),
+          EnvReader.UBOField(None, "vec3", "pos"),
+          EnvReader.UBOField(None, "vec4", "COLOR")
         )
       )
 
@@ -48,12 +48,43 @@ class EnvReaderTests extends munit.FunSuite {
       EnvReader.UBODef(
         "FragEnv",
         List(
-          EnvReader.UBOField("highp", "a", "float"),
-          EnvReader.UBOField("mediump", "b", "float"),
-          EnvReader.UBOField("lowp", "c", "float"),
-          EnvReader.UBOField("", "d", "float")
+          EnvReader.UBOField(Option("highp"), "float", "a"),
+          EnvReader.UBOField(Option("mediump"), "float", "b"),
+          EnvReader.UBOField(Option("lowp"), "float", "c"),
+          EnvReader.UBOField(None, "float", "d")
         )
       )
+
+    assertEquals(actual, expected)
+  }
+
+  test("UBOField renders correctly") {
+    val actual =
+      EnvReader.UBOField(Option("highp"), "float", "TIME").render
+
+    val expected =
+      "highp float TIME;"
+
+    assertEquals(actual, expected)
+  }
+
+  test("UBODef renders correctly") {
+    val actual =
+      EnvReader.UBODef(
+        "MyCustomData",
+        List(
+          EnvReader.UBOField(Option("highp"), "float", "TIME"),
+          EnvReader.UBOField(None, "vec2", "VIEWPORT_SIZE")
+        )
+      ).render
+
+    val expected =
+      s"""
+      |layout (std140) uniform MyCustomData {
+      |  highp float TIME;
+      |  vec2 VIEWPORT_SIZE;
+      |};
+      |""".stripMargin.trim
 
     assertEquals(actual, expected)
   }
