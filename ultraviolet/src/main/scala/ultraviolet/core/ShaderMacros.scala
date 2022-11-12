@@ -220,7 +220,7 @@ object ShaderMacros:
 
         // Specific hooks we care about
 
-        // Entry point (with in/out type params)
+        // Entry point (with type params, no headers)
         case Apply(
               TypeApply(Select(Ident("Shader"), "apply"), _),
               List(
@@ -240,11 +240,40 @@ object ShaderMacros:
                 )
               )
             ) =>
-          ShaderAST.ShaderBlock(Option(envVarName), List(walkTerm(term)))
+          ShaderAST.ShaderBlock(Option(envVarName), Nil, List(walkTerm(term)))
 
-        // Entry point (no type params)
+        // Entry point (with type params, with headers)
+        case Apply(
+              Apply(
+                TypeApply(Select(Ident("Shader"), "apply"), _),
+                headers
+              ),
+              List(
+                Block(
+                  Nil,
+                  Block(
+                    List(
+                      DefDef(
+                        "$anonfun",
+                        List(TermParamClause(List(ValDef(envVarName, Inferred(), None)))),
+                        Inferred(),
+                        Some(term)
+                      )
+                    ),
+                    Closure(Ident("$anonfun"), None)
+                  )
+                )
+              )
+            ) =>
+          ShaderAST.ShaderBlock(Option(envVarName), headers.map(walkTerm), List(walkTerm(term)))
+
+        // Entry point (no type params, no headers)
         case Apply(Select(Ident("Shader"), "apply"), args) =>
-          ShaderAST.ShaderBlock(None, args.map(walkTerm))
+          ShaderAST.ShaderBlock(None, Nil, args.map(walkTerm))
+
+        // Entry point (no type params, with headers)
+        case Apply(Apply(Select(Ident("Shader"), "apply"), headers), args) =>
+          ShaderAST.ShaderBlock(None, headers.map(walkTerm), args.map(walkTerm))
 
         case Apply(Select(Ident("vec2"), "apply"), args) =>
           args match
@@ -362,6 +391,14 @@ object ShaderMacros:
               Some(Select(Ident(_), _)),
               Nil,
               Typed(Apply(Select(_, _), List(Literal(StringConstant(raw)))), TypeIdent("RawGLSL"))
+            ) =>
+          ShaderAST.RawLiteral(raw)
+
+        // GLSLHeader
+        case Inlined(
+              Some(Select(Ident(_), _)),
+              Nil,
+              Typed(Apply(Select(_, _), List(Literal(StringConstant(raw)))), TypeIdent("GLSLHeader"))
             ) =>
           ShaderAST.RawLiteral(raw)
 
@@ -569,8 +606,8 @@ object ShaderMacros:
         case Return(_, _) =>
           throw new Exception("Shaders do not support return statements.")
 
-        case Repeated(_, _) =>
-          throw new Exception("Shaders do not support repeated arguments.")
+        case Repeated(args, _) =>
+          ShaderAST.Block(args.map(walkTerm))
 
         case SelectOuter(_, _, _) =>
           throw new Exception("Shaders do not support outer selectors.")

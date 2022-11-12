@@ -34,17 +34,10 @@ object syntax extends ShaderDSLOps:
   type Shader[In, Out] = ultraviolet.core.Shader[In, Out]
   val Shader: ultraviolet.core.Shader.type = ultraviolet.core.Shader
 
+  type GLSLHeader[In, Out] = ultraviolet.core.GLSLHeader
+  val GLSLHeader: ultraviolet.core.GLSLHeader.type = ultraviolet.core.GLSLHeader
+
   final class out extends StaticAnnotation
   final class in  extends StaticAnnotation
-
-  object glsl:
-
-    inline def Version300ES: RawGLSL = RawGLSL("#version 300 es\n")
-
-    inline def PrecisionHighPFloat: RawGLSL   = RawGLSL("precision highp float;\n")
-    inline def PrecisionMediumPFloat: RawGLSL = RawGLSL("precision mediump float;\n")
-    inline def PrecisionLowPFloat: RawGLSL    = RawGLSL("precision lowp float;\n")
-
-  end glsl
 
 end syntax
