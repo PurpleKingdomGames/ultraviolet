@@ -71,10 +71,13 @@ class ShaderASTTests extends munit.FunSuite {
       }
 
     val actual =
-      ShaderMacros.toAST(fragment)
+      fragment.toGLSL
+
+    // DebugAST.toAST(fragment)
+    // println(actual)
 
     assertEquals(
-      actual.toGLSL[FragEnv],
+      actual,
       s"""
       |vec2 xy(in float val0){return vec2(1.0);}
       |vec2 def0(in float alpha){return vec2(0.0,alpha);}
@@ -643,7 +646,10 @@ class ShaderASTTests extends munit.FunSuite {
     case class MyCustomData(TIME: highp[Float], val VIEWPORT_SIZE: vec2)
 
     inline def fragment =
-      Shader[MyCustomData, vec4] { env =>
+      Shader[MyCustomData, vec4](
+        GLSLHeader.Version300ES,
+        GLSLHeader.PrecisionHighPFloat
+      ) { env =>
         vec4( /*env.UV*/ 1.0f, 0.0f, env.TIME, 1.0f)
       }
 
@@ -656,6 +662,8 @@ class ShaderASTTests extends munit.FunSuite {
     assertEquals(
       actual,
       s"""
+      |#version 300 es
+      |precision highp float;
       |layout (std140) uniform MyCustomData {
       |  float TIME;
       |  vec2 VIEWPORT_SIZE;

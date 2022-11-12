@@ -22,12 +22,12 @@ object ProceduralShader:
       def envName(ast: ShaderAST): Option[String] =
         ast
           .find {
-            case ShaderBlock(_, _) => true
-            case _                 => false
+            case ShaderBlock(_, _, _) => true
+            case _                    => false
           }
           .flatMap {
-            case ShaderBlock(name, _) => name
-            case _                    => None
+            case ShaderBlock(name, _, _) => name
+            case _                       => None
           }
 
       val res = (p.defs ++ List(p.main)).map(_.render).mkString("\n").trim
