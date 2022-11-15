@@ -462,6 +462,7 @@ object ShaderMacros:
         case TypeApply(term, _) =>
           walkTerm(term)
 
+        // Anonymous function?
         case Typed(
               Block(List(DefDef(_, args, _, Some(term))), Closure(Ident("$anonfun"), None)),
               Applied(_, types)
