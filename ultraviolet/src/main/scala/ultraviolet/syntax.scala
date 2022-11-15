@@ -38,4 +38,7 @@ object syntax extends ShaderDSLOps:
   final class out extends StaticAnnotation
   final class in  extends StaticAnnotation
 
+  def raw(body: String): RawGLSL =
+    RawGLSL(body)
+
 end syntax
