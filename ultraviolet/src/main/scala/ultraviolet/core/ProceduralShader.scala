@@ -13,9 +13,9 @@ object ProceduralShader:
   }
 
   extension (p: ProceduralShader)
-    inline def toGLSL[In](using Mirror.ProductOf[In]): String =
-      // println(EnvReader.readUBO[In]) // TODO: Use this.
-      p.render
+    // inline def toGLSL[In](using Mirror.ProductOf[In]): String =
+    //   // println(EnvReader.readUBO[In]) // TODO: Use this.
+    //   p.render
 
     inline def render: String =
       import ShaderAST.*
@@ -30,11 +30,18 @@ object ProceduralShader:
             case _                       => None
           }
 
-      val res = (p.defs ++ List(p.main)).map(_.render).mkString("\n").trim
+      val renderedHeaders = List(p.main.renderHeaders)
+      val renderedDefs    = p.defs.map(_.render)
+      val renderedBody    = List(p.main.render)
 
-      envName(p.main) match
-        case None       => res
-        case Some(name) => res.replace(name + ".", "").replace(name, "")
+      val res = (renderedHeaders ++ renderedDefs ++ renderedBody).mkString("\n").trim
+
+      val shaderBody =
+        envName(p.main) match
+          case None       => res
+          case Some(name) => res.replace(name + ".", "").replace(name, "")
+
+      shaderBody
 
     def exists(q: ShaderAST => Boolean): Boolean =
       p.main.exists(q) || p.defs.exists(_.exists(q))

@@ -351,6 +351,30 @@ object ShaderAST:
         case DataTypes.vec4(_)            => Option(ShaderAST.DataTypes.ident("vec4"))
         case DataTypes.swizzle(v, _, _)   => v.typeIdent
 
+    def renderStatements(statements: List[ShaderAST]): String =
+      statements
+        .map(_.prune)
+        .filterNot(_.isEmpty) // Empty()
+        .map {
+          case ShaderAST.RawLiteral(raw) =>
+            raw
+
+          case f: ShaderAST.Function =>
+            "\n" + f.render + "\n"
+
+          case ShaderAST.Block(ss) =>
+            renderStatements(ss)
+
+          case x =>
+            val r = x.render
+            if r.isEmpty then r else r + ";"
+        }
+        .filterNot(_.isEmpty) // empty String
+        .mkString
+        .trim
+        .replace("\n\n", "\n")
+        .replace(";;", ";")
+
     @SuppressWarnings(Array("scalafix:DisableSyntax.throw"))
     def render: String =
       def rf(f: Float): String =
@@ -384,30 +408,6 @@ object ShaderAST:
           case DataTypes.vec4(args)         => Option("vec4")
           case DataTypes.swizzle(v, _, rt)  => rt.map(_.render)
 
-      def processStatements(statements: List[ShaderAST]): String =
-        statements
-          .map(_.prune)
-          .filterNot(_.isEmpty) // Empty()
-          .map {
-            case ShaderAST.RawLiteral(raw) =>
-              raw
-
-            case f: ShaderAST.Function =>
-              "\n" + f.render + "\n"
-
-            case ShaderAST.Block(ss) =>
-              processStatements(ss)
-
-            case x =>
-              val r = x.render
-              if r.isEmpty then r else r + ";"
-          }
-          .filterNot(_.isEmpty) // empty String
-          .mkString
-          .trim
-          .replace("\n\n", "\n")
-          .replace(";;", ";")
-
       def processFunctionStatements(statements: List[ShaderAST], maybeReturnType: Option[String]): (String, String) =
         val nonEmpty = statements
           .map(_.prune)
@@ -423,10 +423,10 @@ object ShaderAST:
             case Some(value) => value
 
         val body =
-          processStatements(init) +
+          renderStatements(init) +
             last.headOption
               .map { ss =>
-                (if returnType != "void" then "return " else "") + processStatements(List(ss))
+                (if returnType != "void" then "return " else "") + renderStatements(List(ss))
               }
               .getOrElse("")
 
@@ -441,23 +441,19 @@ object ShaderAST:
             ""
 
           case Block(statements) =>
-            processStatements(statements)
+            renderStatements(statements)
 
           case ShaderBlock(envVarName, headers, statements) =>
-            val shaderBody =
-              envVarName match
-                case None =>
-                  processStatements(statements)
+            envVarName match
+              case None =>
+                renderStatements(statements)
 
-                case Some(value) =>
-                  val (body, _) = processFunctionStatements(statements, None)
-                  body
-
-            if headers.isEmpty then shaderBody
-            else processStatements(headers) + "\n" + shaderBody
+              case Some(value) =>
+                val (body, _) = processFunctionStatements(statements, None)
+                body
 
           case NamedBlock(namespace, id, statements) =>
-            s"""$namespace$id {${processStatements(statements)}}"""
+            s"""$namespace$id {${renderStatements(statements)}}"""
 
           case Function(id, args, body, returnType) if id.isEmpty =>
             throw new Exception("Failed to render shader, unnamed function definition found.")
@@ -557,3 +553,16 @@ object ShaderAST:
             body
 
       res
+
+    def renderHeaders: String =
+      val res =
+        ast match
+          case ShaderBlock(envVarName, headers, statements) =>
+            renderStatements(headers)
+
+          case _ =>
+            ""
+
+      res
+
+final case class RenderedAST(headers: String, body: String)
