@@ -40,7 +40,7 @@ object syntax extends ShaderDSLOps:
   final class out extends StaticAnnotation
   final class in  extends StaticAnnotation
 
-  def raw(body: String): RawGLSL =
+  inline def raw(body: String): RawGLSL =
     RawGLSL(body)
 
   inline def ubo[A](using Mirror.ProductOf[A]) = EnvReader.readUBO[A]
