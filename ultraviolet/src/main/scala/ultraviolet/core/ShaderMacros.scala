@@ -514,6 +514,9 @@ object ShaderMacros:
         case Apply(Apply(Select(Ident("Shader"), "apply"), headers), args) =>
           ShaderAST.ShaderBlock(None, headers.map(walkTerm), args.map(walkTerm))
 
+        case Apply(Select(Ident("RawGLSL"), "apply"), List(term)) =>
+          walkTerm(term)
+
         case Apply(Select(Ident("vec2"), "apply"), args) =>
           args match
             case List(Typed(Repeated(args2, _), _)) =>
@@ -640,6 +643,10 @@ object ShaderMacros:
               Typed(Apply(Select(_, _), List(Literal(StringConstant(raw)))), TypeIdent("GLSLHeader"))
             ) =>
           ShaderAST.RawLiteral(raw)
+
+        // raw
+        case Inlined(Some(Apply(Ident("raw"), List(term))), _, _) =>
+          walkTerm(term)
 
         // Swizzle
         case Inlined(Some(Apply(Ident(name), List(gt @ Apply(Select(Ident(genType), "apply"), args)))), _, _)
@@ -770,6 +777,9 @@ object ShaderMacros:
 
         case Literal(NullConstant()) =>
           ShaderAST.Empty()
+
+        case Literal(StringConstant(raw)) =>
+          ShaderAST.RawLiteral(raw)
 
         case Literal(constant) =>
           throw new Exception("Shaders do not support constant type: " + constant.show)
