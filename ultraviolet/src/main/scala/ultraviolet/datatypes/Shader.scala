@@ -24,10 +24,6 @@ object Shader:
   inline def apply(headers: GLSLHeader*)(body: => Any): Shader[Unit, Unit] =
     new Shader[Unit, Unit](headers.toList, (_: Unit) => body)
 
-  extension (inline ctx: Shader[Unit, Unit])
-    inline def toGLSL: String =
-      ShaderMacros.toAST(ctx).render
-
   extension [In, Out](inline ctx: Shader[In, Out])
     inline def toGLSL: String =
       ShaderMacros.toAST(ctx).render
