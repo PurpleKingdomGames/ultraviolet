@@ -542,12 +542,12 @@ object ShaderAST:
                 s"""$tOf $id=${value.render}"""
 
           case Annotated(label, value) =>
-            label.render match
-              case "in" | "out" =>
-                s"""${label.render} ${value.render}"""
+            value match
+              case Val(id, value, typeOf) =>
+                s"""${label.render} ${Val(id, Empty(), typeOf).render}"""
 
               case _ =>
-                s"""${value.render}"""
+                ""
 
           case RawLiteral(body) =>
             body

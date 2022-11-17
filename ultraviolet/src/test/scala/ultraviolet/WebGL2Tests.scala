@@ -10,7 +10,7 @@ class WebGL2Tests extends munit.FunSuite {
     @SuppressWarnings(Array("scalafix:DisableSyntax.var", "scalafix:DisableSyntax.null"))
     inline def fragment =
       Shader(GLSLHeader.Version300ES, GLSLHeader.PrecisionHighPFloat) {
-        @out var outColor: vec4 = null;
+        @out var outColor: vec4 = null
 
         def main: Unit =
           outColor = vec4(1.0f, 0.0f, 0.5f, 1.0f)

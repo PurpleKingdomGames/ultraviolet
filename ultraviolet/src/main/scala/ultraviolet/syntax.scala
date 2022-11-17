@@ -37,8 +37,12 @@ object syntax extends ShaderDSLOps:
   type GLSLHeader[In, Out] = ultraviolet.datatypes.GLSLHeader
   val GLSLHeader: ultraviolet.datatypes.GLSLHeader.type = ultraviolet.datatypes.GLSLHeader
 
-  final class out extends StaticAnnotation
-  final class in  extends StaticAnnotation
+  final class attribute extends StaticAnnotation // WebGL 1.0 // TODO - move to predefs when they exist.
+  final class const     extends StaticAnnotation
+  final class in        extends StaticAnnotation // WebGL 2.0 // TODO - move to predefs when they exist.
+  final class out       extends StaticAnnotation // WebGL 2.0 // TODO - move to predefs when they exist.
+  final class uniform   extends StaticAnnotation
+  final class varying   extends StaticAnnotation // WebGL 1.0 // TODO - move to predefs when they exist.
 
   inline def raw(body: String): RawGLSL =
     RawGLSL(body)

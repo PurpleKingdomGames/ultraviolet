@@ -678,6 +678,36 @@ class ShaderASTTests extends munit.FunSuite {
 
   }
 
+  test("Annotated variables render correctly") {
+
+    import scala.language.implicitConversions.*
+
+    @SuppressWarnings(Array("scalafix:DisableSyntax.null", "scalafix:DisableSyntax.var"))
+    inline def fragment =
+      Shader {
+        @attribute var a: Float = 0.0f // Scala doesn't allow for primitives.
+        @const var b: vec2      = null
+        @in var c: vec3         = null
+        @out var d: vec4        = null
+        @uniform var e: Float   = 0.0f
+        @varying var f: Float   = 0.0f
+      }
+
+    val actual =
+      fragment.toGLSL
+
+    // DebugAST.toAST(fragment)
+    // println(actual)
+
+    assertEquals(
+      actual,
+      s"""
+      |attribute float a;const vec2 b;in vec3 c;out vec4 d;uniform float e;varying float f;
+      |""".stripMargin.trim
+    )
+
+  }
+
 }
 
 object Importable:
