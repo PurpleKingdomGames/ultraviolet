@@ -6,7 +6,8 @@ import scala.deriving.Mirror
 
 /** A `Shader` is a program that can be run on a graphics card as part of the rendering pipeline.
   */
-final case class Shader[In, Out](headers: List[GLSLHeader], body: In => Out)
+final case class Shader[In, Out](headers: List[GLSLHeader], body: In => Out):
+  def run(in: In): Out = body(in)
 object Shader:
   inline def apply[In, Out](f: In => Out): Shader[In, Out] =
     new Shader[In, Out](Nil, f)
