@@ -1,6 +1,6 @@
 package ultraviolet
 
-import ultraviolet.core.DebugAST
+import ultraviolet.DebugAST
 import ultraviolet.syntax.*
 
 class WebGL2Tests extends munit.FunSuite {

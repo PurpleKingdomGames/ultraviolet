@@ -9,7 +9,7 @@ object ShaderDSLGen {
       name: String,
       contents: String
   ): String =
-    s"""package ultraviolet.core
+    s"""package ultraviolet.datatypes
     |
     |import ultraviolet.syntax.*
     |
@@ -23,7 +23,7 @@ object ShaderDSLGen {
     val name = "ShaderDSLTypeExtensions"
 
     val file: File =
-      sourceManagedDir / "ultraviolet" / "core" / (name + ".scala")
+      sourceManagedDir / "ultraviolet" / "datatypes" / (name + ".scala")
 
     if (!file.exists()) {
       val newContents: String =

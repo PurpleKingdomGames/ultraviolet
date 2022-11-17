@@ -1,4 +1,4 @@
-package ultraviolet.core
+package ultraviolet.datatypes
 
 import scala.annotation.targetName
 

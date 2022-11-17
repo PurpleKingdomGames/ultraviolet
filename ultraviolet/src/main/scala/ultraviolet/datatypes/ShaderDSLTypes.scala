@@ -1,4 +1,4 @@
-package ultraviolet.core
+package ultraviolet.datatypes
 
 trait ShaderDSLTypes:
 

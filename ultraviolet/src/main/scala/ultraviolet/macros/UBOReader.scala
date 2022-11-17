@@ -1,5 +1,7 @@
-package ultraviolet.core
+package ultraviolet.macros
 
+import ultraviolet.datatypes.UBODef
+import ultraviolet.datatypes.UBOField
 import ultraviolet.syntax.*
 
 import scala.compiletime.constValue
@@ -7,7 +9,7 @@ import scala.compiletime.erasedValue
 import scala.compiletime.summonInline
 import scala.deriving.Mirror
 
-object EnvReader:
+object UBOReader:
 
   inline private def summonPrecision[T <: Tuple]: List[Option[String]] =
     inline erasedValue[T] match

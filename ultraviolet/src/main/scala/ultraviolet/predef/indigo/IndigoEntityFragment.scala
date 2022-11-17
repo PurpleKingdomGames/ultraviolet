@@ -1,4 +1,4 @@
-package ultraviolet.core
+package ultraviolet.predef.indigo
 
 import ultraviolet.syntax.*
 

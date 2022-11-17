@@ -1,4 +1,6 @@
-package ultraviolet.core
+package ultraviolet
+
+import ultraviolet.datatypes.Shader
 
 import scala.quoted.*
 

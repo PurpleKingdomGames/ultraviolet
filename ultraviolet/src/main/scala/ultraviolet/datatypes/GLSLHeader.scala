@@ -1,4 +1,4 @@
-package ultraviolet.core
+package ultraviolet.datatypes
 
 final case class GLSLHeader(glsl: String)
 object GLSLHeader:

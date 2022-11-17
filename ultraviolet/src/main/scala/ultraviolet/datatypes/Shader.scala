@@ -1,4 +1,6 @@
-package ultraviolet.core
+package ultraviolet.datatypes
+
+import ultraviolet.macros.ShaderMacros
 
 import scala.deriving.Mirror
 

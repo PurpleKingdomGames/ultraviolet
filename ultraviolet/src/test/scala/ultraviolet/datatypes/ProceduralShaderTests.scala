@@ -1,4 +1,4 @@
-package ultraviolet.core
+package ultraviolet.datatypes
 
 class ProceduralShaderTests extends munit.FunSuite {
   import ShaderAST.*

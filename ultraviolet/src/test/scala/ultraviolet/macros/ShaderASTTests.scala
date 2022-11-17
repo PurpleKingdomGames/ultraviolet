@@ -1,5 +1,6 @@
-package ultraviolet.core
+package ultraviolet.macros
 
+import ultraviolet.DebugAST
 import ultraviolet.syntax.*
 
 class ShaderASTTests extends munit.FunSuite {

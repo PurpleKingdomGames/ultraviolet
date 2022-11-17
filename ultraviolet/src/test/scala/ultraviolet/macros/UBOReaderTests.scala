@@ -1,8 +1,10 @@
-package ultraviolet.core
+package ultraviolet.macros
 
+import ultraviolet.datatypes.UBODef
+import ultraviolet.datatypes.UBOField
 import ultraviolet.syntax.*
 
-class EnvReaderTests extends munit.FunSuite {
+class UBOReaderTests extends munit.FunSuite {
 
   test("Create a UBO definition from a case class)") {
 
@@ -15,7 +17,7 @@ class EnvReaderTests extends munit.FunSuite {
     )
 
     val actual =
-      EnvReader.readUBO[FragEnv]
+      UBOReader.readUBO[FragEnv]
 
     val expected =
       UBODef(
@@ -42,7 +44,7 @@ class EnvReaderTests extends munit.FunSuite {
     )
 
     val actual =
-      EnvReader.readUBO[FragEnv]
+      UBOReader.readUBO[FragEnv]
 
     val expected =
       UBODef(

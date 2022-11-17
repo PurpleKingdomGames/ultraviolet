@@ -1,5 +1,9 @@
-package ultraviolet.core
+package ultraviolet.macros
 
+import ultraviolet.datatypes.ProceduralShader
+import ultraviolet.datatypes.ShaderAST
+import ultraviolet.datatypes.UBODef
+import ultraviolet.datatypes.UBOField
 import ultraviolet.syntax.*
 
 import scala.annotation.tailrec

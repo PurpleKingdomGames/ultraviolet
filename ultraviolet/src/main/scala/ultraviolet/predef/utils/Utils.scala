@@ -1,4 +1,4 @@
-package ultraviolet.core
+package ultraviolet.predef.utils
 
 import ultraviolet.syntax.*
 

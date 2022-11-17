@@ -1,7 +1,7 @@
 package ultraviolet
 
-import ultraviolet.core.EnvReader
-import ultraviolet.core.ShaderDSLOps
+import ultraviolet.datatypes.ShaderDSLOps
+import ultraviolet.macros.UBOReader
 
 import scala.annotation.StaticAnnotation
 import scala.deriving.Mirror
@@ -28,14 +28,14 @@ object syntax extends ShaderDSLOps:
   type mediump[A] = A
   type lowp[A]    = A
 
-  type RawGLSL = ultraviolet.core.RawGLSL
-  val RawGLSL: ultraviolet.core.RawGLSL.type = ultraviolet.core.RawGLSL
+  type RawGLSL = ultraviolet.datatypes.RawGLSL
+  val RawGLSL: ultraviolet.datatypes.RawGLSL.type = ultraviolet.datatypes.RawGLSL
 
-  type Shader[In, Out] = ultraviolet.core.Shader[In, Out]
-  val Shader: ultraviolet.core.Shader.type = ultraviolet.core.Shader
+  type Shader[In, Out] = ultraviolet.datatypes.Shader[In, Out]
+  val Shader: ultraviolet.datatypes.Shader.type = ultraviolet.datatypes.Shader
 
-  type GLSLHeader[In, Out] = ultraviolet.core.GLSLHeader
-  val GLSLHeader: ultraviolet.core.GLSLHeader.type = ultraviolet.core.GLSLHeader
+  type GLSLHeader[In, Out] = ultraviolet.datatypes.GLSLHeader
+  val GLSLHeader: ultraviolet.datatypes.GLSLHeader.type = ultraviolet.datatypes.GLSLHeader
 
   final class out extends StaticAnnotation
   final class in  extends StaticAnnotation
@@ -43,6 +43,6 @@ object syntax extends ShaderDSLOps:
   inline def raw(body: String): RawGLSL =
     RawGLSL(body)
 
-  inline def ubo[A](using Mirror.ProductOf[A]) = EnvReader.readUBO[A]
+  inline def ubo[A](using Mirror.ProductOf[A]) = UBOReader.readUBO[A]
 
 end syntax

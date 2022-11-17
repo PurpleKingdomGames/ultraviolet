@@ -1,4 +1,4 @@
-package ultraviolet.core
+package ultraviolet.macros
 
 import scala.quoted.*
 
