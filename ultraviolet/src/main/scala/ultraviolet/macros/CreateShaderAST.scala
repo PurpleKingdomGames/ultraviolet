@@ -28,7 +28,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
         case _                                          => false
       }
 
-  def walkStatement(s: Statement): ShaderAST =
+  def walkStatement(s: Statement, envVarName: Option[String]): ShaderAST =
     s match
       case Import(_, _) =>
         ShaderAST.Empty()
@@ -50,8 +50,8 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
               Apply(TypeApply(Select(Ident(g), op), List(Inferred())), List(Ident(f)))
             )
           ) if op == "compose" || op == "andThen" =>
-        val fnInType  = walkTree(argType)
-        val fnOutType = Option(walkTree(returnType))
+        val fnInType  = walkTree(argType, envVarName)
+        val fnOutType = Option(walkTree(returnType, envVarName))
         val fnName    = proxies.makeDefName
         val vName     = proxies.makeVarName
 
@@ -85,10 +85,10 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
 
       case v @ ValDef(name, typ, Some(term)) =>
         val typeOf = extractInferredType(typ)
-        val body   = walkTerm(term)
+        val body   = walkTerm(term, envVarName)
 
         val maybeAnnotation: Option[ShaderAST.DataTypes.ident] =
-          v.symbol.annotations.headOption.map(walkTerm).flatMap {
+          v.symbol.annotations.headOption.map(p => walkTerm(p, envVarName)).flatMap {
             case a: ShaderAST.DataTypes.ident => Option(a)
             case _                            => None
           }
@@ -120,12 +120,12 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
 
         val isAnon = fnName == "$anonfun"
         val fn     = if isAnon then proxies.makeDefName else fnName
-        val body   = walkTerm(term)
+        val body   = walkTerm(term, envVarName)
 
         val returnType =
           rt match
             case rtt @ TypeIdent(_) =>
-              Option(walkTree(rtt))
+              Option(walkTree(rtt, envVarName))
 
             case _ =>
               findReturnType(body)
@@ -159,9 +159,9 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
         throw new Exception("Unexpected def construction")
 
       case t: Term =>
-        walkTerm(t)
+        walkTerm(t, envVarName)
 
-  def walkTree(t: Tree): ShaderAST =
+  def walkTree(t: Tree, envVarName: Option[String]): ShaderAST =
     t match
       case TypeIdent("Unit") =>
         ShaderAST.DataTypes.ident("void")
@@ -179,9 +179,9 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
         throw new Exception("Shaders do not support packages.")
 
       case s: Statement =>
-        walkStatement(s)
+        walkStatement(s, envVarName)
 
-  def walkTerm(t: Term): ShaderAST =
+  def walkTerm(t: Term, envVarName: Option[String]): ShaderAST =
     t match
 
       // Specific hooks we care about
@@ -196,7 +196,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
                   List(
                     DefDef(
                       "$anonfun",
-                      List(TermParamClause(List(ValDef(envVarName, Inferred(), None)))),
+                      List(TermParamClause(List(ValDef(env, Inferred(), None)))),
                       Inferred(),
                       Some(term)
                     )
@@ -206,7 +206,8 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
               )
             )
           ) =>
-        ShaderAST.ShaderBlock(Option(envVarName), Nil, List(walkTerm(term)))
+        val e = Option(env)
+        ShaderAST.ShaderBlock(e, Nil, List(walkTerm(term, e)))
 
       // Entry point (with type params, with headers)
       case Apply(
@@ -221,7 +222,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
                   List(
                     DefDef(
                       "$anonfun",
-                      List(TermParamClause(List(ValDef(envVarName, Inferred(), None)))),
+                      List(TermParamClause(List(ValDef(env, Inferred(), None)))),
                       Inferred(),
                       Some(term)
                     )
@@ -231,74 +232,75 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
               )
             )
           ) =>
-        ShaderAST.ShaderBlock(Option(envVarName), headers.map(walkTerm), List(walkTerm(term)))
+        val e = Option(env)
+        ShaderAST.ShaderBlock(e, headers.map(p => walkTerm(p, e)), List(walkTerm(term, e)))
 
       // Entry point (no type params, no headers)
       case Apply(Select(Ident("Shader"), "apply"), args) =>
-        ShaderAST.ShaderBlock(None, Nil, args.map(walkTerm))
+        ShaderAST.ShaderBlock(None, Nil, args.map(p => walkTerm(p, envVarName)))
 
       // Entry point (no type params, with headers)
       case Apply(Apply(Select(Ident("Shader"), "apply"), headers), args) =>
-        ShaderAST.ShaderBlock(None, headers.map(walkTerm), args.map(walkTerm))
+        ShaderAST.ShaderBlock(None, headers.map(p => walkTerm(p, envVarName)), args.map(p => walkTerm(p, envVarName)))
 
       case Apply(Select(Ident("RawGLSL"), "apply"), List(term)) =>
-        walkTerm(term)
+        walkTerm(term, envVarName)
 
       case Apply(Select(Ident("vec2"), "apply"), args) =>
         args match
           case List(Typed(Repeated(args2, _), _)) =>
-            ShaderAST.DataTypes.vec2(args2.map(p => walkTerm(p)))
+            ShaderAST.DataTypes.vec2(args2.map(p => walkTerm(p, envVarName)))
           case _ =>
-            ShaderAST.DataTypes.vec2(args.map(p => walkTerm(p)))
+            ShaderAST.DataTypes.vec2(args.map(p => walkTerm(p, envVarName)))
 
       case Apply(Select(Ident("vec3"), "apply"), args) =>
         args match
           case List(Typed(Repeated(args2, _), _)) =>
-            ShaderAST.DataTypes.vec3(args2.map(p => walkTerm(p)))
+            ShaderAST.DataTypes.vec3(args2.map(p => walkTerm(p, envVarName)))
           case _ =>
-            ShaderAST.DataTypes.vec3(args.map(p => walkTerm(p)))
+            ShaderAST.DataTypes.vec3(args.map(p => walkTerm(p, envVarName)))
 
       case Apply(Select(Ident("vec4"), "apply"), args) =>
         args match
           case List(Typed(Repeated(args2, _), _)) =>
-            ShaderAST.DataTypes.vec4(args2.map(p => walkTerm(p)))
+            ShaderAST.DataTypes.vec4(args2.map(p => walkTerm(p, envVarName)))
           case _ =>
-            ShaderAST.DataTypes.vec4(args.map(p => walkTerm(p)))
+            ShaderAST.DataTypes.vec4(args.map(p => walkTerm(p, envVarName)))
 
       //
 
       case Apply(Select(Ident(id), "apply"), args) =>
         val (fnName, rt) = proxies.lookUp(id, id -> Option(ShaderAST.DataTypes.ident("void")))
-        ShaderAST.CallFunction(fnName, args.map(x => walkTerm(x)), Nil, rt)
+        ShaderAST.CallFunction(fnName, args.map(x => walkTerm(x, envVarName)), Nil, rt)
 
       // Generally walking the tree
 
       case Apply(TypeApply(Select(Ident(id), "apply"), _), List(x)) =>
-        ShaderAST.NamedBlock("", id, walkTerm(x))
+        ShaderAST.NamedBlock("", id, walkTerm(x, envVarName))
 
       case Apply(TypeApply(Select(Ident(namespace), name), _), List(x)) =>
-        ShaderAST.NamedBlock(namespace, name, walkTerm(x))
+        ShaderAST.NamedBlock(namespace, name, walkTerm(x, envVarName))
 
       case Apply(TypeApply(term, _), List(x)) =>
-        walkTerm(x)
+        walkTerm(x, envVarName)
 
       // Extension method applies...
       case Apply(Select(Select(Inlined(_, _, _), "vec2"), "apply"), args) =>
-        ShaderAST.DataTypes.vec2(args.map(p => walkTerm(p)))
+        ShaderAST.DataTypes.vec2(args.map(p => walkTerm(p, envVarName)))
 
       case Apply(Select(Select(Inlined(_, _, _), "vec3"), "apply"), args) =>
-        ShaderAST.DataTypes.vec3(args.map(p => walkTerm(p)))
+        ShaderAST.DataTypes.vec3(args.map(p => walkTerm(p, envVarName)))
 
       case Apply(Select(Select(Inlined(_, _, _), "vec4"), "apply"), args) =>
-        ShaderAST.DataTypes.vec4(args.map(p => walkTerm(p)))
+        ShaderAST.DataTypes.vec4(args.map(p => walkTerm(p, envVarName)))
 
       // Casting
 
       case Select(term, "toInt") =>
-        ShaderAST.Cast(walkTerm(term), "int")
+        ShaderAST.Cast(walkTerm(term, envVarName), "int")
 
       case Select(term, "toFloat") =>
-        ShaderAST.Cast(walkTerm(term), "float")
+        ShaderAST.Cast(walkTerm(term, envVarName), "float")
 
       // Read a field
 
@@ -317,31 +319,31 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
       // Annotations
 
       case Apply(Select(New(tree), _), List()) =>
-        walkTree(tree)
+        walkTree(tree, envVarName)
 
       //
 
       case Apply(Select(term, "apply"), xs) =>
-        walkTerm(term).find {
+        walkTerm(term, envVarName).find {
           case ShaderAST.CallFunction(_, _, _, _) => true
           case _                                  => false
         } match
           case Some(ShaderAST.CallFunction(id, Nil, Nil, rt)) =>
-            ShaderAST.CallFunction(id, xs.map(tt => walkTerm(tt)), Nil, rt)
+            ShaderAST.CallFunction(id, xs.map(tt => walkTerm(tt, envVarName)), Nil, rt)
 
           case Some(ShaderAST.CallFunction(id, args, argNames, rt)) =>
-            ShaderAST.CallFunction(id, xs.map(tt => walkTerm(tt)), argNames, rt)
+            ShaderAST.CallFunction(id, xs.map(tt => walkTerm(tt, envVarName)), argNames, rt)
 
           case _ =>
-            ShaderAST.Block(xs.map(tt => walkTerm(tt)))
+            ShaderAST.Block(xs.map(tt => walkTerm(tt, envVarName)))
 
       // Infix operations
 
       case Apply(Select(term, op), xs) =>
         op match
           case "+" | "-" | "*" | "/" | "<" | ">" | "==" | "<=" | ">=" =>
-            val lhs = walkTerm(term)
-            val rhs = xs.headOption.map(tt => walkTerm(tt)).getOrElse(ShaderAST.Empty())
+            val lhs = walkTerm(term, envVarName)
+            val rhs = xs.headOption.map(tt => walkTerm(tt, envVarName)).getOrElse(ShaderAST.Empty())
             val rt  = findReturnType(lhs)
             ShaderAST.Infix(op, lhs, rhs, rt)
 
@@ -351,8 +353,8 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
       case Apply(Apply(Ident(op), List(l)), List(r)) =>
         op match
           case "+" | "-" | "*" | "/" | "<" | ">" | "==" | "<=" | ">=" =>
-            val lhs = walkTerm(l)
-            val rhs = walkTerm(r)
+            val lhs = walkTerm(l, envVarName)
+            val rhs = walkTerm(r, envVarName)
             val rt  = findReturnType(lhs)
             ShaderAST.Infix(op, lhs, rhs, rt)
 
@@ -362,13 +364,13 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
       //
 
       case Apply(Ident(name), terms) =>
-        ShaderAST.CallFunction(name, terms.map(tt => walkTerm(tt)), Nil, None)
+        ShaderAST.CallFunction(name, terms.map(tt => walkTerm(tt, envVarName)), Nil, None)
 
       case Inlined(None, _, term) =>
-        walkTerm(term)
+        walkTerm(term, envVarName)
 
       case Inlined(Some(Ident(_)), _, term) =>
-        walkTerm(term)
+        walkTerm(term, envVarName)
 
       // Raw
       case Inlined(
@@ -388,13 +390,21 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
 
       // raw
       case Inlined(Some(Apply(Ident("raw"), List(term))), _, _) =>
-        walkTerm(term)
+        walkTerm(term, envVarName)
 
       // Swizzle
+      case Inlined(Some(Apply(Ident(name), List(id @ Select(Ident(env), varName)))), _, rt)
+          if isSwizzle.matches(name) && envVarName.contains(env) =>
+        ShaderAST.DataTypes.swizzle(
+          walkTerm(id, envVarName),
+          name,
+          Option(walkTree(rt, envVarName))
+        )
+
       case Inlined(Some(Apply(Ident(name), List(gt @ Apply(Select(Ident(genType), "apply"), args)))), _, _)
           if isSwizzle.matches(name) && isSwizzleable.matches(genType) =>
         ShaderAST.DataTypes.swizzle(
-          walkTerm(gt),
+          walkTerm(gt, envVarName),
           name,
           Option(ShaderAST.DataTypes.ident(genType))
         )
@@ -409,7 +419,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
 
       case Inlined(Some(Apply(Ident(name), args)), ds, Typed(term, typeTree)) =>
         val argNames   = args.map(_ => proxies.makeVarName)
-        val callArgs   = args.map(tt => walkTerm(tt))
+        val callArgs   = args.map(tt => walkTerm(tt, envVarName))
         val pairedArgs = callArgs.zip(argNames)
         val fnArgs: List[(ShaderAST, String)] =
           pairedArgs.map { p =>
@@ -417,7 +427,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
             typ -> p._2
           }
 
-        ds.map(s => walkStatement(s))
+        ds.map(s => walkStatement(s, envVarName))
           .flatMap {
             case ShaderAST.Val(proxy, value, _) =>
               pairedArgs.find(p => p._1 == value) match
@@ -431,8 +441,8 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
             proxies.add(originalName, refName)
           }
 
-        val body       = walkTerm(term)
-        val returnType = findReturnType(walkTree(typeTree))
+        val body       = walkTerm(term, envVarName)
+        val returnType = findReturnType(walkTree(typeTree, envVarName))
 
         shaderDefs += FunctionLookup(
           ShaderAST.Function(name, fnArgs, body, returnType),
@@ -442,7 +452,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
         ShaderAST.CallFunction(name, callArgs, nmes, returnType)
 
       case Inlined(Some(Select(This(_), _)), _, term) =>
-        walkTerm(term)
+        walkTerm(term, envVarName)
 
       case tt @ Inlined(
             Some(
@@ -457,17 +467,17 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
         ShaderAST.RawLiteral(uboUtils.extractUBO(tt).render)
 
       case Inlined(Some(tree: Tree), _, _) =>
-        walkTree(tree)
+        walkTree(tree, envVarName)
 
       case TypeApply(term, _) =>
-        walkTerm(term)
+        walkTerm(term, envVarName)
 
       // Anonymous function?
       case Typed(
             Block(List(DefDef(_, args, _, Some(term))), Closure(Ident("$anonfun"), None)),
             Applied(_, types)
           ) =>
-        val typesRendered: List[ShaderAST] = types.map(p => walkTree(p))
+        val typesRendered: List[ShaderAST] = types.map(p => walkTree(p, envVarName))
 
         val returnType: Option[ShaderAST] =
           typesRendered.reverse.headOption
@@ -485,24 +495,24 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
 
         val fn = proxies.makeDefName
         shaderDefs += FunctionLookup(
-          ShaderAST.Function(fn, arguments, walkTerm(term), returnType),
+          ShaderAST.Function(fn, arguments, walkTerm(term, envVarName), returnType),
           false
         )
         val nmes = argNames.map(ShaderAST.DataTypes.ident.apply)
         ShaderAST.CallFunction(fn, Nil, nmes, returnType)
 
       case Typed(term, _) =>
-        walkTerm(term)
+        walkTerm(term, envVarName)
 
       case Block(statements, Closure(Ident("$anonfun"), None)) =>
         val ss = statements
-          .map(s => walkStatement(s))
+          .map(s => walkStatement(s, envVarName))
 
         ShaderAST.Block(ss)
 
       case Block(statements, term) =>
         val ss =
-          statements.map(s => walkStatement(s)) :+ walkTerm(term)
+          statements.map(s => walkStatement(s, envVarName)) :+ walkTerm(term, envVarName)
 
         ShaderAST.Block(ss)
 
@@ -542,13 +552,13 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
         ShaderAST.Empty()
 
       case Closure(term, typeRepr) =>
-        ShaderAST.DataTypes.closure(walkTerm(term), typeRepr.map(_.toString))
+        ShaderAST.DataTypes.closure(walkTerm(term, envVarName), typeRepr.map(_.toString))
 
       case Wildcard() =>
         throw new Exception("Shaders do not support wildcards.")
 
       case Select(term, _) => // term, name
-        walkTerm(term)
+        walkTerm(term, envVarName)
 
       // Unsupported (yet?)
 
@@ -566,23 +576,23 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
 
       case Assign(lhs, rhs) =>
         ShaderAST.Assign(
-          walkTerm(lhs),
-          walkTerm(rhs)
+          walkTerm(lhs, envVarName),
+          walkTerm(rhs, envVarName)
         )
 
       case If(condTerm, thenTerm, elseTerm) =>
-        walkTerm(elseTerm) match
+        walkTerm(elseTerm, envVarName) match
           case ShaderAST.Empty() =>
             ShaderAST.If(
-              walkTerm(condTerm),
-              walkTerm(thenTerm),
+              walkTerm(condTerm, envVarName),
+              walkTerm(thenTerm, envVarName),
               None
             )
 
           case e =>
             ShaderAST.If(
-              walkTerm(condTerm),
-              walkTerm(thenTerm),
+              walkTerm(condTerm, envVarName),
+              walkTerm(thenTerm, envVarName),
               Option(e)
             )
 
@@ -590,16 +600,16 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
         val cs =
           cases.map {
             case CaseDef(Literal(IntConstant(i)), None, caseTerm) =>
-              (Option(i), walkTerm(caseTerm))
+              (Option(i), walkTerm(caseTerm, envVarName))
 
             case CaseDef(Wildcard(), None, caseTerm) =>
-              (None, walkTerm(caseTerm))
+              (None, walkTerm(caseTerm, envVarName))
 
             case _ =>
               throw new Exception("Shaders only support pattern matching on `Int` values or `_` wildcards.")
           }
 
-        ShaderAST.Switch(walkTerm(term), cs)
+        ShaderAST.Switch(walkTerm(term, envVarName), cs)
 
       case SummonFrom(_) =>
         throw new Exception("Shaders do not support summoning.")
@@ -611,10 +621,10 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
         throw new Exception("Shaders do not support return statements.")
 
       case Repeated(args, _) =>
-        ShaderAST.Block(args.map(walkTerm))
+        ShaderAST.Block(args.map(p => walkTerm(p, envVarName)))
 
       case SelectOuter(_, _, _) =>
         throw new Exception("Shaders do not support outer selectors.")
 
       case While(cond, body) =>
-        ShaderAST.While(walkTerm(cond), walkTerm(body))
+        ShaderAST.While(walkTerm(cond, envVarName), walkTerm(body, envVarName))
