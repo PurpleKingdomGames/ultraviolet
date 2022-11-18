@@ -4,6 +4,11 @@ import scala.annotation.targetName
 
 trait ShaderDSLOps extends ShaderDSLTypeExtensions:
 
+  def texture2D(sampler: sampler2D.type, coords: vec2): vec4 =
+    vec4(0.0f)
+  def textureCube(sampler: samplerCube.type, normal: vec3): vec4 =
+    vec4(0.0f)
+
   def length(genType: Float | vec2 | vec3 | vec4): Float =
     genType match
       case f: Float =>
