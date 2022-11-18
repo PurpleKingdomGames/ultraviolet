@@ -725,10 +725,6 @@ class ShaderASTTests extends munit.FunSuite {
     )
   }
 
-  // // test("arrays?") {
-  // //   //
-  // // }
-
   test("Can define a UBO struct") {
 
     import ultraviolet.predef.glsl300.*
@@ -837,6 +833,32 @@ class ShaderASTTests extends munit.FunSuite {
       |""".stripMargin.trim
     )
 
+  }
+
+  test("arrays - initialise and check length") {
+
+    @SuppressWarnings(Array("scalafix:DisableSyntax.null"))
+    inline def fragment =
+      Shader {
+        val x: array[Float, 12] = null
+        val y                   = x.length
+        y
+      }
+
+    val actual =
+      fragment.toGLSL
+
+    // DebugAST.toAST(fragment)
+    // println(actual)
+
+    assertEquals(
+      actual,
+      s"""
+      |float x[12];
+      |int y=x.length();
+      |y;
+      |""".stripMargin.trim
+    )
   }
 
 }

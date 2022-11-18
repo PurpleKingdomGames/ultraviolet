@@ -31,4 +31,5 @@ trait ShaderMacroUtils:
     case v: ShaderAST.DataTypes.vec2    => v.typeIdent
     case v: ShaderAST.DataTypes.vec3    => v.typeIdent
     case v: ShaderAST.DataTypes.vec4    => v.typeIdent
+    case v: ShaderAST.DataTypes.array   => v.typeIdent
     case v: ShaderAST.DataTypes.swizzle => v.typeIdent

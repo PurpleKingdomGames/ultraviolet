@@ -185,6 +185,7 @@ object ShaderAST:
     case vec2(args: List[ShaderAST])
     case vec3(args: List[ShaderAST])
     case vec4(args: List[ShaderAST])
+    case array(size: Int, typeOf: Option[String])
     case swizzle(genType: ShaderAST, swizzle: String, returnType: Option[ShaderAST])
 
   object DataTypes:
@@ -209,6 +210,7 @@ object ShaderAST:
           case v: DataTypes.vec2    => Expr(v)
           case v: DataTypes.vec3    => Expr(v)
           case v: DataTypes.vec4    => Expr(v)
+          case v: DataTypes.array   => Expr(v)
           case v: DataTypes.swizzle => Expr(v)
     }
     given ToExpr[ident] with {
@@ -238,6 +240,10 @@ object ShaderAST:
     given ToExpr[vec4] with {
       def apply(x: vec4)(using Quotes): Expr[vec4] =
         '{ vec4(${ Expr(x.args) }) }
+    }
+    given ToExpr[array] with {
+      def apply(x: array)(using Quotes): Expr[array] =
+        '{ array(${ Expr(x.size) }, ${ Expr(x.typeOf) }) }
     }
     given ToExpr[swizzle] with {
       def apply(x: swizzle)(using Quotes): Expr[swizzle] =
@@ -284,6 +290,7 @@ object ShaderAST:
               case v: DataTypes.vec2        => rec(v.args ++ xs)
               case v: DataTypes.vec3        => rec(v.args ++ xs)
               case v: DataTypes.vec4        => rec(v.args ++ xs)
+              case v: DataTypes.array       => rec(xs)
               case v: DataTypes.swizzle     => rec(v.genType :: xs)
 
       rec(List(ast))
@@ -322,6 +329,7 @@ object ShaderAST:
         case v @ DataTypes.vec2(vs)                   => f(DataTypes.vec2(vs.map(f)))
         case v @ DataTypes.vec3(vs)                   => f(DataTypes.vec3(vs.map(f)))
         case v @ DataTypes.vec4(vs)                   => f(DataTypes.vec4(vs.map(f)))
+        case v @ DataTypes.array(_, _)                => f(v)
         case v @ DataTypes.swizzle(_, _, _)           => f(v)
 
     def typeIdent: Option[ShaderAST.DataTypes.ident] =
@@ -349,6 +357,7 @@ object ShaderAST:
         case DataTypes.vec2(_)            => Option(ShaderAST.DataTypes.ident("vec2"))
         case DataTypes.vec3(_)            => Option(ShaderAST.DataTypes.ident("vec3"))
         case DataTypes.vec4(_)            => Option(ShaderAST.DataTypes.ident("vec4"))
+        case DataTypes.array(_, typeOf)   => typeOf.map(t => ShaderAST.DataTypes.ident(t + "[]"))
         case DataTypes.swizzle(v, _, _)   => v.typeIdent
 
     def headers: List[ShaderAST] =
