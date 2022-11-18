@@ -33,7 +33,7 @@ object ShaderPrinter:
         val (body, rt) = processFunctionStatements(statements, returnType.flatMap(r => render(r).headOption))
         List(
           List(s"""$rt $id(${args.map(s => s"in ${render(s._1).mkString} ${s._2}").mkString(",")}){"""),
-          body.map(correctIndent),
+          body.map(addIndent),
           List("}")
         ).flatten
 
@@ -44,7 +44,7 @@ object ShaderPrinter:
         val (body, rt) = processFunctionStatements(List(statement), returnType.flatMap(r => render(r).headOption))
         List(
           List(s"""$rt $id(${args.map(s => s"in ${render(s._1).mkString} ${s._2}").mkString(",")}){"""),
-          body.map(correctIndent),
+          body.map(addIndent),
           List("}")
         ).flatten
 
@@ -58,7 +58,17 @@ object ShaderPrinter:
         List(s"""$as(${render(value).mkString})""")
 
       case Infix(op, left, right, returnType) =>
-        List(s"""(${render(left).mkString})$op(${render(right).mkString})""")
+        val isSimpleValue = """^([a-zA-Z0-9\[\]\(\)\.\,_]+)$""".r
+        val hasBrackets   = """^\((.*)\)$""".r
+
+        def cleanUp(str: String): String =
+          str match
+            case s if hasBrackets.matches(s) || isSimpleValue.matches(s) => s
+            case s                                                       => s"""($s)"""
+
+        val l = render(left).mkString
+        val r = render(right).mkString
+        List(s"""${cleanUp(l)}$op${cleanUp(r)}""")
 
       case Assign(left, right) =>
         List(s"""${render(left).mkString}=${render(right).mkString}""")
@@ -66,27 +76,51 @@ object ShaderPrinter:
       case If(cond, thenTerm, elseTerm) =>
         elseTerm match
           case None =>
-            List(s"""if(${render(cond).mkString}){${render(thenTerm).mkString};}""")
+            List(
+              List(s"""if(${render(cond).mkString}){"""),
+              render(thenTerm).map(addIndent),
+              List(s"""}""")
+            ).flatten
 
           case Some(els) =>
-            List(s"""if(${render(cond).mkString}){${render(thenTerm).mkString};}else{${render(els).mkString};}""")
+            List(
+              List(s"""if(${render(cond).mkString}){"""),
+              render(thenTerm).map(addIndent),
+              List(s"""}else{"""),
+              render(els).map(addIndent),
+              List(s"""}""")
+            ).flatten
 
       case While(cond, body) =>
         List(
-          s"""while(${render(cond).mkString}){${render(body).mkString}}"""
-        )
+          List(s"""while(${render(cond).mkString}){"""),
+          render(body).map(addIndent),
+          List("""}""")
+        ).flatten
 
       case Switch(on, cases) =>
         val cs =
-          cases.map {
+          cases.flatMap {
             case (Some(i), body) =>
-              s"case $i:${render(body).mkString}break;"
+              List(
+                List(s"""case $i:"""),
+                render(body).map(addIndent),
+                List(s"""  break;""")
+              ).flatten
 
             case (None, body) =>
-              s"default:${render(body).mkString}break;"
+              List(
+                List(s"""default:"""),
+                render(body).map(addIndent),
+                List(s"""  break;""")
+              ).flatten
           }
 
-        List(s"""switch(${render(on).mkString}){${cs.mkString}}""")
+        List(
+          List(s"""switch(${render(on).mkString}){"""),
+          cs.map(addIndent),
+          List(s"""}""")
+        ).flatten
 
       case c @ DataTypes.closure(body, typeOf) =>
         throw new Exception("Closure found, this is probably an error: " + c)
@@ -156,11 +190,19 @@ object ShaderPrinter:
             renderStatements(ss)
 
           case x =>
-            render(x).map(r => if r.isEmpty then r else r + ";")
+            render(x)
+              .map {
+                case s if s.isEmpty()     => s
+                case s if s.endsWith(";") => s
+                case s if s.endsWith(":") => s
+                case s if s.endsWith("{") => s
+                case s if s.endsWith("}") => s
+                case s                    => s + ";"
+              }
         }
         .filterNot(_.isEmpty)
 
-    private def correctIndent: String => String = str => if str.startsWith("  ") then str else "  " + str
+    private def addIndent: String => String = str => "  " + str
 
     private def decideType(a: ShaderAST): Option[String] =
       a match
