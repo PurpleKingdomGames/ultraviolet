@@ -64,3 +64,8 @@ trait ShaderDSLOps extends ShaderDSLTypeExtensions:
   def atan2(genType: vec2): vec2   = vec2(0.0f)
   def atan2(genType: vec3): vec3   = vec3(0.0f)
   def atan2(genType: vec4): vec4   = vec4(0.0f)
+
+  def normalize(genType: Float): Float = 0.0f
+  def normalize(genType: vec2): vec2   = vec2(0.0f)
+  def normalize(genType: vec3): vec3   = vec3(0.0f)
+  def normalize(genType: vec4): vec4   = vec4(0.0f)
