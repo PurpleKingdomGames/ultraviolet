@@ -71,3 +71,6 @@ trait ShaderDSLTypes:
 
   case object sampler2D
   case object samplerCube
+
+  final case class array[T, L <: Singleton](private val size: L)(using convert: L => Int):
+    def length: Int = convert(size)

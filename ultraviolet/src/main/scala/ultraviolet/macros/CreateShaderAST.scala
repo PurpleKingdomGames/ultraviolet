@@ -16,22 +16,29 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
   val shaderDefs: ListBuffer[FunctionLookup] = new ListBuffer()
 
   def extractInferredType(typ: TypeTree): Option[String] =
-    typ.tpe.classSymbol
-      .map(_.name)
-      .map {
-        case "Float"        => "float"
-        case "Int"          => "int"
-        case "vec2"         => "vec2"
-        case "vec3"         => "vec3"
-        case "vec4"         => "vec4"
-        case "sampler2D$"   => "sampler2D"
-        case "samplerCube$" => "samplerCube"
-        case n              => n
-      }
-      .filter {
-        case "float" | "int" | "vec2" | "vec3" | "vec4" | "sampler2D" | "samplerCube" => true
-        case _                                                                        => false
-      }
+    def mapName(name: Option[String]): Option[String] =
+      name
+        .map {
+          case "Float"        => "float"
+          case "Int"          => "int"
+          case "vec2"         => "vec2"
+          case "vec3"         => "vec3"
+          case "vec4"         => "vec4"
+          case "sampler2D$"   => "sampler2D"
+          case "samplerCube$" => "samplerCube"
+          case n              => n
+        }
+        .filter {
+          case "float" | "int" | "vec2" | "vec3" | "vec4" | "sampler2D" | "samplerCube" => true
+          case _                                                                        => false
+        }
+
+    typ match
+      case Applied(TypeIdent("array"), List(TypeIdent(typeName), Singleton(Literal(IntConstant(size))))) =>
+        mapName(Option(typeName)).map(_ + s"[${size.toString()}]")
+
+      case _ =>
+        mapName(typ.tpe.classSymbol.map(_.name))
 
   def walkStatement(s: Statement, envVarName: Option[String]): ShaderAST =
     s match
@@ -107,11 +114,9 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
             maybeAnnotation match
               case None =>
                 ShaderAST.Val(name, body, typeOf)
+
               case Some(label) =>
                 ShaderAST.Annotated(label, ShaderAST.Val(name, body, typeOf))
-
-      case ValDef(name, _, None) =>
-        throw new Exception("Shaders do not support val's with no values.")
 
       case DefDef(fnName, args, rt, Some(term)) =>
         val argNamesTypes =
@@ -250,6 +255,8 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
 
       case Apply(Select(Ident("RawGLSL"), "apply"), List(term)) =>
         walkTerm(term, envVarName)
+
+      // Primitives
 
       case Apply(Select(Ident("vec2"), "apply"), args) =>
         args match

@@ -91,6 +91,9 @@ object ShaderPrinter:
       case c @ DataTypes.closure(body, typeOf) =>
         throw new Exception("Closure found, this is probably an error: " + c)
 
+      case DataTypes.ident(id) if id.endsWith(".length") =>
+        List(s"$id()")
+
       case DataTypes.ident(id) =>
         List(s"$id")
 
@@ -109,12 +112,20 @@ object ShaderPrinter:
       case DataTypes.vec4(args) =>
         List(s"vec4(${args.flatMap(render).mkString(",")})")
 
+      case DataTypes.array(size, typeOf) =>
+        List(s"array goes here...")
+
       case DataTypes.swizzle(genType, swizzle, returnType) =>
         List(s"${render(genType).mkString}.$swizzle")
 
       case Val(id, value, typeOf) =>
         val tOf = typeOf.getOrElse("void")
         value match
+          case Empty() if tOf.endsWith("]") && tOf.contains("[") =>
+            // array
+            val (tName, tSize) = tOf.splitAt(tOf.indexOf("["))
+            List(s"""$tName $id$tSize""")
+
           case Empty() =>
             List(s"""$tOf $id""")
 
@@ -149,8 +160,7 @@ object ShaderPrinter:
         }
         .filterNot(_.isEmpty)
 
-    private def correctIndent: String => String = str =>
-      if str.startsWith("  ") then str else "  " + str
+    private def correctIndent: String => String = str => if str.startsWith("  ") then str else "  " + str
 
     private def decideType(a: ShaderAST): Option[String] =
       a match
@@ -177,6 +187,7 @@ object ShaderPrinter:
         case DataTypes.vec2(args)         => Option("vec2")
         case DataTypes.vec3(args)         => Option("vec3")
         case DataTypes.vec4(args)         => Option("vec4")
+        case DataTypes.array(_, typeOf)   => typeOf
         case DataTypes.swizzle(v, _, rt)  => rt.toList.flatMap(render).headOption
 
     private def rf(f: Float): String =
