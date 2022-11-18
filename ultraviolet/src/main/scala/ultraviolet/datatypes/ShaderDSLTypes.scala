@@ -68,3 +68,6 @@ trait ShaderDSLTypes:
 
     inline def apply(xyz: Float): vec4 =
       vec4(xyz, xyz, xyz, xyz)
+
+  case object sampler2D
+  case object samplerCube
