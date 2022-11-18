@@ -17,7 +17,7 @@ object ShaderMacros:
     import q.reflect.*
 
     val createAST     = new CreateShaderAST[q.type](using q)
-    val res           = createAST.walkTerm(expr.asTerm)
+    val res           = createAST.walkTerm(expr.asTerm, None)
     val shaderDefList = createAST.shaderDefs.toList
 
     Expr(ProceduralShader(shaderDefList.filterNot(_.userDefined).map(_.fn), res))
