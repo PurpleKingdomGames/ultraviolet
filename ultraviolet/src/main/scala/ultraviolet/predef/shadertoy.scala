@@ -6,6 +6,7 @@ import ultraviolet.syntax.*
 @SuppressWarnings(Array("scalafix:DisableSyntax.var"))
 object shadertoy:
 
+  // Current doesn't support samplerCube types, Ultraviolet does, just not sure how to represent that here.
   final case class ShaderToyEnv(
       iResolution: vec3, // viewport resolution (in pixels)
       iTime: Float,      // shader playback time (in seconds)
@@ -14,12 +15,15 @@ object shadertoy:
       iFrame: Int,       // shader playback frame
       // iChannelTime[4]: Float, // channel playback time (in seconds)
       // iChannelResolution[4]: vec3, // channel resolution (in pixels)
-      iMouse: vec4, // mouse pixel coords. xy: current (if MLB down) = null zw: click
-      // iChannel0..3: samplerXX, // input channel. XX = 2D/Cube
-      iDate: vec4,        // (year = null month = null day = null time in seconds)
-      iSampleRate: Float, // sound sample rate (i.e. = null 44100)
-      fragCoord: vec2,    // UV coordinates // Unoffical, from the main function definition
-      var fragColor: vec4 // output variable // Unoffical, from the main function definition
+      iMouse: vec4,              // mouse pixel coords. xy: current (if MLB down) = null zw: click
+      iChannel0: sampler2D.type, // input channel. XX = 2D/Cube
+      iChannel1: sampler2D.type, // input channel. XX = 2D/Cube
+      iChannel2: sampler2D.type, // input channel. XX = 2D/Cube
+      iChannel3: sampler2D.type, // input channel. XX = 2D/Cube
+      iDate: vec4,               // (year = null month = null day = null time in seconds)
+      iSampleRate: Float,        // sound sample rate (i.e. = null 44100)
+      fragCoord: vec2,           // UV coordinates // Unoffical, from the main function definition
+      var fragColor: vec4        // output variable // Unoffical, from the main function definition
   )
   object ShaderToyEnv:
     def Default: ShaderToyEnv =
@@ -32,7 +36,10 @@ object shadertoy:
         // iChannelTime[4]: Float, // channel playback time (in seconds)
         // iChannelResolution[4]: vec3, // channel resolution (in pixels)
         iMouse = vec4(0.0f),
-        // iChannel0..3: samplerXX, // input channel. XX = 2D/Cube
+        iChannel0 = sampler2D,
+        iChannel1 = sampler2D,
+        iChannel2 = sampler2D,
+        iChannel3 = sampler2D,
         iDate = vec4(0.0f),
         iSampleRate = 44100.0f,
         fragCoord = vec2(0.0),
