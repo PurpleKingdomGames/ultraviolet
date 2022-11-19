@@ -1,6 +1,8 @@
 package ultraviolet.predef
 
-import ultraviolet.datatypes.ShaderTemplate
+import ultraviolet.datatypes.ShaderAST
+import ultraviolet.datatypes.ShaderValid
+import ultraviolet.datatypes.ShaderValidation
 import ultraviolet.syntax.*
 
 @SuppressWarnings(Array("scalafix:DisableSyntax.var"))
@@ -46,14 +48,32 @@ object shadertoy:
         fragColor = vec4(0.0f)
       )
 
-  given ShaderTemplate with
-    def print(headers: List[String], functions: List[String], body: List[String]): String =
-      val (main, last) = body.splitAt(body.length - 1)
-      s"""
-      |${headers.mkString("\n")}
-      |${functions.mkString("\n")}
-      |void mainImage(out vec4 fragColor, in vec2 fragCoord){
-      |${main.map(b => "  " + b).mkString("\n")}
-      |  fragColor=${last.mkString}
-      |}
-      |""".stripMargin.trim
+  given ShaderValidation with
+    def isValid(
+        inType: Option[String],
+        outType: Option[String],
+        headers: List[ShaderAST],
+        functions: List[ShaderAST],
+        body: ShaderAST
+    ): ShaderValid =
+      val inTypeValid =
+        if inType.contains("ShaderToyEnv") then ShaderValid.Valid
+        else
+          ShaderValid.Invalid(
+            List(
+              "ShaderToy Shader instances must be of type Shader[ShaderToyEnv, Unit], environment type was: " +
+                inType.getOrElse("<missing>")
+            )
+          )
+
+      val outTypeValid =
+        if outType.contains("Unit") then ShaderValid.Valid
+        else
+          ShaderValid.Invalid(
+            List(
+              "ShaderToy Shader instances must be of type Shader[ShaderToyEnv, Unit], return type was: " +
+                outType.getOrElse("<missing>")
+            )
+          )
+
+      inTypeValid |+| outTypeValid

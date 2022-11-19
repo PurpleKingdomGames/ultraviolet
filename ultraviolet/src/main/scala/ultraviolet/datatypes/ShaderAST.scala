@@ -57,12 +57,25 @@ object ShaderAST:
       NamedBlock(namespace, id, statements.toList)
 
   // Specifically handles our 'Shader' type
-  final case class ShaderBlock(envVarName: Option[String], headers: List[ShaderAST], statements: List[ShaderAST])
-      extends ShaderAST
+  final case class ShaderBlock(
+      inType: Option[String],
+      outType: Option[String],
+      envVarName: Option[String],
+      headers: List[ShaderAST],
+      statements: List[ShaderAST]
+  ) extends ShaderAST
   object ShaderBlock:
     given ToExpr[ShaderBlock] with {
       def apply(x: ShaderBlock)(using Quotes): Expr[ShaderBlock] =
-        '{ ShaderBlock(${ Expr(x.envVarName) }, ${ Expr(x.headers) }, ${ Expr(x.statements) }) }
+        '{
+          ShaderBlock(
+            ${ Expr(x.inType) },
+            ${ Expr(x.outType) },
+            ${ Expr(x.envVarName) },
+            ${ Expr(x.headers) },
+            ${ Expr(x.statements) }
+          )
+        }
     }
 
   final case class Function(id: String, args: List[(ShaderAST, String)], body: ShaderAST, returnType: Option[ShaderAST])
@@ -266,32 +279,32 @@ object ShaderAST:
           case Nil => None
           case x :: xs =>
             x match
-              case v if p(v)                => Option(v)
-              case Empty()                  => rec(xs)
-              case Block(s)                 => rec(s ++ xs)
-              case NamedBlock(_, _, s)      => rec(s ++ xs)
-              case ShaderBlock(_, _, s)     => rec(s ++ xs)
-              case Function(_, _, body, _)  => rec(body :: xs)
-              case CallFunction(_, _, _, _) => rec(xs)
-              case FunctionRef(_, _)        => rec(xs)
-              case Cast(v, _)               => rec(v :: xs)
-              case Infix(_, l, r, _)        => rec(l :: r :: xs)
-              case Assign(l, r)             => rec(l :: r :: xs)
-              case If(_, t, e)              => rec(t :: (e.toList ++ xs))
-              case While(_, b)              => rec(b :: xs)
-              case Switch(_, cs)            => rec(cs.map(_._2) ++ xs)
-              case Val(_, body, _)          => rec(body :: xs)
-              case Annotated(_, _, body)    => rec(body :: xs)
-              case RawLiteral(_)            => rec(xs)
-              case v: DataTypes.closure     => rec(v.body :: xs)
-              case v: DataTypes.ident       => rec(xs)
-              case v: DataTypes.float       => rec(xs)
-              case v: DataTypes.int         => rec(xs)
-              case v: DataTypes.vec2        => rec(v.args ++ xs)
-              case v: DataTypes.vec3        => rec(v.args ++ xs)
-              case v: DataTypes.vec4        => rec(v.args ++ xs)
-              case v: DataTypes.array       => rec(xs)
-              case v: DataTypes.swizzle     => rec(v.genType :: xs)
+              case v if p(v)                  => Option(v)
+              case Empty()                    => rec(xs)
+              case Block(s)                   => rec(s ++ xs)
+              case NamedBlock(_, _, s)        => rec(s ++ xs)
+              case ShaderBlock(_, _, _, _, s) => rec(s ++ xs)
+              case Function(_, _, body, _)    => rec(body :: xs)
+              case CallFunction(_, _, _, _)   => rec(xs)
+              case FunctionRef(_, _)          => rec(xs)
+              case Cast(v, _)                 => rec(v :: xs)
+              case Infix(_, l, r, _)          => rec(l :: r :: xs)
+              case Assign(l, r)               => rec(l :: r :: xs)
+              case If(_, t, e)                => rec(t :: (e.toList ++ xs))
+              case While(_, b)                => rec(b :: xs)
+              case Switch(_, cs)              => rec(cs.map(_._2) ++ xs)
+              case Val(_, body, _)            => rec(body :: xs)
+              case Annotated(_, _, body)      => rec(body :: xs)
+              case RawLiteral(_)              => rec(xs)
+              case v: DataTypes.closure       => rec(v.body :: xs)
+              case v: DataTypes.ident         => rec(xs)
+              case v: DataTypes.float         => rec(xs)
+              case v: DataTypes.int           => rec(xs)
+              case v: DataTypes.vec2          => rec(v.args ++ xs)
+              case v: DataTypes.vec3          => rec(v.args ++ xs)
+              case v: DataTypes.vec4          => rec(v.args ++ xs)
+              case v: DataTypes.array         => rec(xs)
+              case v: DataTypes.swizzle       => rec(v.genType :: xs)
 
       rec(List(ast))
 
@@ -309,7 +322,7 @@ object ShaderAST:
         case v @ Empty()                              => f(v)
         case v @ Block(s)                             => f(Block(s.map(f)))
         case v @ NamedBlock(ns, id, s)                => f(NamedBlock(ns, id, s))
-        case v @ ShaderBlock(n, h, s)                 => f(ShaderBlock(n, h, s))
+        case v @ ShaderBlock(in, out, n, h, s)        => f(ShaderBlock(in, out, n, h, s))
         case v @ Function(id, args, body, returnType) => f(Function(id, args, f(body), returnType))
         case v @ CallFunction(_, _, _, _)             => f(v)
         case v @ FunctionRef(_, _)                    => f(v)
@@ -337,7 +350,7 @@ object ShaderAST:
         case Empty()                      => None
         case Block(_)                     => None
         case NamedBlock(_, _, _)          => None
-        case ShaderBlock(_, _, _)         => None
+        case ShaderBlock(_, _, _, _, _)   => None
         case Function(_, _, _, rt)        => rt.flatMap(_.typeIdent)
         case CallFunction(_, _, _, rt)    => rt.flatMap(_.typeIdent)
         case FunctionRef(_, rt)           => rt.flatMap(_.typeIdent)
@@ -348,7 +361,7 @@ object ShaderAST:
         case While(_, _)                  => None
         case Switch(_, _)                 => None
         case Val(id, value, typeOf)       => typeOf.map(t => ShaderAST.DataTypes.ident(t))
-        case Annotated(_, _, value)          => value.typeIdent
+        case Annotated(_, _, value)       => value.typeIdent
         case RawLiteral(_)                => None
         case n @ DataTypes.ident(_)       => Option(n)
         case DataTypes.closure(_, typeOf) => typeOf.map(t => ShaderAST.DataTypes.ident(t))
@@ -360,10 +373,34 @@ object ShaderAST:
         case DataTypes.array(_, typeOf)   => typeOf.map(t => ShaderAST.DataTypes.ident(t + "[]"))
         case DataTypes.swizzle(v, _, _)   => v.typeIdent
 
+    def envVarName: Option[String] =
+      ast match
+        case ShaderBlock(_, _, env, _, _) =>
+          env
+
+        case _ =>
+          None
+
     def headers: List[ShaderAST] =
       ast match
-        case ShaderBlock(_, headers, _) =>
+        case ShaderBlock(_, _, _, headers, _) =>
           headers
 
         case _ =>
           Nil
+
+    def inType: Option[String] =
+      ast match
+        case ShaderBlock(in, _, _, _, _) =>
+          in
+
+        case _ =>
+          None
+
+    def outType: Option[String] =
+      ast match
+        case ShaderBlock(_, out, _, _, _) =>
+          out
+
+        case _ =>
+          None
