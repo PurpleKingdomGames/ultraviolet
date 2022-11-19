@@ -326,6 +326,9 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
       case Select(Inlined(None, Nil, Ident(obj)), fieldName) =>
         ShaderAST.DataTypes.ident(s"$obj.$fieldName")
 
+      case Select(Ident(name), "unary_-") =>
+        ShaderAST.DataTypes.ident(s"-$name")
+
       case Select(Ident(namespace), name) =>
         ShaderAST.DataTypes.ident(s"$namespace.$name")
 
