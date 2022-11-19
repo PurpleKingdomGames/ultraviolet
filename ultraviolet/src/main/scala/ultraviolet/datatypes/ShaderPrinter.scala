@@ -20,7 +20,7 @@ object ShaderPrinter:
       case Block(statements) =>
         renderStatements(statements)
 
-      case ShaderBlock(envVarName, headers, statements) =>
+      case ShaderBlock(_, _, envVarName, headers, statements) =>
         renderStatements(statements)
 
       case b @ NamedBlock(namespace, id, statements) =>
@@ -216,7 +216,7 @@ object ShaderPrinter:
         case Empty()                      => None
         case Block(_)                     => None
         case NamedBlock(_, _, _)          => None
-        case ShaderBlock(_, _, _)         => None
+        case ShaderBlock(_, _, _, _, _)   => None
         case Function(_, _, _, rt)        => rt.toList.flatMap(render).headOption
         case CallFunction(_, _, _, rt)    => rt.toList.flatMap(render).headOption
         case FunctionRef(_, rt)           => rt.toList.flatMap(render).headOption

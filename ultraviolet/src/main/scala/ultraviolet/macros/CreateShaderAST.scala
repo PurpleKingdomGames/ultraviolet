@@ -43,6 +43,34 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
       case _ =>
         mapName(typ.tpe.classSymbol.map(_.name))
 
+  def extractInferredTypeParam(typ: TypeTree): Option[String] =
+    def extract(t: Tree): Option[String] =
+      t match
+        case Applied(TypeIdent("&"), List(t1, t2)) =>
+          for {
+            a <- extract(t1)
+            b <- extract(t2)
+          } yield s"""$a & $b"""
+
+        case TypeIdent(typeName) =>
+          Option(typeName)
+
+        case _ =>
+          None
+
+    typ match
+      case Applied(TypeIdent("&"), List(t1, t2)) =>
+        for {
+          a <- extract(t1)
+          b <- extract(t2)
+        } yield s"""$a & $b"""
+
+      case TypeIdent(typeName) =>
+        Option(typeName)
+
+      case x =>
+        typ.tpe.classSymbol.map(_.name)
+
   def walkStatement(s: Statement, envVarName: Option[String]): ShaderAST =
     s match
       case Import(_, _) =>
@@ -220,7 +248,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
 
       // Entry point (with type params, no headers)
       case Apply(
-            TypeApply(Select(Ident("Shader"), "apply"), _),
+            TypeApply(Select(Ident("Shader"), "apply"), types),
             List(
               Block(
                 Nil,
@@ -238,13 +266,23 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
               )
             )
           ) =>
-        val e = Option(env)
-        ShaderAST.ShaderBlock(e, Nil, List(walkTerm(term, e)))
+        val e          = Option(env)
+        val statements = List(walkTerm(term, e))
+
+        types.map(extractInferredTypeParam) match
+          case List(in, out) =>
+            ShaderAST.ShaderBlock(in, out, e, Nil, statements)
+
+          case List(in) =>
+            ShaderAST.ShaderBlock(in, None, e, Nil, statements)
+
+          case _ =>
+            ShaderAST.ShaderBlock(None, None, e, Nil, statements)
 
       // Entry point (with type params, with headers)
       case Apply(
             Apply(
-              TypeApply(Select(Ident("Shader"), "apply"), _),
+              TypeApply(Select(Ident("Shader"), "apply"), types),
               headers
             ),
             List(
@@ -264,16 +302,33 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
               )
             )
           ) =>
-        val e = Option(env)
-        ShaderAST.ShaderBlock(e, headers.map(p => walkTerm(p, e)), List(walkTerm(term, e)))
+        val e                = Option(env)
+        val headerStatements = headers.map(p => walkTerm(p, e))
+        val statements       = List(walkTerm(term, e))
+
+        types.map(extractInferredTypeParam) match
+          case List(in, out) =>
+            ShaderAST.ShaderBlock(in, out, e, headerStatements, statements)
+
+          case List(in) =>
+            ShaderAST.ShaderBlock(in, None, e, headerStatements, statements)
+
+          case _ =>
+            ShaderAST.ShaderBlock(None, None, e, headerStatements, statements)
 
       // Entry point (no type params, no headers)
       case Apply(Select(Ident("Shader"), "apply"), args) =>
-        ShaderAST.ShaderBlock(None, Nil, args.map(p => walkTerm(p, envVarName)))
+        ShaderAST.ShaderBlock(None, None, None, Nil, args.map(p => walkTerm(p, envVarName)))
 
       // Entry point (no type params, with headers)
       case Apply(Apply(Select(Ident("Shader"), "apply"), headers), args) =>
-        ShaderAST.ShaderBlock(None, headers.map(p => walkTerm(p, envVarName)), args.map(p => walkTerm(p, envVarName)))
+        ShaderAST.ShaderBlock(
+          None,
+          None,
+          None,
+          headers.map(p => walkTerm(p, envVarName)),
+          args.map(p => walkTerm(p, envVarName))
+        )
 
       case Apply(Select(Ident("RawGLSL"), "apply"), List(term)) =>
         walkTerm(term, envVarName)

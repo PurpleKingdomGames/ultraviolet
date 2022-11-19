@@ -1,12 +1,12 @@
 package ultraviolet
 
+import ultraviolet.predef.shadertoy.*
+import ultraviolet.predef.shadertoy.given
 import ultraviolet.syntax.*
 
 class ShaderToyTests extends munit.FunSuite {
 
   test("Able to fully define the default shadertoy example") {
-    import ultraviolet.predef.shadertoy.*
-    import ultraviolet.predef.shadertoy.given
 
     inline def fragment =
       Shader[ShaderToyEnv, vec4] { env =>
@@ -85,9 +85,6 @@ class ShaderToyTests extends munit.FunSuite {
 }
 
 object Plasma:
-
-  import ultraviolet.predef.shadertoy.*
-  import ultraviolet.predef.shadertoy.given
 
   inline def bufferA =
     Shader[ShaderToyEnv, Unit] { env =>

@@ -13,29 +13,32 @@ object ProceduralShader:
   }
 
   extension (p: ProceduralShader)
-    inline def render(using template: ShaderTemplate, printer: ShaderPrinter): String =
+    @SuppressWarnings(Array("scalafix:DisableSyntax.throw"))
+    inline def render(using printer: ShaderPrinter, checker: ShaderValidation): String =
       import ShaderAST.*
-      def envName(ast: ShaderAST): Option[String] =
-        ast
-          .find {
-            case ShaderBlock(_, _, _) => true
-            case _                    => false
-          }
-          .flatMap {
-            case ShaderBlock(name, _, _) => name
-            case _                       => None
-          }
 
       def stripOutEnvName(content: String): String =
-        envName(p.main) match
+        p.main.envVarName match
           case None       => content
           case Some(name) => content.replace(name + ".", "").replace(name, "")
 
-      val renderedHeaders = p.main.headers.flatMap(printer.print).map(stripOutEnvName)
-      val renderedDefs    = p.defs.map(d => printer.print(d).mkString("\n")).map(stripOutEnvName)
-      val renderedBody    = printer.print(p.main).map(stripOutEnvName)
+      val inType    = p.main.inType
+      val outType   = p.main.outType
+      val headers   = p.main.headers
+      val functions = p.defs
+      val body      = p.main
 
-      template.print(renderedHeaders, renderedDefs, renderedBody)
+      checker.isValid(inType, outType, headers, functions, body) match
+        case ShaderValid.Invalid(reasons) =>
+          // throw new Exception(reason)
+          throw ShaderError.ValidationError("Shader failed to validate because: " + reasons.mkString("[", ", ", "]"))
+
+        case ShaderValid.Valid =>
+          val renderedHeaders = headers.flatMap(printer.print).map(stripOutEnvName)
+          val renderedDefs    = functions.map(d => printer.print(d).mkString("\n")).map(stripOutEnvName)
+          val renderedBody    = printer.print(body).map(stripOutEnvName)
+
+          (renderedHeaders ++ renderedDefs ++ renderedBody).mkString("\n").trim
 
     def exists(q: ShaderAST => Boolean): Boolean =
       p.main.exists(q) || p.defs.exists(_.exists(q))
