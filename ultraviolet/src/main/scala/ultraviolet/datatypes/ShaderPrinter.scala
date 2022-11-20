@@ -2,21 +2,71 @@ package ultraviolet.datatypes
 
 import ShaderAST.*
 
-trait ShaderPrinter:
+trait ShaderPrinter[T]:
+  def isValid(
+      inType: Option[String],
+      outType: Option[String],
+      headers: List[ShaderAST],
+      functions: List[ShaderAST],
+      body: ShaderAST
+  ): ShaderValid
   def transformer: PartialFunction[ShaderAST, ShaderAST]
   def printer: PartialFunction[ShaderAST, List[String]]
 
 object ShaderPrinter:
 
-  given ShaderPrinter = new ShaderPrinter:
-    def transformer: PartialFunction[ShaderAST, ShaderAST] = PartialFunction.empty
-    def printer: PartialFunction[ShaderAST, List[String]]  = PartialFunction.empty
+  sealed trait WebGL1
+  sealed trait WebGL2
 
-  def print(ast: ShaderAST)(using pp: ShaderPrinter): List[String] =
+  // A number of the transforms seen in the WebGL1 & 2 printers below are based
+  // on this page: https://webgl2fundamentals.org/webgl/lessons/webgl1-to-webgl2.html
+
+  given ShaderPrinter[WebGL1] = new ShaderPrinter:
+    def isValid(
+        inType: Option[String],
+        outType: Option[String],
+        headers: List[ShaderAST],
+        functions: List[ShaderAST],
+        body: ShaderAST
+    ): ShaderValid = ShaderValid.Valid
+
+    def transformer: PartialFunction[ShaderAST, ShaderAST] = {
+      case ShaderAST.Annotated(ShaderAST.DataTypes.ident("in"), param, value) =>
+        ShaderAST.Annotated(ShaderAST.DataTypes.ident("varying"), param, value)
+
+      case ShaderAST.Annotated(ShaderAST.DataTypes.ident("out"), param, value) =>
+        ShaderAST.Annotated(ShaderAST.DataTypes.ident("varying"), param, value)
+    }
+
+    def printer: PartialFunction[ShaderAST, List[String]] = PartialFunction.empty
+
+  given ShaderPrinter[WebGL2] = new ShaderPrinter:
+    def isValid(
+        inType: Option[String],
+        outType: Option[String],
+        headers: List[ShaderAST],
+        functions: List[ShaderAST],
+        body: ShaderAST
+    ): ShaderValid = ShaderValid.Valid
+
+    def transformer: PartialFunction[ShaderAST, ShaderAST] = {
+      case ShaderAST.Annotated(ShaderAST.DataTypes.ident("attribute"), param, value) =>
+        ShaderAST.Annotated(ShaderAST.DataTypes.ident("in"), param, value)
+
+      case ShaderAST.CallFunction("texture2D", args, argNames, returnType) =>
+        ShaderAST.CallFunction("texture", args, argNames, returnType)
+
+      case ShaderAST.CallFunction("textureCube", args, argNames, returnType) =>
+        ShaderAST.CallFunction("texture", args, argNames, returnType)
+    }
+
+    def printer: PartialFunction[ShaderAST, List[String]] = PartialFunction.empty
+
+  def print[T](ast: ShaderAST)(using pp: ShaderPrinter[T]): List[String] =
     render(ast)
 
   @SuppressWarnings(Array("scalafix:DisableSyntax.throw"))
-  private def render(ast: ShaderAST)(using pp: ShaderPrinter): List[String] =
+  private def render(ast: ShaderAST)(using pp: ShaderPrinter[_]): List[String] =
     val p =
       pp.printer.orElse {
         case Empty() =>
@@ -35,7 +85,8 @@ object ShaderPrinter:
           throw new Exception("Failed to render shader, unnamed function definition found.")
 
         case Function(id, args, Block(statements), returnType) =>
-          val (body, rt) = processFunctionStatements(statements, returnType.flatMap(r => render(r).headOption))
+          val (body: List[String], rt: String) =
+            processFunctionStatements(statements, returnType.flatMap(r => render(r).headOption))
           List(
             List(s"""$rt $id(${args.map(s => s"in ${render(s._1).mkString} ${s._2}").mkString(",")}){"""),
             body.map(addIndent),
@@ -46,7 +97,8 @@ object ShaderPrinter:
           throw new Exception("Function with a NamedBlock body found, this is probably an error: " + b)
 
         case Function(id, args, statement, returnType) =>
-          val (body, rt) = processFunctionStatements(List(statement), returnType.flatMap(r => render(r).headOption))
+          val (body: List[String], rt: String) =
+            processFunctionStatements(List(statement), returnType.flatMap(r => render(r).headOption))
           List(
             List(s"""$rt $id(${args.map(s => s"in ${render(s._1).mkString} ${s._2}").mkString(",")}){"""),
             body.map(addIndent),
@@ -192,7 +244,7 @@ object ShaderPrinter:
 
     p(ast.traverse(pp.transformer.orElse(n => n)))
 
-  private def renderStatements(statements: List[ShaderAST])(using pp: ShaderPrinter): List[String] =
+  private def renderStatements(statements: List[ShaderAST])(using pp: ShaderPrinter[_]): List[String] =
     val p =
       pp.printer.orElse {
         case ShaderAST.RawLiteral(raw) =>
@@ -223,7 +275,7 @@ object ShaderPrinter:
 
   private def addIndent: String => String = str => "  " + str
 
-  private def decideType(a: ShaderAST)(using pp: ShaderPrinter): Option[String] =
+  private def decideType(a: ShaderAST)(using pp: ShaderPrinter[_]): Option[String] =
     a match
       case Empty()                      => None
       case Block(_)                     => None
@@ -258,7 +310,7 @@ object ShaderPrinter:
   private def processFunctionStatements(
       statements: List[ShaderAST],
       maybeReturnType: Option[String]
-  )(using pp: ShaderPrinter): (List[String], String) =
+  )(using pp: ShaderPrinter[_]): (List[String], String) =
     val nonEmpty = statements
       .filterNot(_.isEmpty)
 

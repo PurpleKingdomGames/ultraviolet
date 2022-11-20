@@ -1,10 +1,14 @@
 package ultraviolet
 
 import ultraviolet.datatypes.ShaderDSLOps
+import ultraviolet.macros.UBOReader
 
 import scala.annotation.StaticAnnotation
+import scala.deriving.Mirror
 
 object syntax extends ShaderDSLOps:
+  type WebGL1 = ultraviolet.datatypes.ShaderPrinter.WebGL1
+  type WebGL2 = ultraviolet.datatypes.ShaderPrinter.WebGL2
 
   extension (f: Float)
     def +(v: vec2): vec2 = vec2(f + v.x, f + v.y)
@@ -35,9 +39,14 @@ object syntax extends ShaderDSLOps:
   type GLSLHeader[In, Out] = ultraviolet.datatypes.GLSLHeader
   val GLSLHeader: ultraviolet.datatypes.GLSLHeader.type = ultraviolet.datatypes.GLSLHeader
 
-  final class const                         extends StaticAnnotation
-  final class uniform                       extends StaticAnnotation
+  final class attribute                    extends StaticAnnotation
+  final class const                        extends StaticAnnotation
+  final class uniform                      extends StaticAnnotation
   final class ShaderDef(namespace: String) extends StaticAnnotation
+  final class in                           extends StaticAnnotation
+  final class out                          extends StaticAnnotation
+
+  inline def ubo[A](using Mirror.ProductOf[A]) = UBOReader.readUBO[A]
 
   inline def raw(body: String): RawGLSL =
     RawGLSL(body)

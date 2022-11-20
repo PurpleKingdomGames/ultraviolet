@@ -14,7 +14,7 @@ object ProceduralShader:
 
   extension (p: ProceduralShader)
     @SuppressWarnings(Array("scalafix:DisableSyntax.throw"))
-    inline def render(using printer: ShaderPrinter, checker: ShaderValidation): String =
+    inline def render[T](using printer: ShaderPrinter[T]): String =
       import ShaderAST.*
 
       def stripOutEnvName(content: String): String =
@@ -28,7 +28,7 @@ object ProceduralShader:
       val functions = p.defs
       val body      = p.main
 
-      checker.isValid(inType, outType, headers, functions, body) match
+      printer.isValid(inType, outType, headers, functions, body) match
         case ShaderValid.Invalid(reasons) =>
           // throw new Exception(reason)
           throw ShaderError.ValidationError("Shader failed to validate because: " + reasons.mkString("[", ", ", "]"))
