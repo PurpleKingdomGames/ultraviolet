@@ -1,8 +1,8 @@
 package ultraviolet.predef
 
 import ultraviolet.datatypes.ShaderAST
+import ultraviolet.datatypes.ShaderPrinter
 import ultraviolet.datatypes.ShaderValid
-import ultraviolet.datatypes.ShaderValidation
 import ultraviolet.syntax.*
 
 @SuppressWarnings(Array("scalafix:DisableSyntax.var"))
@@ -48,7 +48,9 @@ object shadertoy:
         fragColor = vec4(0.0f)
       )
 
-  given ShaderValidation with
+  sealed trait ShaderToy
+
+  given ShaderPrinter[ShaderToy] = new ShaderPrinter {
     def isValid(
         inType: Option[String],
         outType: Option[String],
@@ -77,3 +79,14 @@ object shadertoy:
           )
 
       inTypeValid |+| outTypeValid
+
+    def transformer: PartialFunction[ShaderAST, ShaderAST] = {
+      case ShaderAST.Val("x", ShaderAST.DataTypes.float(1.0), Some("float")) =>
+        ShaderAST.Val("xx", ShaderAST.DataTypes.float(100.0), Some("float"))
+    }
+
+    def printer: PartialFunction[ShaderAST, List[String]] = {
+      case ShaderAST.Val("y", ShaderAST.DataTypes.float(2.0), Some("float")) =>
+        List("float foo")
+    }
+  }

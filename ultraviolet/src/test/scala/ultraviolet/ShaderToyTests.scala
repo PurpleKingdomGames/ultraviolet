@@ -1,7 +1,6 @@
 package ultraviolet
 
 import ultraviolet.predef.shadertoy.*
-import ultraviolet.predef.shadertoy.given
 import ultraviolet.syntax.*
 
 class ShaderToyTests extends munit.FunSuite {
@@ -23,7 +22,7 @@ class ShaderToyTests extends munit.FunSuite {
     assertEquals(fragment.run(ShaderToyEnv.Default), vec4(vec3(0.5f), 1.0f))
 
     val actual =
-      fragment.toGLSL
+      fragment.toGLSL[ShaderToy]
 
     // DebugAST.toAST(fragment)
     // println(actual)
@@ -100,7 +99,7 @@ object Plasma:
         vec4(0.5f + 0.5f * cs, 1.0f)
     }
 
-  val bufferAShader = bufferA.toGLSL
+  val bufferAShader = bufferA.toGLSL[ShaderToy]
 
   inline def image =
     Shader[ShaderToyEnv, vec4] { env =>
@@ -118,10 +117,10 @@ object Plasma:
         cos(length(p2d) / 20.0f) +
         sin(length(p3d) / 25.0f) * sin(p3d.x / 20.0f) * sin(p3d.y / 15.0f))
 
-      texture(env.iChannel0, vec2(fract(sum), 0))
+      texture2D(env.iChannel0, vec2(fract(sum), 0))
     }
 
-  val imageShader = image.toGLSL
+  val imageShader = image.toGLSL[ShaderToy]
 
 /*
 Original - https://www.shadertoy.com/view/XsVSDz

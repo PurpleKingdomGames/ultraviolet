@@ -15,7 +15,7 @@ class ShaderASTTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL
+      fragment.toGLSL[WebGL2]
 
     // DebugAST.toAST(fragment)
     // println(actual)
@@ -38,7 +38,7 @@ class ShaderASTTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL
+      fragment.toGLSL[WebGL2]
 
     // DebugAST.toAST(fragment)
     // println(actual)
@@ -57,7 +57,7 @@ class ShaderASTTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL
+      fragment.toGLSL[WebGL2]
 
     assert(clue(actual) == clue("vec4(1.0,1.0,vec2(0.0,1.0));"))
   }
@@ -76,7 +76,7 @@ class ShaderASTTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL
+      fragment.toGLSL[WebGL2]
 
     // DebugAST.toAST(fragment)
     // println(actual)
@@ -111,7 +111,7 @@ class ShaderASTTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL
+      fragment.toGLSL[WebGL2]
 
     assertEquals(
       actual,
@@ -134,7 +134,7 @@ class ShaderASTTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL
+      fragment.toGLSL[WebGL2]
 
     assertEquals(
       actual,
@@ -151,7 +151,7 @@ class ShaderASTTests extends munit.FunSuite {
       }
 
     val actual1 =
-      fragment1.toGLSL
+      fragment1.toGLSL[WebGL2]
 
     assertEquals(
       actual1,
@@ -166,7 +166,7 @@ class ShaderASTTests extends munit.FunSuite {
       }
 
     val actual2 =
-      fragment2.toGLSL
+      fragment2.toGLSL[WebGL2]
 
     assertEquals(
       actual2,
@@ -182,7 +182,7 @@ class ShaderASTTests extends munit.FunSuite {
       }
 
     val actual3 =
-      fragment3.toGLSL
+      fragment3.toGLSL[WebGL2]
 
     assertEquals(
       actual3,
@@ -204,7 +204,7 @@ class ShaderASTTests extends munit.FunSuite {
       }
 
     val actual1 =
-      circleShader.toGLSL
+      circleShader.toGLSL[WebGL2]
 
     // println(ShaderMacros.toAST(circleShader))
 
@@ -230,7 +230,7 @@ class ShaderASTTests extends munit.FunSuite {
       }
 
     val actual2 =
-      circleShader2.toGLSL
+      circleShader2.toGLSL[WebGL2]
 
     // println(ShaderMacros.toAST(circleShader2))
 
@@ -258,7 +258,7 @@ class ShaderASTTests extends munit.FunSuite {
       }
 
     val actual =
-      shader.toGLSL
+      shader.toGLSL[WebGL2]
 
     assertEquals(
       actual,
@@ -291,7 +291,7 @@ class ShaderASTTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL
+      fragment.toGLSL[WebGL2]
 
     assertEquals(
       actual,
@@ -318,7 +318,7 @@ class ShaderASTTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL
+      fragment.toGLSL[WebGL2]
 
     // DebugAST.toAST(fragment)
     // println(actual)
@@ -349,7 +349,7 @@ class ShaderASTTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL
+      fragment.toGLSL[WebGL2]
 
     val expected =
       s"""
@@ -387,7 +387,7 @@ class ShaderASTTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL
+      fragment.toGLSL[WebGL2]
 
     // DebugAST.toAST(fragment)
     // println(actual)
@@ -422,7 +422,7 @@ class ShaderASTTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL
+      fragment.toGLSL[WebGL2]
 
     // DebugAST.toAST(fragment)
     // println(actual)
@@ -451,7 +451,7 @@ class ShaderASTTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL
+      fragment.toGLSL[WebGL2]
 
     assertEquals(
       actual,
@@ -485,7 +485,7 @@ class ShaderASTTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL
+      fragment.toGLSL[WebGL2]
 
     // DebugAST.toAST(fragment)
     // println(actual)
@@ -525,7 +525,7 @@ class ShaderASTTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL
+      fragment.toGLSL[WebGL2]
 
     // DebugAST.toAST(fragment)
     // println(actual)
@@ -551,7 +551,7 @@ class ShaderASTTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL
+      fragment.toGLSL[WebGL2]
 
     // DebugAST.toAST(fragment)
     // println(actual)
@@ -576,7 +576,7 @@ class ShaderASTTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL
+      fragment.toGLSL[WebGL2]
 
     // DebugAST.toAST(fragment)
     // println(actual)
@@ -604,7 +604,7 @@ class ShaderASTTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL
+      fragment.toGLSL[WebGL2]
 
     // DebugAST.toAST(fragment)
     // println(actual)
@@ -634,7 +634,7 @@ class ShaderASTTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL
+      fragment.toGLSL[WebGL2]
 
     // DebugAST.toAST(fragment)
     // println(actual)
@@ -667,7 +667,7 @@ class ShaderASTTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL
+      fragment.toGLSL[WebGL2]
 
     // DebugAST.toAST(fragment)
     // println(actual)
@@ -703,7 +703,7 @@ class ShaderASTTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL
+      fragment.toGLSL[WebGL2]
 
     // DebugAST.toAST(fragment)
     // println(actual)
@@ -736,7 +736,7 @@ class ShaderASTTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL
+      fragment.toGLSL[WebGL2]
 
     // DebugAST.toAST(fragment)
     // println(actual)
@@ -752,8 +752,6 @@ class ShaderASTTests extends munit.FunSuite {
 
   test("Can define a UBO struct") {
 
-    import ultraviolet.predef.glsl300.*
-
     case class UBO1(TIME: highp[Float], val VIEWPORT_SIZE: vec2)
     case class UBO2(customColor: vec4, pos: lowp[vec3])
 
@@ -768,7 +766,7 @@ class ShaderASTTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL
+      fragment.toGLSL[WebGL2]
 
     // DebugAST.toAST(fragment)
     // println(actual)
@@ -806,7 +804,7 @@ class ShaderASTTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL
+      fragment.toGLSL[WebGL2]
 
     // DebugAST.toAST(fragment)
     // println(actual)
@@ -822,8 +820,6 @@ class ShaderASTTests extends munit.FunSuite {
   }
 
   test("Supports samplers") {
-
-    import ultraviolet.predef.glsl300.*
 
     @SuppressWarnings(Array("scalafix:DisableSyntax.var"))
     case class Env(var COLOR: vec4)
@@ -841,7 +837,7 @@ class ShaderASTTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL
+      fragment.toGLSL[WebGL2]
 
     // DebugAST.toAST(fragment)
     // println(actual)
@@ -853,8 +849,8 @@ class ShaderASTTests extends munit.FunSuite {
       |in vec3 v_normal;
       |uniform sampler2D u_texture2d;
       |uniform samplerCube u_textureCube;
-      |vec4 c=texture2D(u_texture2d,v_texcoord);
-      |COLOR=textureCube(u_textureCube,normalize(v_normal))*c;
+      |vec4 c=texture(u_texture2d,v_texcoord);
+      |COLOR=texture(u_textureCube,normalize(v_normal))*c;
       |""".stripMargin.trim
     )
 
@@ -871,7 +867,7 @@ class ShaderASTTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL
+      fragment.toGLSL[WebGL2]
 
     // DebugAST.toAST(fragment)
     // println(actual)
@@ -887,7 +883,6 @@ class ShaderASTTests extends munit.FunSuite {
   }
 
   test("arrays - more complicated example") {
-    import ultraviolet.predef.glsl300.*
 
     case class Env(
         VERTICES: array[vec2, 16],
@@ -917,7 +912,7 @@ class ShaderASTTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL
+      fragment.toGLSL[WebGL2]
 
     // DebugAST.toAST(fragment)
     // println(actual)

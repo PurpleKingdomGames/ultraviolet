@@ -22,7 +22,7 @@ class ShaderPrinterTests extends munit.FunSuite {
       )
 
     val actual =
-      ShaderPrinter.print(ast)
+      ShaderPrinter.print[ShaderPrinter.WebGL2](ast)
 
     val expected =
       List(
@@ -37,7 +37,15 @@ class ShaderPrinterTests extends munit.FunSuite {
 
   test("A custom printer can partially match to modify the output of the print") {
 
-    given ShaderPrinter = new ShaderPrinter {
+    given ShaderPrinter[Any] = new ShaderPrinter[Any] {
+      def isValid(
+          inType: Option[String],
+          outType: Option[String],
+          headers: List[ShaderAST],
+          functions: List[ShaderAST],
+          body: ShaderAST
+      ): ShaderValid = ShaderValid.Valid
+
       def transformer: PartialFunction[ShaderAST, ShaderAST] = {
         case ShaderAST.Val("x", ShaderAST.DataTypes.float(1.0), Some("float")) =>
           ShaderAST.Val("xx", ShaderAST.DataTypes.float(100.0), Some("float"))
@@ -77,6 +85,66 @@ class ShaderPrinterTests extends munit.FunSuite {
       )
 
     assertEquals(actual, expected)
+
+  }
+
+  test("Can output WebGL 1.0 and 2.0") {
+
+    import ultraviolet.syntax.*
+
+    @SuppressWarnings(Array("scalafix:DisableSyntax.var"))
+    case class Env(var COLOR: vec4)
+
+    @SuppressWarnings(Array("scalafix:DisableSyntax.null"))
+    inline def fragment =
+      Shader[Env, Unit] { env =>
+        @in val v_texcoord: vec2   = null
+        @in val v_normal: vec3     = null
+        @out val v_color: vec4     = null
+        @uniform val u_texture2d   = sampler2D
+        @uniform val u_textureCube = samplerCube
+
+        val c: vec4 = texture2D(u_texture2d, v_texcoord);
+        env.COLOR = textureCube(u_textureCube, normalize(v_normal)) * c
+      }
+
+    // DebugAST.toAST(fragment)
+
+    val webgl1 =
+      fragment.toGLSL[ShaderPrinter.WebGL1]
+
+    // println(webgl1)
+
+    assertEquals(
+      webgl1,
+      s"""
+      |varying vec2 v_texcoord;
+      |varying vec3 v_normal;
+      |varying vec4 v_color;
+      |uniform sampler2D u_texture2d;
+      |uniform samplerCube u_textureCube;
+      |vec4 c=texture2D(u_texture2d,v_texcoord);
+      |COLOR=textureCube(u_textureCube,normalize(v_normal))*c;
+      |""".stripMargin.trim
+    )
+
+    val webgl2 =
+      fragment.toGLSL[ShaderPrinter.WebGL2]
+
+    // println(webgl2)
+
+    assertEquals(
+      webgl2,
+      s"""
+      |in vec2 v_texcoord;
+      |in vec3 v_normal;
+      |out vec4 v_color;
+      |uniform sampler2D u_texture2d;
+      |uniform samplerCube u_textureCube;
+      |vec4 c=texture(u_texture2d,v_texcoord);
+      |COLOR=texture(u_textureCube,normalize(v_normal))*c;
+      |""".stripMargin.trim
+    )
 
   }
 

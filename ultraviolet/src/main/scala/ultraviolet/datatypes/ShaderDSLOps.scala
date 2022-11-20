@@ -4,10 +4,6 @@ import scala.annotation.targetName
 
 trait ShaderDSLOps extends ShaderDSLTypeExtensions:
 
-  // WebGL 2.0
-  def texture(sampler: sampler2D.type, coords: vec2): vec4 =
-    vec4(0.0f)
-  // WebGL 1.0
   def texture2D(sampler: sampler2D.type, coords: vec2): vec4 =
     vec4(0.0f)
   def textureCube(sampler: samplerCube.type, normal: vec3): vec4 =
