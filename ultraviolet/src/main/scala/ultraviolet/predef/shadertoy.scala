@@ -5,7 +5,6 @@ import ultraviolet.datatypes.ShaderPrinter
 import ultraviolet.datatypes.ShaderValid
 import ultraviolet.syntax.*
 
-@SuppressWarnings(Array("scalafix:DisableSyntax.var"))
 object shadertoy:
 
   // Current doesn't support samplerCube types, Ultraviolet does, just not sure how to represent that here.
@@ -23,9 +22,7 @@ object shadertoy:
       iChannel2: sampler2D.type,          // input channel. XX = 2D/Cube
       iChannel3: sampler2D.type,          // input channel. XX = 2D/Cube
       iDate: vec4,                        // (year = null month = null day = null time in seconds)
-      iSampleRate: Float,                 // sound sample rate (i.e. = null 44100)
-      fragCoord: vec2,                    // UV coordinates // Unoffical, from the main function definition
-      var fragColor: vec4                 // output variable // Unoffical, from the main function definition
+      iSampleRate: Float                  // sound sample rate (i.e. = null 44100)
   )
   object ShaderToyEnv:
     def Default: ShaderToyEnv =
@@ -43,14 +40,14 @@ object shadertoy:
         iChannel2 = sampler2D,
         iChannel3 = sampler2D,
         iDate = vec4(0.0f),
-        iSampleRate = 44100.0f,
-        fragCoord = vec2(0.0),
-        fragColor = vec4(0.0f)
+        iSampleRate = 44100.0f
       )
 
   sealed trait ShaderToy
 
   given ShaderPrinter[ShaderToy] = new ShaderPrinter {
+    val webGL1Printer = summon[ShaderPrinter[WebGL1]]
+
     def isValid(
         inType: Option[String],
         outType: Option[String],
@@ -58,7 +55,7 @@ object shadertoy:
         functions: List[ShaderAST],
         body: ShaderAST
     ): ShaderValid =
-      val inTypeValid =
+      val inTypeValid: ShaderValid =
         if inType.contains("ShaderToyEnv") then ShaderValid.Valid
         else
           ShaderValid.Invalid(
@@ -68,7 +65,7 @@ object shadertoy:
             )
           )
 
-      val outTypeValid =
+      val outTypeValid: ShaderValid =
         if outType.contains("Unit") then ShaderValid.Valid
         else
           ShaderValid.Invalid(
@@ -78,15 +75,85 @@ object shadertoy:
             )
           )
 
-      inTypeValid |+| outTypeValid
+      val hasMainImageMethod: ShaderValid =
+        val main =
+          body.find {
+            case ShaderAST.Function(
+                  "mainImage",
+                  List(
+                    (ShaderAST.DataTypes.ident("vec4") -> "fragColor"),
+                    (ShaderAST.DataTypes.ident("vec2") -> "fragCoord")
+                  ),
+                  body,
+                  Some(ShaderAST.DataTypes.ident("vec4"))
+                ) =>
+              true
 
-    def transformer: PartialFunction[ShaderAST, ShaderAST] = {
-      case ShaderAST.Val("x", ShaderAST.DataTypes.float(1.0), Some("float")) =>
-        ShaderAST.Val("xx", ShaderAST.DataTypes.float(100.0), Some("float"))
-    }
+            case _ => false
+          }
 
-    def printer: PartialFunction[ShaderAST, List[String]] = {
-      case ShaderAST.Val("y", ShaderAST.DataTypes.float(2.0), Some("float")) =>
-        List("float foo")
-    }
+        main match
+          case Some(_) =>
+            ShaderValid.Valid
+
+          case None =>
+            ShaderValid.Invalid(
+              List(
+                "ShaderToy Shader instances must declare a 'mainImage' method: `def mainImage(fragColor: vec4, fragCoord: vec2): vec4 = ???`"
+              )
+            )
+
+      webGL1Printer.isValid(inType, outType, headers, functions, body) |+|
+        (inTypeValid |+| outTypeValid |+| hasMainImageMethod)
+
+    def transformer: PartialFunction[ShaderAST, ShaderAST] =
+      val pf: PartialFunction[ShaderAST, ShaderAST] = {
+        case ShaderAST.Function(
+              "mainImage",
+              List(typ1 -> fragColor, typ2 -> fragCoord),
+              ShaderAST.Block(statements),
+              Some(ShaderAST.DataTypes.ident("vec4"))
+            ) =>
+          val nonEmpty = statements
+            .filterNot(_.isEmpty)
+
+          val (init, last) =
+            if nonEmpty.length > 1 then (nonEmpty.dropRight(1), nonEmpty.takeRight(1))
+            else (Nil, nonEmpty)
+
+          ShaderAST.Function(
+            "mainImage",
+            List(
+              ShaderAST.Annotated(ShaderAST.DataTypes.ident("out"), ShaderAST.Empty(), typ1) -> fragColor,
+              typ2                                                                           -> fragCoord
+            ),
+            ShaderAST.Block(
+              init ++
+                List(
+                  ShaderAST.Assign(ShaderAST.DataTypes.ident("fragColor"), last.headOption.getOrElse(ShaderAST.Empty()))
+                )
+            ),
+            None
+          )
+
+        case ShaderAST.Function(
+              "mainImage",
+              List(typ1 -> fragColor, typ2 -> fragCoord),
+              body,
+              Some(ShaderAST.DataTypes.ident("vec4"))
+            ) =>
+          ShaderAST.Function(
+            "mainImage",
+            List(
+              ShaderAST.Annotated(ShaderAST.DataTypes.ident("out"), ShaderAST.Empty(), typ1) -> fragColor,
+              typ2                                                                           -> fragCoord
+            ),
+            ShaderAST.Assign(ShaderAST.DataTypes.ident("fragColor"), body),
+            None
+          )
+      }
+
+      pf.orElse(webGL1Printer.transformer)
+
+    def printer: PartialFunction[ShaderAST, List[String]] = webGL1Printer.printer
   }
