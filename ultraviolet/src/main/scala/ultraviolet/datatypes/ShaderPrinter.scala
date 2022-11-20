@@ -31,11 +31,11 @@ object ShaderPrinter:
     ): ShaderValid = ShaderValid.Valid
 
     def transformer: PartialFunction[ShaderAST, ShaderAST] = {
-      case ShaderAST.Annotated(ShaderAST.DataTypes.ident("in"), param, value) =>
-        ShaderAST.Annotated(ShaderAST.DataTypes.ident("varying"), param, value)
+      case ShaderAST.Annotated(ShaderAST.DataTypes.ident("in"), param, v @ ShaderAST.Val(_, _, _)) =>
+        ShaderAST.Annotated(ShaderAST.DataTypes.ident("varying"), param, v)
 
-      case ShaderAST.Annotated(ShaderAST.DataTypes.ident("out"), param, value) =>
-        ShaderAST.Annotated(ShaderAST.DataTypes.ident("varying"), param, value)
+      case ShaderAST.Annotated(ShaderAST.DataTypes.ident("out"), param, v @ ShaderAST.Val(_, _, _)) =>
+        ShaderAST.Annotated(ShaderAST.DataTypes.ident("varying"), param, v)
     }
 
     def printer: PartialFunction[ShaderAST, List[String]] = PartialFunction.empty
@@ -50,8 +50,8 @@ object ShaderPrinter:
     ): ShaderValid = ShaderValid.Valid
 
     def transformer: PartialFunction[ShaderAST, ShaderAST] = {
-      case ShaderAST.Annotated(ShaderAST.DataTypes.ident("attribute"), param, value) =>
-        ShaderAST.Annotated(ShaderAST.DataTypes.ident("in"), param, value)
+      case ShaderAST.Annotated(ShaderAST.DataTypes.ident("attribute"), param, v @ ShaderAST.Val(_, _, _)) =>
+        ShaderAST.Annotated(ShaderAST.DataTypes.ident("in"), param, v)
 
       case ShaderAST.CallFunction("texture2D", args, argNames, returnType) =>
         ShaderAST.CallFunction("texture", args, argNames, returnType)
@@ -84,23 +84,31 @@ object ShaderPrinter:
         case Function(id, args, body, returnType) if id.isEmpty =>
           throw new Exception("Failed to render shader, unnamed function definition found.")
 
-        case Function(id, args, Block(statements), returnType) =>
-          val (body: List[String], rt: String) =
-            processFunctionStatements(statements, returnType.flatMap(r => render(r).headOption))
-          List(
-            List(s"""$rt $id(${args.map(s => s"in ${render(s._1).mkString} ${s._2}").mkString(",")}){"""),
-            body.map(addIndent),
-            List("}")
-          ).flatten
-
         case b @ Function(id, args, NamedBlock(_, _, statements), returnType) =>
           throw new Exception("Function with a NamedBlock body found, this is probably an error: " + b)
 
-        case Function(id, args, statement, returnType) =>
+        case Function(id, args, fnBody, returnType) =>
+          val statements =
+            fnBody match
+              case Block(ss) => ss
+              case _         => List(fnBody)
+
           val (body: List[String], rt: String) =
-            processFunctionStatements(List(statement), returnType.flatMap(r => render(r).headOption))
+            processFunctionStatements(statements, returnType.flatMap(r => render(r).headOption))
+
+          val renderedArgs: String =
+            args
+              .map {
+                case (typ @ Annotated(_, _, _), name) =>
+                  s"${render(typ).mkString} $name"
+
+                case (typ, name) =>
+                  s"in ${render(typ).mkString} $name"
+              }
+              .mkString(",")
+
           List(
-            List(s"""$rt $id(${args.map(s => s"in ${render(s._1).mkString} ${s._2}").mkString(",")}){"""),
+            List(s"""$rt $id($renderedArgs){"""),
             body.map(addIndent),
             List("}")
           ).flatten
@@ -236,7 +244,7 @@ object ShaderPrinter:
               List(s"""$lbl ${render(Val(id, Empty(), typeOf)).mkString}""")
 
             case _ =>
-              Nil
+              List(s"""$lbl ${render(value).mkString}""")
 
         case RawLiteral(body) =>
           List(body)
