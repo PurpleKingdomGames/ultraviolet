@@ -83,3 +83,63 @@ trait ShaderDSLTypes:
   object array:
     def apply[T: ClassTag, L <: Singleton](size: L)(using convert: L => Int): array[T, L] =
       array[T, L](size, new Array[T](convert(size)))
+
+  final case class mat2(mat: Array[Float]):
+    def apply(index: Int): Float = mat(index)
+    def update(i: Int, value: Float): Unit =
+      mat(i) = value
+    def update(i: Int, value: vec2): Unit =
+      mat(i + 0) = value.x
+      mat(i + 1) = value.y
+  object mat2:
+    def apply(m0: Float, m1: Float, m2: Float, m3: Float): mat2 =
+      mat2(Array(m0, m1, m2, m3))
+
+  final case class mat3(mat: Array[Float]):
+    def apply(index: Int): Float = mat(index)
+    def update(i: Int, value: Float): Unit =
+      mat(i) = value
+    def update(i: Int, value: vec3): Unit =
+      mat(i + 0) = value.x
+      mat(i + 1) = value.y
+      mat(i + 2) = value.z
+  object mat3:
+    // format: off
+    def apply(
+      m0: Float, m1: Float, m2: Float,
+      m3: Float, m4: Float, m5: Float,
+      m6: Float, m7: Float, m8: Float,
+    ): mat3 =
+      mat3(
+        Array(
+          m0, m1, m2,
+          m3, m4, m5,
+          m6, m7, m8
+        )
+      )
+
+  final case class mat4(mat: Array[Float]):
+    def apply(index: Int): Float = mat(index)
+    def update(i: Int, value: Float): Unit =
+      mat(i) = value
+    def update(i: Int, value: vec4): Unit =
+      mat(i + 0) = value.x
+      mat(i + 1) = value.y
+      mat(i + 2) = value.z
+      mat(i + 3) = value.w
+  object mat4:
+    // format: off
+    def apply(
+       m0: Float,  m1: Float,  m2: Float,  m3: Float,
+       m4: Float,  m5: Float,  m6: Float,  m7: Float,
+       m8: Float,  m9: Float, m10: Float, m11: Float,
+      m12: Float, m13: Float, m14: Float, m15: Float,
+    ): mat4 =
+      mat4(
+        Array(
+           m0,  m1,  m2,  m3,
+           m4,  m5,  m6,  m7,
+           m8,  m9, m10, m11,
+          m12, m13, m14, m15,
+        )
+      )
