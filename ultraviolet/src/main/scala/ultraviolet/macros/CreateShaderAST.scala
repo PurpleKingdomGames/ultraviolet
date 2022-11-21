@@ -438,7 +438,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
       case Apply(
             Select(Ident(id), "update"),
             List(
-              Ident(index),
+              index,
               rhs
             )
           ) =>
