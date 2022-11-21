@@ -1,8 +1,8 @@
 package ultraviolet
 
 import ultraviolet.predef.shadertoy.*
-import ultraviolet.syntax.*
 import ultraviolet.shadertoyexamples.*
+import ultraviolet.syntax.*
 
 class ShaderToyTests extends munit.FunSuite {
 
@@ -55,7 +55,7 @@ class ShaderToyTests extends munit.FunSuite {
 
   test("Real example: Seascape") {
     // Image
-    // DebugAST.toAST(Plasma.image)
+    // DebugAST.toAST(Seascape.image)
     // println(actual)
     assertEquals(Seascape.imageShader, Seascape.imageExpected)
   }
