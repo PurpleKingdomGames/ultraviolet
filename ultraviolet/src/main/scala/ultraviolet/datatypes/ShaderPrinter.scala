@@ -162,6 +162,16 @@ object ShaderPrinter:
           List("""}""")
         ).flatten
 
+      case For(init, cond, next, body) =>
+        val i = render(init).mkString
+        val c = render(cond).mkString
+        val n = render(next).mkString
+        List(
+          List(s"""for($i;$c;$n){"""),
+          render(body).map(addIndent),
+          List("""}""")
+        ).flatten
+
       case Switch(on, cases) =>
         val cs =
           cases.flatMap {

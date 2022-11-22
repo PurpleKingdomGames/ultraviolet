@@ -20,6 +20,7 @@ trait ShaderMacroUtils:
     case v: ShaderAST.Assign            => findReturnType(v.right)
     case v: ShaderAST.If                => None
     case v: ShaderAST.While             => None
+    case v: ShaderAST.For               => None
     case v: ShaderAST.Switch            => None
     case v: ShaderAST.Val               => findReturnType(v.value)
     case v: ShaderAST.Annotated         => findReturnType(v.value)
