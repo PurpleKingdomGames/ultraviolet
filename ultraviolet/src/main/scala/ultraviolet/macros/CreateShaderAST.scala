@@ -333,6 +333,40 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
       case Apply(Select(Ident("RawGLSL"), "apply"), List(term)) =>
         walkTerm(term, envVarName)
 
+      // For loops
+
+      case Apply(
+            Apply(
+              TypeApply(Ident("cfor"), _),
+              List(
+                initial,
+                Block(
+                  List(DefDef("$anonfun", _, _, Some(condition))),
+                  Closure(Ident("$anonfun"), None)
+                ),
+                Block(
+                  List(DefDef("$anonfun", _, _, Some(next))),
+                  Closure(Ident("$anonfun"), None)
+                )
+              )
+            ),
+            List(
+              Block(
+                Nil,
+                Block(
+                  List(DefDef("$anonfun", _, _, Some(body))),
+                  _
+                )
+              )
+            )
+          ) =>
+        ShaderAST.For(
+          walkTerm(initial, envVarName),
+          walkTerm(condition, envVarName),
+          walkTerm(next, envVarName),
+          walkTerm(body, envVarName)
+        )
+
       // Primitives
 
       case Apply(Select(Ident("vec2"), "apply"), args) =>

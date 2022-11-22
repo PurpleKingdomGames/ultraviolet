@@ -22,6 +22,7 @@ object ShaderAST:
         case v: Assign       => Expr(v)
         case v: If           => Expr(v)
         case v: While        => Expr(v)
+        case v: For          => Expr(v)
         case v: Switch       => Expr(v)
         case v: DataTypes    => Expr(v)
         case v: Val          => Expr(v)
@@ -159,6 +160,18 @@ object ShaderAST:
         '{ While(${ Expr(x.condition) }, ${ Expr(x.body) }) }
     }
 
+  final case class For(
+      initial: ShaderAST,
+      condition: ShaderAST,
+      next: ShaderAST,
+      body: ShaderAST
+  ) extends ShaderAST
+  object For:
+    given ToExpr[For] with {
+      def apply(x: For)(using Quotes): Expr[For] =
+        '{ For(${ Expr(x.initial) }, ${ Expr(x.condition) }, ${ Expr(x.next) }, ${ Expr(x.body) }) }
+    }
+
   final case class Switch(
       on: ShaderAST,
       cases: List[(Option[Int], ShaderAST)]
@@ -292,6 +305,7 @@ object ShaderAST:
               case Assign(l, r)               => rec(l :: r :: xs)
               case If(_, t, e)                => rec(t :: (e.toList ++ xs))
               case While(_, b)                => rec(b :: xs)
+              case For(_, _, _, b)            => rec(b :: xs)
               case Switch(_, cs)              => rec(cs.map(_._2) ++ xs)
               case Val(_, body, _)            => rec(body :: xs)
               case Annotated(_, _, body)      => rec(body :: xs)
@@ -331,6 +345,7 @@ object ShaderAST:
         case v @ Assign(l, r)                         => f(Assign(f(l), f(r)))
         case v @ If(c, t, e)                          => f(If(c, f(t), e.map(f)))
         case v @ While(c, b)                          => f(While(c, f(b)))
+        case v @ For(i, c, n, b)                      => f(For(i, c, n, f(b)))
         case v @ Switch(c, cs)                        => f(Switch(c, cs.map(p => p._1 -> f(p._2))))
         case v @ Val(id, value, typeOf)               => f(Val(id, f(value), typeOf))
         case v @ Annotated(id, param, value)          => f(Annotated(id, param, f(value)))
@@ -359,6 +374,7 @@ object ShaderAST:
         case Assign(_, _)                 => None
         case If(_, _, _)                  => None
         case While(_, _)                  => None
+        case For(_, _, _, _)              => None
         case Switch(_, _)                 => None
         case Val(id, value, typeOf)       => typeOf.map(t => ShaderAST.DataTypes.ident(t))
         case Annotated(_, _, value)       => value.typeIdent
