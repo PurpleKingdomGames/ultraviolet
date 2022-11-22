@@ -365,7 +365,7 @@ object ShaderPrinter:
         List(
           last.headOption
             .map { ss =>
-              (if returnType != "void" then "return " else "") + renderStatements(List(ss)).mkString
+              (if returnType != "void" then "return " else "") + renderStatements(List(ss)).mkString("\n")
             }
             .getOrElse("")
         )

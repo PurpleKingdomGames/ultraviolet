@@ -134,11 +134,11 @@ object Seascape:
         var tx: Float = 1000.0f
         var hx: Float = map(ori + dir * tx)
 
+        var res = 0.0f
         if (hx > 0.0f) {
           pOut = ori + dir * tx
-          tx
+          res = tx
         } else {
-
           var hm: Float   = map(ori + dir * tm)
           var tmid: Float = 0.0f
 
@@ -155,8 +155,9 @@ object Seascape:
             }
           }
 
-          tmid
+          res = tmid
         }
+        res
 
       def getPixel(coord: vec2, time: Float): vec3 = {
         var uv: vec2 = coord / env.iResolution.xy
@@ -296,13 +297,14 @@ object Seascape:
     |  float tm=0.0;
     |  float tx=1000.0;
     |  float hx=map(ori+(dir*tx));
+    |  float res=0.0;
     |  if(hx>0.0){
     |    pOut=ori+(dir*tx);
-    |    return tx;
+    |    res=tx;
     |  }else{
     |    float hm=map(ori+(dir*tm));
     |    float tmid=0.0;
-    |    for(0;(_$4)<NUM_STEPS;(_$5)+1){
+    |    for(int val1=0;val1<NUM_STEPS;val1=val1+1){
     |      tmid=mix(tm,tx,hm/(hm-hx));
     |      pOut=ori+(dir*tmid);
     |      float hmid=map(pOut);
@@ -314,8 +316,9 @@ object Seascape:
     |        hm=hmid;
     |      }
     |    }
-    |    return tmid;
+    |    res=tmid;
     |  }
+    |  return res;
     |}
     |vec3 getPixel(in vec2 coord,in float time){
     |  vec2 uv=coord/iResolution.xy;
