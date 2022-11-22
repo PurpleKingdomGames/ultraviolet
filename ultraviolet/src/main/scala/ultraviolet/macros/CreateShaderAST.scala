@@ -1,6 +1,7 @@
 package ultraviolet.macros
 
 import ultraviolet.datatypes.ShaderAST
+import ultraviolet.datatypes.ShaderError
 import ultraviolet.datatypes.UBODef
 import ultraviolet.datatypes.UBOField
 
@@ -81,13 +82,13 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
         ShaderAST.Empty()
 
       case Export(_, _) =>
-        throw new Exception("Shaders do not support exports.")
+        throw ShaderError.Unsupported("Shaders do not support exports.")
 
       case ClassDef(_, _, _, _, _) =>
-        throw new Exception("Shaders do not support classes.")
+        throw ShaderError.Unsupported("Shaders do not support classes.")
 
       case TypeDef(_, _) =>
-        throw new Exception("Shaders do not support fancy types.")
+        throw ShaderError.Unsupported("Shaders do not support fancy types. :-)")
 
       // Compose
       case ValDef(
@@ -220,7 +221,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
               )
 
       case DefDef(_, _, _, _) =>
-        throw new Exception("Unexpected def construction")
+        throw ShaderError.UnexpectedConstruction("Unexpected def construction")
 
       case t: Term =>
         walkTerm(t, envVarName)
@@ -240,7 +241,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
         ShaderAST.DataTypes.ident(name)
 
       case PackageClause(_, _) =>
-        throw new Exception("Shaders do not support packages.")
+        throw ShaderError.Unsupported("Shaders do not support packages.")
 
       case s: Statement =>
         walkStatement(s, envVarName)
@@ -588,7 +589,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
             )
 
           case _ =>
-            throw new Exception("Shaders do not support infix operator: " + op)
+            throw ShaderError.Unsupported("Shaders do not support infix operator: " + op)
 
       case Apply(Apply(Ident(op), List(l)), List(r)) =>
         op match
@@ -613,7 +614,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
             )
 
           case _ =>
-            throw new Exception("Shaders do not support infix operator: " + op)
+            throw ShaderError.Unsupported("Shaders do not support infix operator: " + op)
 
       //
 
@@ -788,7 +789,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
         ShaderAST.RawLiteral(raw)
 
       case Literal(constant) =>
-        throw new Exception("Shaders do not support constant type: " + constant.show)
+        throw ShaderError.Unsupported("Shaders do not support constant type: " + constant.show)
 
       // Refs
 
@@ -809,7 +810,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
         ShaderAST.DataTypes.closure(walkTerm(term, envVarName), typeRepr.map(_.toString))
 
       case Wildcard() =>
-        throw new Exception("Shaders do not support wildcards.")
+        throw ShaderError.Unsupported("Shaders do not support wildcards.")
 
       case Select(term, _) => // term, name
         walkTerm(term, envVarName)
@@ -817,16 +818,16 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
       // Unsupported (yet?)
 
       case This(_) =>
-        throw new Exception("Shaders do not support 'this'.")
+        throw new ShaderError.Unsupported("Shaders do not support references to 'this'.")
 
       case New(_) =>
-        throw new Exception("Shaders do not support 'new'.")
+        throw new ShaderError.Unsupported("Shaders do not support 'new' instances.")
 
       case NamedArg(_, _) =>
-        throw new Exception("Shaders do not support named args.")
+        throw new ShaderError.Unsupported("Shaders do not support named args.")
 
       case Super(_, _) =>
-        throw new Exception("Shaders do not support super.")
+        throw new ShaderError.Unsupported("Shaders do not support calls to super.")
 
       case Assign(lhs, rhs) =>
         ShaderAST.Assign(
@@ -860,25 +861,25 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
               (None, walkTerm(caseTerm, envVarName))
 
             case _ =>
-              throw new Exception("Shaders only support pattern matching on `Int` values or `_` wildcards.")
+              throw ShaderError.Unsupported("Shaders only support pattern matching on `Int` values or `_` wildcards.")
           }
 
         ShaderAST.Switch(walkTerm(term, envVarName), cs)
 
       case SummonFrom(_) =>
-        throw new Exception("Shaders do not support summoning.")
+        throw ShaderError.Unsupported("Shaders do not support summoning.")
 
       case Try(_, _, _) =>
-        throw new Exception("Shaders do not support try blocks.")
+        throw ShaderError.Unsupported("Shaders do not support try blocks.")
 
       case Return(_, _) =>
-        throw new Exception("Shaders do not support return statements.")
+        throw ShaderError.Unsupported("Shaders do not support return statements.")
 
       case Repeated(args, _) =>
         ShaderAST.Block(args.map(p => walkTerm(p, envVarName)))
 
       case SelectOuter(_, _, _) =>
-        throw new Exception("Shaders do not support outer selectors.")
+        throw ShaderError.Unsupported("Shaders do not support outer selectors.")
 
       case While(cond, body) =>
         ShaderAST.While(walkTerm(cond, envVarName), walkTerm(body, envVarName))

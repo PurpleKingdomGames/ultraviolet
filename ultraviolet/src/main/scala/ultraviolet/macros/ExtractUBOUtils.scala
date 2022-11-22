@@ -1,5 +1,6 @@
 package ultraviolet.macros
 
+import ultraviolet.datatypes.ShaderError
 import ultraviolet.datatypes.UBODef
 import ultraviolet.datatypes.UBOField
 
@@ -137,24 +138,6 @@ class ExtractUBOUtils[Q <: Quotes](using val qq: Q):
           Nil
       }
 
-    def findStatementsOf(ident: String): Statement => List[Term] =
-      case ValDef(_, _, _) =>
-        Nil
-
-      case x =>
-        throw new Exception(
-          s"findStatementsOf '$ident' failed at: " + Printer.TreeStructure.show(x)
-        )
-
-    def findTreesOf(ident: String): Tree => List[Term] =
-      case Inferred() =>
-        Nil
-
-      case x =>
-        throw new Exception(
-          s"findTreesOf '$ident' failed at: " + Printer.TreeStructure.show(x)
-        )
-
     def findTermsOf(ident: String): Term => List[Term] =
       // Match
       case res @ Inlined(Some(TypeApply(Ident(id), _)), _, t) if id == ident =>
@@ -167,7 +150,7 @@ class ExtractUBOUtils[Q <: Quotes](using val qq: Q):
         Nil
 
       case Block(ss, t) =>
-        ss.flatMap(findStatementsOf(ident)) ++ findTermsOf(ident)(t)
+        findTermsOf(ident)(t)
 
       case Ident(_) =>
         Nil
@@ -182,24 +165,10 @@ class ExtractUBOUtils[Q <: Quotes](using val qq: Q):
         findTermsOf(ident)(t)
 
       case TypeApply(t, ts) =>
-        findTermsOf(ident)(t) ++ ts.flatMap(findTreesOf(ident))
+        findTermsOf(ident)(t)
 
-      case x =>
-        throw new Exception(
-          s"findTermsOf '$ident' failed at: " + Printer.TreeStructure.show(x)
-        )
-
-    def walkUBOStatement: Statement => UBODef =
-      case x =>
-        throw new Exception(
-          "UBO Statement match failed at: " + Printer.TreeStructure.show(x)
-        )
-
-    def walkUBOTree: Tree => UBODef =
-      case x =>
-        throw new Exception(
-          "UBO Tree match failed at: " + Printer.TreeStructure.show(x)
-        )
+      case _ =>
+        Nil
 
     def walkUBOTerm: Term => UBODef =
       // Things to skip over
@@ -238,8 +207,6 @@ class ExtractUBOUtils[Q <: Quotes](using val qq: Q):
         walkUBOTerm(term)
 
       case x =>
-        throw new Exception(
-          "UBO Term match failed at: " + Printer.TreeStructure.show(x)
-        )
+        throw ShaderError.UBORead("UBO Term match failed at: " + Printer.TreeStructure.show(x))
 
     walkUBOTerm(uboTerm)

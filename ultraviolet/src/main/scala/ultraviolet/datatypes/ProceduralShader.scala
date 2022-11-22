@@ -30,8 +30,7 @@ object ProceduralShader:
 
       printer.isValid(inType, outType, headers, functions, body) match
         case ShaderValid.Invalid(reasons) =>
-          // throw new Exception(reason)
-          throw ShaderError.ValidationError("Shader failed to validate because: " + reasons.mkString("[", ", ", "]"))
+          throw ShaderError.Validation("Shader failed to validate because: " + reasons.mkString("[", ", ", "]"))
 
         case ShaderValid.Valid =>
           val renderedHeaders = headers.flatMap(ShaderPrinter.print).map(stripOutEnvName)

@@ -78,7 +78,7 @@ object ShaderPrinter:
         renderStatements(statements)
 
       case Function(id, args, body, returnType) if id.isEmpty =>
-        throw new Exception("Failed to render shader, unnamed function definition found.")
+        throw ShaderError.PrintError("Failed to render shader, unnamed function definition found.")
 
       case Function(id, args, fnBody, returnType) =>
         val statements =
@@ -191,7 +191,7 @@ object ShaderPrinter:
         ).flatten
 
       case c @ DataTypes.closure(body, typeOf) =>
-        throw new Exception("Closure found, this is probably an error: " + c)
+        throw ShaderError.PrintError("Closure found, this is probably an error: " + c)
 
       case DataTypes.ident(id) if id.endsWith(".length") =>
         List(s"$id()")
