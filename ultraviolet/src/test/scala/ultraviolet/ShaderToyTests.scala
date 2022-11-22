@@ -44,19 +44,19 @@ class ShaderToyTests extends munit.FunSuite {
   test("Real example: Plasma") {
     // Buffer A
     // DebugAST.toAST(Plasma.bufferA)
-    // println(actual)
+    // println(Plasma.bufferAShader)
     assertEquals(Plasma.bufferAShader, Plasma.bufferAExpected)
 
     // Image
     // DebugAST.toAST(Plasma.image)
-    // println(actual)
+    // println(Plasma.imageShader)
     assertEquals(Plasma.imageShader, Plasma.imageExpected)
   }
 
   test("Real example: Seascape") {
     // Image
     // DebugAST.toAST(Seascape.image)
-    // println(actual)
+    // println(Seascape.imageShader)
     assertEquals(Seascape.imageShader, Seascape.imageExpected)
   }
 
