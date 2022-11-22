@@ -468,11 +468,39 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
         ShaderAST.DataTypes.ident(s"-$name")
 
       case Select(Ident(namespace), name) =>
-        ShaderAST.DataTypes.ident(s"$namespace.$name")
+        envVarName match
+          case Some(value) if value == namespace =>
+            ShaderAST.DataTypes.ident(s"$name")
+
+          case _ =>
+            ShaderAST.DataTypes.ident(s"$namespace.$name")
+
+      // Read a field - but of something namespaced, negated, e.g. -position.x
+      case Select(Select(Ident(namespace), name), "unary_-") =>
+        envVarName match
+          case Some(value) if value == namespace =>
+            ShaderAST.DataTypes.ident(s"-$name")
+
+          case _ =>
+            ShaderAST.DataTypes.ident(s"-$namespace.$name")
 
       // Read a field - but of something namespaced, e.g. env.Position.x
       case Select(Select(Ident(namespace), name), field) =>
-        ShaderAST.DataTypes.ident(s"$namespace.$name.$field")
+        envVarName match
+          case Some(value) if value == namespace =>
+            ShaderAST.DataTypes.ident(s"$name.$field")
+
+          case _ =>
+            ShaderAST.DataTypes.ident(s"$namespace.$name.$field")
+
+      // Read a field - but of something namespaced, negated, e.g. -env.Position.x
+      case Select(Select(Select(Ident(namespace), name), field), "unary_-") =>
+        envVarName match
+          case Some(value) if value == namespace =>
+            ShaderAST.DataTypes.ident(s"-$name.$field")
+
+          case _ =>
+            ShaderAST.DataTypes.ident(s"-$namespace.$name.$field")
 
       // Native method call.
       case Apply(Ident(name), List(Inlined(None, Nil, Ident(defRef)))) =>
