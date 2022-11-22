@@ -579,6 +579,20 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
             val rt  = findReturnType(lhs)
             ShaderAST.Infix(op, lhs, rhs, rt)
 
+          case "%" =>
+            val lhs = walkTerm(term, envVarName)
+            val rhs = xs.headOption.map(tt => walkTerm(tt, envVarName)).getOrElse(ShaderAST.Empty())
+            val rt  = findReturnType(lhs)
+            ShaderAST.CallFunction(
+              "mod",
+              List(lhs, rhs),
+              List(
+                ShaderAST.DataTypes.ident("x"),
+                ShaderAST.DataTypes.ident("y")
+              ),
+              rt
+            )
+
           case _ =>
             throw new Exception("Shaders do not support infix operator: " + op)
 
@@ -589,6 +603,20 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
             val rhs = walkTerm(r, envVarName)
             val rt  = findReturnType(lhs)
             ShaderAST.Infix(op, lhs, rhs, rt)
+
+          case "%" =>
+            val lhs = walkTerm(l, envVarName)
+            val rhs = walkTerm(r, envVarName)
+            val rt  = findReturnType(lhs)
+            ShaderAST.CallFunction(
+              "mod",
+              List(lhs, rhs),
+              List(
+                ShaderAST.DataTypes.ident("x"),
+                ShaderAST.DataTypes.ident("y")
+              ),
+              rt
+            )
 
           case _ =>
             throw new Exception("Shaders do not support infix operator: " + op)

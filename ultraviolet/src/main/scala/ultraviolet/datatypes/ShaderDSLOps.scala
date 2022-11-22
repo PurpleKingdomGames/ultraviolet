@@ -101,6 +101,15 @@ trait ShaderDSLOps extends ShaderDSLTypeExtensions:
   def mix(x: vec4, y: vec4, a: vec4): vec4     = vec4(0.0f)
   def mix(x: vec4, y: vec4, a: Float): vec4    = vec4(0.0f)
 
+  // https://registry.khronos.org/OpenGL-Refpages/gl4/html/mod.xhtml
+  def mod(x: Float, y: Float): Float = x - (y * Math.floor(x / y).toFloat)
+  def mod(x: vec2, y: vec2): vec2    = vec2(mod(x.x, y.x), mod(x.y, y.y))
+  def mod(x: vec2, y: Float): vec2   = vec2(mod(x.x, y), mod(x.y, y))
+  def mod(x: vec3, y: vec3): vec3    = vec3(mod(x.x, y.x), mod(x.y, y.y), mod(x.z, y.z))
+  def mod(x: vec3, y: Float): vec3   = vec3(mod(x.x, y), mod(x.y, y), mod(x.z, y))
+  def mod(x: vec4, y: vec4): vec4    = vec4(mod(x.x, y.x), mod(x.y, y.y), mod(x.z, y.z), mod(x.w, y.w))
+  def mod(x: vec4, y: Float): vec4   = vec4(mod(x.x, y), mod(x.y, y), mod(x.z, y), mod(x.w, y))
+
   // https://registry.khronos.org/OpenGL-Refpages/gl4/html/normalize.xhtml
   def normalize(genType: Float): Float = 0.0f
   def normalize(genType: vec2): vec2   = vec2(0.0f)
