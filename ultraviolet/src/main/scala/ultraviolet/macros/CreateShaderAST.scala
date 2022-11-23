@@ -146,6 +146,19 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
             proxies.add(name, id, rt)
             ShaderAST.Empty()
 
+          case ShaderAST.If(cond, thn, els) =>
+            val rt = ShaderAST.DataTypes.ident(name)
+            ShaderAST.Block(
+              List(
+                ShaderAST.Val(name, ShaderAST.Empty(), typeOf),
+                ShaderAST.If(
+                  cond,
+                  ShaderAST.Assign(rt, thn),
+                  els.map(e => ShaderAST.Assign(rt, e))
+                )
+              )
+            )
+
           case _ =>
             maybeAnnotation match
               case None =>
@@ -199,6 +212,54 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
           case ShaderAST.Block(List(ShaderAST.FunctionRef(id, rt))) =>
             proxies.add(fn, id, rt)
             ShaderAST.Empty()
+
+          case ShaderAST.Block(statements :+ ShaderAST.If(cond, thn, els)) =>
+            val name   = proxies.makeVarName
+            val resVal = ShaderAST.DataTypes.ident(name)
+            val typeOf = extractInferredType(rt)
+            val fnBody =
+              ShaderAST.Block(
+                List(
+                  ShaderAST.Val(name, ShaderAST.Empty(), typeOf),
+                  ShaderAST.If(
+                    cond,
+                    ShaderAST.Assign(resVal, thn),
+                    els.map(e => ShaderAST.Assign(resVal, e))
+                  ),
+                  resVal
+                )
+              )
+
+            ShaderAST.Function(
+              fn,
+              argNamesTypes.map(p => ShaderAST.DataTypes.ident(p._1) -> p._2),
+              ShaderAST.Block(statements ++ fnBody.statements),
+              returnType
+            )
+
+          case ShaderAST.If(cond, thn, els) =>
+            val name   = proxies.makeVarName
+            val resVal = ShaderAST.DataTypes.ident(name)
+            val typeOf = extractInferredType(rt)
+            val fnBody =
+              ShaderAST.Block(
+                List(
+                  ShaderAST.Val(name, ShaderAST.Empty(), typeOf),
+                  ShaderAST.If(
+                    cond,
+                    ShaderAST.Assign(resVal, thn),
+                    els.map(e => ShaderAST.Assign(resVal, e))
+                  ),
+                  resVal
+                )
+              )
+
+            ShaderAST.Function(
+              fn,
+              argNamesTypes.map(p => ShaderAST.DataTypes.ident(p._1) -> p._2),
+              fnBody,
+              returnType
+            )
 
           case _ =>
             shaderDefs += FunctionLookup(

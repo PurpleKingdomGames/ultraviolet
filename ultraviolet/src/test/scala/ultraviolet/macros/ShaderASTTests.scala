@@ -466,6 +466,82 @@ class ShaderASTTests extends munit.FunSuite {
     )
   }
 
+  test("if statements can be used to set vals") {
+    inline def fragment =
+      Shader[FragEnv, Int] { _ =>
+        val x: Int = 1
+        val y      = if x <= 10 then 15 else 20
+        y + 2
+      }
+
+    val actual =
+      fragment.toGLSL[WebGL2]
+
+    // DebugAST.toAST(fragment)
+    // println(actual)
+
+    assertEquals(
+      actual,
+      s"""
+      |int x=1;
+      |int y;
+      |if(x<=10){
+      |  y=15;
+      |}else{
+      |  y=20;
+      |}
+      |y+2;
+      |""".stripMargin.trim
+    )
+  }
+
+  test("if statements can be used to return functions") {
+    inline def fragment =
+      Shader[FragEnv, Int] { _ =>
+        def p1(x: Int): Int =
+          if x <= 10 then 15 else 20
+        p1(1)
+
+        def p2(x: Int): Int =
+          val amount = 10 // Forces a Block in the function body.
+          if x <= amount then 15 else 20
+        p2(1)
+      }
+
+    val actual =
+      fragment.toGLSL[WebGL2]
+
+    // DebugAST.toAST(fragment)
+    // println(actual)
+
+    assertEquals(
+      actual,
+      s"""
+      |int p1(in int x){
+      |  int val0;
+      |  if(x<=10){
+      |    val0=15;
+      |  }else{
+      |    val0=20;
+      |  }
+      |  return val0;
+      |}
+      |p1(1);
+      |int p2(in int x){
+      |  int amount=10;
+      |  int val1;
+      |  if(x<=amount){
+      |    val1=15;
+      |  }else{
+      |    val1=20;
+      |  }
+      |  return val1;
+      |}
+      |p2(1);
+      |""".stripMargin.trim
+    )
+  }
+
   test("casting") {
     inline def fragment: Shader[FragEnv, Float] =
       Shader { _ =>

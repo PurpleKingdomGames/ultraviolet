@@ -35,7 +35,7 @@ Just writing these down during the development process, mostly for me! They may 
 - GLSL supports for loops, but we have no way to represent the traditional 'for loop' in Scala, and 'for expressions' are pure syntactic sugar. So no for loops.
 - Imports work for free, but only if the things you're importing are inlined, which comes with the usual caveats.
 - Pattern matching emulates switch statements, but they are side effecting, not used for setting `val`s.
-- If statements are side effecting and cannot set a variable or function return type.
+- Unlike in GLSL, if statements can be used to return values and functions.
 - Although Ultraviolet is based on GLSL 300, I've kept `texture2D` and `textureCube` from WebGL 1.0 and it is rewritten to `texture` for WebGL 2.0. This allows us to be more specific on the API.
 - Preprocessor directives largely don't exist, but `#define` supported for special cases where you need to define a global value based on a non-constant value.
 - Ultraviolet supports the % operator where GLSL does not.
