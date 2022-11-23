@@ -471,7 +471,10 @@ class ShaderASTTests extends munit.FunSuite {
       Shader[FragEnv, Int] { _ =>
         val x: Int = 1
         val y      = if x <= 10 then 15 else 20
-        y + 2
+        val z =
+          val amount = 15
+          if x <= 10 then amount else 20
+        y + z
       }
 
     val actual =
@@ -490,7 +493,14 @@ class ShaderASTTests extends munit.FunSuite {
       |}else{
       |  y=20;
       |}
-      |y+2;
+      |int amount=15;
+      |int z;
+      |if(x<=10){
+      |  z=amount;
+      |}else{
+      |  z=20;
+      |}
+      |y+z;
       |""".stripMargin.trim
     )
   }
@@ -613,6 +623,102 @@ class ShaderASTTests extends munit.FunSuite {
       |    break;
       |}
       |res;
+      |""".stripMargin.trim
+    )
+  }
+
+  test("pattern matching can set a val") {
+
+    inline def fragment =
+      Shader[FragEnv, Int] { _ =>
+        val flag: Int = 2
+
+        val res1: Int = flag match
+          case 0 => 10
+          case 1 => 20
+          case 2 => 30
+          case _ => -100
+
+        val res2: Int = flag match
+          case 0 => 10
+          case 1 => 20
+          case 2 =>
+            val amount = 30
+            amount + 1
+          case _ => -100
+
+        val res3: Int =
+          val zeroRes = 10
+          flag match
+            case 0 => zeroRes
+            case 1 => 20
+            case 2 =>
+              val amount = 30
+              amount + 1
+            case _ => -100
+
+        res1 + res2 + res3
+      }
+
+    val actual =
+      fragment.toGLSL[WebGL2]
+
+    // DebugAST.toAST(fragment)
+    // println(actual)
+
+    assertEquals(
+      actual,
+      s"""
+      |int flag=2;
+      |int res1;
+      |switch(flag){
+      |  case 0:
+      |    res1=10;
+      |    break;
+      |  case 1:
+      |    res1=20;
+      |    break;
+      |  case 2:
+      |    res1=30;
+      |    break;
+      |  default:
+      |    res1=-100;
+      |    break;
+      |}
+      |int res2;
+      |switch(flag){
+      |  case 0:
+      |    res2=10;
+      |    break;
+      |  case 1:
+      |    res2=20;
+      |    break;
+      |  case 2:
+      |    int amount=30;
+      |    res2=amount+1;
+      |    break;
+      |  default:
+      |    res2=-100;
+      |    break;
+      |}
+      |int zeroRes=10;
+      |int res3;
+      |switch(flag){
+      |  case 0:
+      |    res3=zeroRes;
+      |    break;
+      |  case 1:
+      |    res3=20;
+      |    break;
+      |  case 2:
+      |    int amount=30;
+      |    res3=amount+1;
+      |    break;
+      |  default:
+      |    res3=-100;
+      |    break;
+      |}
+      |(res1+res2)+res3;
       |""".stripMargin.trim
     )
   }
