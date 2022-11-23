@@ -727,6 +727,83 @@ class ShaderASTTests extends munit.FunSuite {
     )
   }
 
+  test("pattern matching can be used to return a function") {
+
+    inline def fragment =
+      Shader[FragEnv, Int] { _ =>
+        def p1(flag: Int): Int =
+          flag match
+            case 0 => 10
+            case 1 => 20
+            case 2 => 30
+            case _ => -100
+        p1(2)
+
+        def p2(flag: Int): Int =
+          val amount = 5 // Forces the function body to be a Block
+          flag match
+            case 0 => amount
+            case 1 => 20
+            case 2 =>
+              val thirty = 30
+              thirty
+            case _ => -100
+        p2(1)
+      }
+
+    val actual =
+      fragment.toGLSL[WebGL2]
+
+    // DebugAST.toAST(fragment)
+    // println(actual)
+
+    assertEquals(
+      actual,
+      s"""
+      |int p1(in int flag){
+      |  int val0;
+      |  switch(flag){
+      |    case 0:
+      |      val0=10;
+      |      break;
+      |    case 1:
+      |      val0=20;
+      |      break;
+      |    case 2:
+      |      val0=30;
+      |      break;
+      |    default:
+      |      val0=-100;
+      |      break;
+      |  }
+      |  return val0;
+      |}
+      |p1(2);
+      |int p2(in int flag){
+      |  int amount=5;
+      |  int val1;
+      |  switch(flag){
+      |    case 0:
+      |      val1=amount;
+      |      break;
+      |    case 1:
+      |      val1=20;
+      |      break;
+      |    case 2:
+      |      int thirty=30;
+      |      val1=thirty;
+      |      break;
+      |    default:
+      |      val1=-100;
+      |      break;
+      |  }
+      |  return val1;
+      |}
+      |p2(1);
+      |""".stripMargin.trim
+    )
+  }
+
   test("while loops") {
 
     @SuppressWarnings(Array("scalafix:DisableSyntax.var", "scalafix:DisableSyntax.while"))

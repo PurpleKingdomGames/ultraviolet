@@ -286,6 +286,31 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
               returnType
             )
 
+          case ShaderAST.Block(statements :+ ShaderAST.Switch(on, cases)) =>
+            val name   = proxies.makeVarName
+            val resVal = ShaderAST.DataTypes.ident(name)
+            val typeOf = extractInferredType(rt)
+            val fnBody =
+              ShaderAST.Block(
+                List(
+                  ShaderAST.Val(name, ShaderAST.Empty(), typeOf),
+                  ShaderAST.Switch(
+                    on,
+                    cases.map { case (i, c) =>
+                      i -> assignToLast(resVal)(c)
+                    }
+                  ),
+                  resVal
+                )
+              )
+
+            ShaderAST.Function(
+              fn,
+              argNamesTypes.map(p => ShaderAST.DataTypes.ident(p._1) -> p._2),
+              ShaderAST.Block(statements ++ fnBody.statements),
+              returnType
+            )
+
           case ShaderAST.If(cond, thn, els) =>
             val name   = proxies.makeVarName
             val resVal = ShaderAST.DataTypes.ident(name)
@@ -298,6 +323,31 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
                     cond,
                     assignToLast(resVal)(thn),
                     els.map(e => assignToLast(resVal)(e))
+                  ),
+                  resVal
+                )
+              )
+
+            ShaderAST.Function(
+              fn,
+              argNamesTypes.map(p => ShaderAST.DataTypes.ident(p._1) -> p._2),
+              fnBody,
+              returnType
+            )
+
+          case ShaderAST.Switch(on, cases) =>
+            val name   = proxies.makeVarName
+            val resVal = ShaderAST.DataTypes.ident(name)
+            val typeOf = extractInferredType(rt)
+            val fnBody =
+              ShaderAST.Block(
+                List(
+                  ShaderAST.Val(name, ShaderAST.Empty(), typeOf),
+                  ShaderAST.Switch(
+                    on,
+                    cases.map { case (i, c) =>
+                      i -> assignToLast(resVal)(c)
+                    }
                   ),
                   resVal
                 )
