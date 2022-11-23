@@ -41,3 +41,9 @@ object ProceduralShader:
 
     def exists(q: ShaderAST): Boolean =
       p.main.exists(q) || p.defs.exists(_.exists(q))
+
+    def find(q: ShaderAST => Boolean): Option[ShaderAST] =
+      p.main.find(q).orElse(p.defs.find(_.find(q).isDefined))
+
+    def findAll(q: ShaderAST => Boolean): List[ShaderAST] =
+      p.main.findAll(q) ++ p.defs.flatMap(_.findAll(q))

@@ -331,6 +331,45 @@ object ShaderAST:
 
       rec(List(ast))
 
+    def findAll(p: ShaderAST => Boolean): List[ShaderAST] =
+      @tailrec
+      def rec(remaining: List[ShaderAST], acc: List[ShaderAST]): List[ShaderAST] =
+        remaining match
+          case Nil => acc.reverse
+          case x :: xs =>
+            x match
+              case v if p(v)                  => rec(xs, v :: acc)
+              case Empty()                    => rec(xs, acc)
+              case Block(s)                   => rec(s ++ xs, acc)
+              case ShaderBlock(_, _, _, _, s) => rec(s ++ xs, acc)
+              case Function(_, _, body, _)    => rec(body :: xs, acc)
+              case CallFunction(_, _, _, _)   => rec(xs, acc)
+              case FunctionRef(_, _)          => rec(xs, acc)
+              case Cast(v, _)                 => rec(v :: xs, acc)
+              case Infix(_, l, r, _)          => rec(l :: r :: xs, acc)
+              case Assign(l, r)               => rec(l :: r :: xs, acc)
+              case If(_, t, e)                => rec(t :: (e.toList ++ xs), acc)
+              case While(_, b)                => rec(b :: xs, acc)
+              case For(_, _, _, b)            => rec(b :: xs, acc)
+              case Switch(_, cs)              => rec(cs.map(_._2) ++ xs, acc)
+              case Val(_, body, _)            => rec(body :: xs, acc)
+              case Annotated(_, _, body)      => rec(body :: xs, acc)
+              case RawLiteral(_)              => rec(xs, acc)
+              case v: DataTypes.ident         => rec(xs, acc)
+              case v: DataTypes.index         => rec(xs, acc)
+              case v: DataTypes.float         => rec(xs, acc)
+              case v: DataTypes.int           => rec(xs, acc)
+              case v: DataTypes.vec2          => rec(v.args ++ xs, acc)
+              case v: DataTypes.vec3          => rec(v.args ++ xs, acc)
+              case v: DataTypes.vec4          => rec(v.args ++ xs, acc)
+              case v: DataTypes.mat2          => rec(v.args ++ xs, acc)
+              case v: DataTypes.mat3          => rec(v.args ++ xs, acc)
+              case v: DataTypes.mat4          => rec(v.args ++ xs, acc)
+              case v: DataTypes.array         => rec(xs, acc)
+              case v: DataTypes.swizzle       => rec(v.genType :: xs, acc)
+
+      rec(List(ast), Nil)
+
     def prune: ShaderAST =
       def crush(statements: ShaderAST): ShaderAST =
         statements match
