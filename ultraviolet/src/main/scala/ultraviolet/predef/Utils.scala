@@ -1,15 +1,15 @@
-package ultraviolet.predef.utils
+package ultraviolet.predef
 
 import ultraviolet.syntax.*
 
 object Utils:
 
-  def hash(x: vec2): vec2 =
+  inline def hash: vec2 => vec2 = x =>
     val k  = vec2(0.3183099, 0.3678794)
     val xx = x * k + k.yx
     -1.0f + 2.0f * fract(16.0f * k * fract(xx.x * xx.y * (xx.x + xx.y)))
 
-  def calcNoise(p: vec2): vec3 =
+  inline def calcNoise: vec2 => vec3 = p =>
     val i: vec2  = floor(p)
     val f: vec2  = fract(p)
     val u: vec2  = f * f * (3.0f - 2.0f * f)
