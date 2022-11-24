@@ -28,7 +28,7 @@ class ShaderASTTests extends munit.FunSuite {
     )
   }
 
-  test("Inlined external val") {
+  test("Inlined external def") {
 
     inline def alpha: Float = 1.0f
 
@@ -47,7 +47,7 @@ class ShaderASTTests extends munit.FunSuite {
     assert(clue(actual) == clue("vec4(1.0,1.0,0.0,1.0);"))
   }
 
-  test("Inlined external val (as def)") {
+  test("Inlined external non-primitive (as def)") {
 
     inline def zw: vec2 = vec2(0.0f, 1.0f)
 
