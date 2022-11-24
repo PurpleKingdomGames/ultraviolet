@@ -440,14 +440,6 @@ object ShaderAST:
         case DataTypes.array(_, typeOf) => typeOf.map(t => ShaderAST.DataTypes.ident(t + "[]"))
         case DataTypes.swizzle(v, _, _) => v.typeIdent
 
-    def envVarName: Option[String] =
-      ast match
-        case ShaderBlock(_, _, env, _, _) =>
-          env
-
-        case _ =>
-          None
-
     def headers: List[ShaderAST] =
       ast match
         case ShaderBlock(_, _, _, headers, _) =>

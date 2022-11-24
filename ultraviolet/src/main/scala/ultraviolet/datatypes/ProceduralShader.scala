@@ -17,11 +17,6 @@ object ProceduralShader:
     inline def render[T](using printer: ShaderPrinter[T]): String =
       import ShaderAST.*
 
-      def stripOutEnvName(content: String): String =
-        p.main.envVarName match
-          case None       => content
-          case Some(name) => content.replace(name + ".", "").replace(name, "")
-
       val inType    = p.main.inType
       val outType   = p.main.outType
       val headers   = p.main.headers
@@ -33,9 +28,9 @@ object ProceduralShader:
           throw ShaderError.Validation("Shader failed to validate because: " + reasons.mkString("[", ", ", "]"))
 
         case ShaderValid.Valid =>
-          val renderedHeaders = headers.flatMap(ShaderPrinter.print).map(stripOutEnvName)
-          val renderedDefs    = functions.map(d => ShaderPrinter.print(d).mkString("\n")).map(stripOutEnvName)
-          val renderedBody    = ShaderPrinter.print(body).map(stripOutEnvName)
+          val renderedHeaders = headers.flatMap(ShaderPrinter.print)
+          val renderedDefs    = functions.map(d => ShaderPrinter.print(d).mkString("\n"))
+          val renderedBody    = ShaderPrinter.print(body)
 
           (renderedHeaders ++ renderedDefs ++ renderedBody).mkString("\n").trim
 
