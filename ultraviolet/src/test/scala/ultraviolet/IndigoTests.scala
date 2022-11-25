@@ -1,7 +1,6 @@
 package ultraviolet
 
 import ultraviolet.indigoexamples.*
-import ultraviolet.predef.shadertoy.*
 import ultraviolet.syntax.*
 
 class IndigoTests extends munit.FunSuite {

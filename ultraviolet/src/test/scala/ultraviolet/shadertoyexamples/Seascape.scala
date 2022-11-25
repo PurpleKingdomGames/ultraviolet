@@ -1,6 +1,6 @@
 package ultraviolet.shadertoyexamples
 
-import ultraviolet.predef.shadertoy.*
+import ultraviolet.shadertoy.*
 import ultraviolet.syntax.*
 
 @SuppressWarnings(Array("scalafix:DisableSyntax.var", "scalafix:DisableSyntax.null"))
@@ -191,7 +191,7 @@ object Seascape:
         vec4(pow(color, vec3(0.65f)), 1.0f)
     }
 
-  val imageShader = image.toGLSL[ShaderToy]
+  val imageShader = image.toGLSL[ShaderToy].code
 
   val imageExpected: String =
     """

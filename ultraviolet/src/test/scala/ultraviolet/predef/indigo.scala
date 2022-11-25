@@ -5,6 +5,9 @@ import ultraviolet.datatypes.ShaderPrinter
 import ultraviolet.datatypes.ShaderValid
 import ultraviolet.syntax.*
 
+/** This is an example of what an Indigo shader could look like based on the pre-ultraviolet set up, it's just for
+  * testing.
+  */
 object indigo:
 
   final case class IndigoVertexEnv(

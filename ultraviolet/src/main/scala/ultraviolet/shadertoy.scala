@@ -1,4 +1,4 @@
-package ultraviolet.predef
+package ultraviolet
 
 import ultraviolet.datatypes.ShaderAST
 import ultraviolet.datatypes.ShaderPrinter

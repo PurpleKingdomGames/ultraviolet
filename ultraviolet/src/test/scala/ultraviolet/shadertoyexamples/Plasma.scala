@@ -1,6 +1,6 @@
 package ultraviolet.shadertoyexamples
 
-import ultraviolet.predef.shadertoy.*
+import ultraviolet.shadertoy.*
 import ultraviolet.syntax.*
 
 object Plasma:
@@ -17,7 +17,7 @@ object Plasma:
         vec4(0.5f + 0.5f * cs, 1.0f)
     }
 
-  val bufferAShader = bufferA.toGLSL[ShaderToy]
+  val bufferAShader = bufferA.toGLSL[ShaderToy].code
 
   val bufferAExpected: String =
     """
@@ -49,7 +49,7 @@ object Plasma:
         texture2D(env.iChannel0, vec2(fract(sum), 0))
     }
 
-  val imageShader = image.toGLSL[ShaderToy]
+  val imageShader = image.toGLSL[ShaderToy].code
 
   val imageExpected: String =
     """
