@@ -39,6 +39,28 @@ trait ShaderDSLOps extends ShaderDSLTypeExtensions:
   def abs(x: vec3): vec3   = vec3(abs(x.x), abs(x.y), abs(x.z))
   def abs(x: vec4): vec4   = vec4(abs(x.x), abs(x.y), abs(x.z), abs(x.w))
 
+  // https://registry.khronos.org/OpenGL-Refpages/gl4/html/acos.xhtml
+  def acos(x: Float): Float = Math.acos(x.toDouble).toFloat
+  def acos(x: vec2): vec2   = vec2(acos(x.x), acos(x.y))
+  def acos(x: vec3): vec3   = vec3(acos(x.x), acos(x.y), acos(x.z))
+  def acos(x: vec4): vec4   = vec4(acos(x.x), acos(x.y), acos(x.z), acos(x.w))
+
+  // https://registry.khronos.org/OpenGL-Refpages/gl4/html/all.xhtml
+  def all(x: bvec2): Boolean = x.x && x.y
+  def all(x: bvec3): Boolean = x.x && x.y && x.z
+  def all(x: bvec4): Boolean = x.x && x.y && x.z && x.w
+
+  // https://registry.khronos.org/OpenGL-Refpages/gl4/html/any.xhtml
+  def any(x: bvec2): Boolean = x.x || x.y
+  def any(x: bvec3): Boolean = x.x || x.y || x.z
+  def any(x: bvec4): Boolean = x.x || x.y || x.z || x.w
+
+  // https://registry.khronos.org/OpenGL-Refpages/gl4/html/asin.xhtml
+  def asin(x: Float): Float = Math.asin(x.toDouble).toFloat
+  def asin(x: vec2): vec2   = vec2(asin(x.x), asin(x.y))
+  def asin(x: vec3): vec3   = vec3(asin(x.x), asin(x.y), asin(x.z))
+  def asin(x: vec4): vec4   = vec4(asin(x.x), asin(x.y), asin(x.z), asin(x.w))
+
   // https://registry.khronos.org/OpenGL-Refpages/gl4/html/atan.xhtml
   def atan(y: Float, x: Float): Float = atan(y / x)
   def atan(y: vec2, x: vec2): vec2    = vec2(atan(y.x / x.x), atan(y.y / x.y))
@@ -78,6 +100,27 @@ trait ShaderDSLOps extends ShaderDSLTypeExtensions:
     val c = x.x * y.y - y.x * x.y
     a * b * c
 
+  // https://registry.khronos.org/OpenGL-Refpages/gl4/html/degrees.xhtml
+  def degrees(radians: Float): Float = ((180.0 * radians) / Math.PI).toFloat
+  def degrees(radians: vec2): vec2   = vec2(degrees(radians.x), degrees(radians.y))
+  def degrees(radians: vec3): vec3   = vec3(degrees(radians.x), degrees(radians.y), degrees(radians.z))
+  def degrees(radians: vec4): vec4 =
+    vec4(degrees(radians.x), degrees(radians.y), degrees(radians.z), degrees(radians.w))
+
+  // STUB
+  // https://registry.khronos.org/OpenGL-Refpages/gl4/html/dFdx.xhtml
+  def dFdx(x: Float): Float = 0.0f
+  def dFdx(x: vec2): vec2   = vec2(0.0f)
+  def dFdx(x: vec3): vec3   = vec3(0.0f)
+  def dFdx(x: vec4): vec4   = vec4(0.0f)
+
+  // STUB
+  // https://registry.khronos.org/OpenGL-Refpages/gl4/html/dFdy.xhtml
+  def dFdy(x: Float): Float = 0.0f
+  def dFdy(x: vec2): vec2   = vec2(0.0f)
+  def dFdy(x: vec3): vec3   = vec3(0.0f)
+  def dFdy(x: vec4): vec4   = vec4(0.0f)
+
   // https://registry.khronos.org/OpenGL-Refpages/gl4/html/distance.xhtml
   def distance(x: Float, y: Float): Float = length(x - y)
   def distance(x: vec2, y: vec2): Float   = length(x - y)
@@ -89,6 +132,32 @@ trait ShaderDSLOps extends ShaderDSLTypeExtensions:
   def dot(x: vec2, y: vec2): Float   = x.x * y.x + x.y * y.y
   def dot(x: vec3, y: vec3): Float   = x.x * y.x + x.y * y.y + x.z * y.z
   def dot(x: vec4, y: vec4): Float   = x.x * y.x + x.y * y.y + x.z * y.z + x.w * y.w
+
+  // https://registry.khronos.org/OpenGL-Refpages/gl4/html/equal.xhtml
+  def equal(x: vec2, y: vec2): bvec2   = bvec2(x.x == y.x, x.y == y.y)
+  def equal(x: vec3, y: vec3): bvec3   = bvec3(x.x == y.x, x.y == y.y, x.z == y.z)
+  def equal(x: vec4, y: vec4): bvec4   = bvec4(x.x == y.x, x.y == y.y, x.z == y.z, x.w == y.w)
+  def equal(x: ivec2, y: ivec2): bvec2 = bvec2(x.x == y.x, x.y == y.y)
+  def equal(x: ivec3, y: ivec3): bvec3 = bvec3(x.x == y.x, x.y == y.y, x.z == y.z)
+  def equal(x: ivec4, y: ivec4): bvec4 = bvec4(x.x == y.x, x.y == y.y, x.z == y.z, x.w == y.w)
+
+  // https://registry.khronos.org/OpenGL-Refpages/gl4/html/exp.xhtml
+  def exp(x: Float): Float = Math.exp(x.toDouble).toFloat
+  def exp(x: vec2): vec2   = vec2(exp(x.x), exp(x.y))
+  def exp(x: vec3): vec3   = vec3(exp(x.x), exp(x.y), exp(x.z))
+  def exp(x: vec4): vec4   = vec4(exp(x.x), exp(x.y), exp(x.z), exp(x.w))
+
+  // https://registry.khronos.org/OpenGL-Refpages/gl4/html/exp2.xhtml
+  def exp2(x: Float): Float = Math.pow(x.toDouble, 2.0).toFloat
+  def exp2(x: vec2): vec2   = vec2(exp2(x.x), exp2(x.y))
+  def exp2(x: vec3): vec3   = vec3(exp2(x.x), exp2(x.y), exp2(x.z))
+  def exp2(x: vec4): vec4   = vec4(exp2(x.x), exp2(x.y), exp2(x.z), exp2(x.w))
+
+  // https://registry.khronos.org/OpenGL-Refpages/gl4/html/faceforward.xhtml
+  def faceforwad(n: Float, i: Float, nRef: Float): Float = if dot(nRef, i) < 0 then n else -n
+  def faceforwad(n: vec2, i: vec2, nRef: vec2): vec2     = if dot(nRef, i) < 0 then n else -n
+  def faceforwad(n: vec3, i: vec3, nRef: vec3): vec3     = if dot(nRef, i) < 0 then n else -n
+  def faceforwad(n: vec4, i: vec4, nRef: vec4): vec4     = if dot(nRef, i) < 0 then n else -n
 
   // https://registry.khronos.org/OpenGL-Refpages/gl4/html/floor.xhtml
   def floor(x: Float): Float = Math.floor(x).toFloat
@@ -102,12 +171,181 @@ trait ShaderDSLOps extends ShaderDSLTypeExtensions:
   def fract(x: vec3): vec3   = x - floor(x)
   def fract(x: vec4): vec4   = x - floor(x)
 
+  // https://registry.khronos.org/OpenGL-Refpages/gl4/html/fwidth.xhtml
+  def fwidth(p: Float): Float = abs(dFdx(p)) + abs(dFdy(p))
+  def fwidth(p: vec2): vec2   = abs(dFdx(p)) + abs(dFdy(p))
+  def fwidth(p: vec3): vec3   = abs(dFdx(p)) + abs(dFdy(p))
+  def fwidth(p: vec4): vec4   = abs(dFdx(p)) + abs(dFdy(p))
+
+  // https://registry.khronos.org/OpenGL-Refpages/gl4/html/greaterThan.xhtml
+  def greaterThan(x: vec2, y: vec2): bvec2   = bvec2(x.x > y.x, x.y > y.y)
+  def greaterThan(x: vec3, y: vec3): bvec3   = bvec3(x.x > y.x, x.y > y.y, x.z > y.z)
+  def greaterThan(x: vec4, y: vec4): bvec4   = bvec4(x.x > y.x, x.y > y.y, x.z > y.z, x.w > y.w)
+  def greaterThan(x: ivec2, y: ivec2): bvec2 = bvec2(x.x > y.x, x.y > y.y)
+  def greaterThan(x: ivec3, y: ivec3): bvec3 = bvec3(x.x > y.x, x.y > y.y, x.z > y.z)
+  def greaterThan(x: ivec4, y: ivec4): bvec4 = bvec4(x.x > y.x, x.y > y.y, x.z > y.z, x.w > y.w)
+
+  // https://registry.khronos.org/OpenGL-Refpages/gl4/html/greaterThanEqual.xhtml
+  def greaterThanEqual(x: vec2, y: vec2): bvec2   = bvec2(x.x >= y.x, x.y >= y.y)
+  def greaterThanEqual(x: vec3, y: vec3): bvec3   = bvec3(x.x >= y.x, x.y >= y.y, x.z >= y.z)
+  def greaterThanEqual(x: vec4, y: vec4): bvec4   = bvec4(x.x >= y.x, x.y >= y.y, x.z >= y.z, x.w >= y.w)
+  def greaterThanEqual(x: ivec2, y: ivec2): bvec2 = bvec2(x.x >= y.x, x.y >= y.y)
+  def greaterThanEqual(x: ivec3, y: ivec3): bvec3 = bvec3(x.x >= y.x, x.y >= y.y, x.z >= y.z)
+  def greaterThanEqual(x: ivec4, y: ivec4): bvec4 = bvec4(x.x >= y.x, x.y >= y.y, x.z >= y.z, x.w >= y.w)
+
+  // https://registry.khronos.org/OpenGL-Refpages/gl4/html/inversesqrt.xhtml
+  def inversesqrt(x: Float): Float = 1.0f / sqrt(x)
+  def inversesqrt(x: vec2): vec2   = 1.0f / sqrt(x)
+  def inversesqrt(x: vec3): vec3   = 1.0f / sqrt(x)
+  def inversesqrt(x: vec4): vec4   = 1.0f / sqrt(x)
+
   // https://registry.khronos.org/OpenGL-Refpages/gl4/html/length.xhtml
   def length(x: Float): Float = Math.sqrt(Math.pow(x, 2.0f)).toFloat
   def length(x: vec2): Float  = Math.sqrt(Math.pow(x.x, 2.0f) + Math.pow(x.y, 2.0f)).toFloat
   def length(x: vec3): Float  = Math.sqrt(Math.pow(x.x, 2.0f) + Math.pow(x.y, 2.0f) + Math.pow(x.z, 2.0f)).toFloat
   def length(x: vec4): Float =
     Math.sqrt(Math.pow(x.x, 2.0f) + Math.pow(x.y, 2.0f) + Math.pow(x.z, 2.0f) + Math.pow(x.w, 2.0f)).toFloat
+
+  // https://registry.khronos.org/OpenGL-Refpages/gl4/html/lessThan.xhtml
+  def lessThan(x: vec2, y: vec2): bvec2   = bvec2(x.x < y.x, x.y < y.y)
+  def lessThan(x: vec3, y: vec3): bvec3   = bvec3(x.x < y.x, x.y < y.y, x.z < y.z)
+  def lessThan(x: vec4, y: vec4): bvec4   = bvec4(x.x < y.x, x.y < y.y, x.z < y.z, x.w < y.w)
+  def lessThan(x: ivec2, y: ivec2): bvec2 = bvec2(x.x < y.x, x.y < y.y)
+  def lessThan(x: ivec3, y: ivec3): bvec3 = bvec3(x.x < y.x, x.y < y.y, x.z < y.z)
+  def lessThan(x: ivec4, y: ivec4): bvec4 = bvec4(x.x < y.x, x.y < y.y, x.z < y.z, x.w < y.w)
+
+  // https://registry.khronos.org/OpenGL-Refpages/gl4/html/lessThanEqual.xhtml
+  def lessThanEqual(x: vec2, y: vec2): bvec2   = bvec2(x.x <= y.x, x.y <= y.y)
+  def lessThanEqual(x: vec3, y: vec3): bvec3   = bvec3(x.x <= y.x, x.y <= y.y, x.z <= y.z)
+  def lessThanEqual(x: vec4, y: vec4): bvec4   = bvec4(x.x <= y.x, x.y <= y.y, x.z <= y.z, x.w <= y.w)
+  def lessThanEqual(x: ivec2, y: ivec2): bvec2 = bvec2(x.x <= y.x, x.y <= y.y)
+  def lessThanEqual(x: ivec3, y: ivec3): bvec3 = bvec3(x.x <= y.x, x.y <= y.y, x.z <= y.z)
+  def lessThanEqual(x: ivec4, y: ivec4): bvec4 = bvec4(x.x <= y.x, x.y <= y.y, x.z <= y.z, x.w <= y.w)
+
+  // https://registry.khronos.org/OpenGL-Refpages/gl4/html/log.xhtml
+  def log(x: Float): Float = Math.log(x.toDouble).toFloat
+  def log(x: vec2): vec2   = vec2(log(x.x), log(x.y))
+  def log(x: vec3): vec3   = vec3(log(x.x), log(x.y), log(x.z))
+  def log(x: vec4): vec4   = vec4(log(x.x), log(x.y), log(x.z), log(x.w))
+
+  // https://registry.khronos.org/OpenGL-Refpages/gl4/html/log2.xhtml
+  def log2(x: Float): Float = (Math.log(x.toDouble) / Math.log(2)).toFloat
+  def log2(x: vec2): vec2   = vec2(log2(x.x), log2(x.y))
+  def log2(x: vec3): vec3   = vec3(log2(x.x), log2(x.y), log2(x.z))
+  def log2(x: vec4): vec4   = vec4(log2(x.x), log2(x.y), log2(x.z), log2(x.w))
+
+  // https://registry.khronos.org/OpenGL-Refpages/gl4/html/matrixCompMult.xhtml
+  def matrixCompMult(x: mat2, y: mat2): mat2 =
+    val listA = x.mat
+    val listB = y.mat
+
+    val a00 = listA(0 * 2 + 0)
+    val a01 = listA(0 * 2 + 1)
+    val a10 = listA(1 * 2 + 0)
+    val a11 = listA(1 * 2 + 1)
+
+    val b00 = listB(0 * 2 + 0)
+    val b01 = listB(0 * 2 + 1)
+    val b10 = listB(1 * 2 + 0)
+    val b11 = listB(1 * 2 + 1)
+
+    mat2(
+      a00 * b00 + a01 * b10,
+      a00 * b01 + a01 * b11,
+      a10 * b00 + a11 * b10,
+      a10 * b01 + a11 * b11
+    )
+  def matrixCompMult(x: mat3, y: mat3): mat3 =
+    val listA = x.mat
+    val listB = y.mat
+
+    val a00 = listA(0 * 3 + 0)
+    val a01 = listA(0 * 3 + 1)
+    val a02 = listA(0 * 3 + 2)
+    val a10 = listA(1 * 3 + 0)
+    val a11 = listA(1 * 3 + 1)
+    val a12 = listA(1 * 3 + 2)
+    val a20 = listA(2 * 3 + 0)
+    val a21 = listA(2 * 3 + 1)
+    val a22 = listA(2 * 3 + 2)
+
+    val b00 = listB(0 * 3 + 0)
+    val b01 = listB(0 * 3 + 1)
+    val b02 = listB(0 * 3 + 2)
+    val b10 = listB(1 * 3 + 0)
+    val b11 = listB(1 * 3 + 1)
+    val b12 = listB(1 * 3 + 2)
+    val b20 = listB(2 * 3 + 0)
+    val b21 = listB(2 * 3 + 1)
+    val b22 = listB(2 * 3 + 2)
+
+    mat3(
+      a00 * b00 + a01 * b10 + a02 * b20,
+      a00 * b01 + a01 * b11 + a02 * b21,
+      a00 * b02 + a01 * b12 + a02 * b22,
+      a10 * b00 + a11 * b10 + a12 * b20,
+      a10 * b01 + a11 * b11 + a12 * b21,
+      a10 * b02 + a11 * b12 + a12 * b22,
+      a20 * b00 + a21 * b10 + a22 * b20,
+      a20 * b01 + a21 * b11 + a22 * b21,
+      a20 * b02 + a21 * b12 + a22 * b22
+    )
+  def matrixCompMult(x: mat4, y: mat4): mat4 =
+    val listA = x.mat
+    val listB = y.mat
+
+    val a00 = listA(0 * 4 + 0)
+    val a01 = listA(0 * 4 + 1)
+    val a02 = listA(0 * 4 + 2)
+    val a03 = listA(0 * 4 + 3)
+    val a10 = listA(1 * 4 + 0)
+    val a11 = listA(1 * 4 + 1)
+    val a12 = listA(1 * 4 + 2)
+    val a13 = listA(1 * 4 + 3)
+    val a20 = listA(2 * 4 + 0)
+    val a21 = listA(2 * 4 + 1)
+    val a22 = listA(2 * 4 + 2)
+    val a23 = listA(2 * 4 + 3)
+    val a30 = listA(3 * 4 + 0)
+    val a31 = listA(3 * 4 + 1)
+    val a32 = listA(3 * 4 + 2)
+    val a33 = listA(3 * 4 + 3)
+
+    val b00 = listB(0 * 4 + 0)
+    val b01 = listB(0 * 4 + 1)
+    val b02 = listB(0 * 4 + 2)
+    val b03 = listB(0 * 4 + 3)
+    val b10 = listB(1 * 4 + 0)
+    val b11 = listB(1 * 4 + 1)
+    val b12 = listB(1 * 4 + 2)
+    val b13 = listB(1 * 4 + 3)
+    val b20 = listB(2 * 4 + 0)
+    val b21 = listB(2 * 4 + 1)
+    val b22 = listB(2 * 4 + 2)
+    val b23 = listB(2 * 4 + 3)
+    val b30 = listB(3 * 4 + 0)
+    val b31 = listB(3 * 4 + 1)
+    val b32 = listB(3 * 4 + 2)
+    val b33 = listB(3 * 4 + 3)
+
+    mat4(
+      a00 * b00 + a01 * b10 + a02 * b20 + a03 * b30,
+      a00 * b01 + a01 * b11 + a02 * b21 + a03 * b31,
+      a00 * b02 + a01 * b12 + a02 * b22 + a03 * b32,
+      a00 * b03 + a01 * b13 + a02 * b23 + a03 * b33,
+      a10 * b00 + a11 * b10 + a12 * b20 + a13 * b30,
+      a10 * b01 + a11 * b11 + a12 * b21 + a13 * b31,
+      a10 * b02 + a11 * b12 + a12 * b22 + a13 * b32,
+      a10 * b03 + a11 * b13 + a12 * b23 + a13 * b33,
+      a20 * b00 + a21 * b10 + a22 * b20 + a23 * b30,
+      a20 * b01 + a21 * b11 + a22 * b21 + a23 * b31,
+      a20 * b02 + a21 * b12 + a22 * b22 + a23 * b32,
+      a20 * b03 + a21 * b13 + a22 * b23 + a23 * b33,
+      a30 * b00 + a31 * b10 + a32 * b20 + a33 * b30,
+      a30 * b01 + a31 * b11 + a32 * b21 + a33 * b31,
+      a30 * b02 + a31 * b12 + a32 * b22 + a33 * b32,
+      a30 * b03 + a31 * b13 + a32 * b23 + a33 * b33
+    )
 
   // https://registry.khronos.org/OpenGL-Refpages/gl4/html/max.xhtml
   def max(x: Int, y: Int): Int       = Math.max(x, y)
@@ -167,11 +405,31 @@ trait ShaderDSLOps extends ShaderDSLTypeExtensions:
     val m = length(x)
     if m == 0.0f then vec4(0.0f) else vec4(x.x / m, x.y / m, x.z / m, x.w / m)
 
+  // https://registry.khronos.org/OpenGL-Refpages/gl4/html/not.xhtml
+  def not(x: bvec2): bvec2 = bvec2(!x.x, !x.y)
+  def not(x: bvec3): bvec3 = bvec3(!x.x, !x.y, !x.z)
+  def not(x: bvec4): bvec4 = bvec4(!x.x, !x.y, !x.z, !x.w)
+
+  // https://registry.khronos.org/OpenGL-Refpages/gl4/html/notEqual.xhtml
+  def notEqual(x: vec2, y: vec2): bvec2   = bvec2(x.x != y.x, x.y != y.y)
+  def notEqual(x: vec3, y: vec3): bvec3   = bvec3(x.x != y.x, x.y != y.y, x.z != y.z)
+  def notEqual(x: vec4, y: vec4): bvec4   = bvec4(x.x != y.x, x.y != y.y, x.z != y.z, x.w != y.w)
+  def notEqual(x: ivec2, y: ivec2): bvec2 = bvec2(x.x != y.x, x.y != y.y)
+  def notEqual(x: ivec3, y: ivec3): bvec3 = bvec3(x.x != y.x, x.y != y.y, x.z != y.z)
+  def notEqual(x: ivec4, y: ivec4): bvec4 = bvec4(x.x != y.x, x.y != y.y, x.z != y.z, x.w != y.w)
+
   // https://registry.khronos.org/OpenGL-Refpages/gl4/html/pow.xhtml
   def pow(x: Float, y: Float): Float = Math.pow(x.toDouble, y.toDouble).toFloat
   def pow(x: vec2, y: vec2): vec2    = vec2(pow(x.x, y.x), pow(x.y, y.y))
   def pow(x: vec3, y: vec3): vec3    = vec3(pow(x.x, y.x), pow(x.y, y.y), pow(x.z, y.z))
   def pow(x: vec4, y: vec4): vec4    = vec4(pow(x.x, y.x), pow(x.y, y.y), pow(x.z, y.z), pow(x.w, y.w))
+
+  // https://registry.khronos.org/OpenGL-Refpages/gl4/html/radians.xhtml
+  def radians(degrees: Float): Float = ((Math.PI * degrees) / 180.0).toFloat
+  def radians(degrees: vec2): vec2   = vec2(radians(degrees.x), radians(degrees.y))
+  def radians(degrees: vec3): vec3   = vec3(radians(degrees.x), radians(degrees.y), radians(degrees.z))
+  def radians(degrees: vec4): vec4 =
+    vec4(radians(degrees.x), radians(degrees.y), radians(degrees.z), radians(degrees.w))
 
   // https://registry.khronos.org/OpenGL-Refpages/gl4/html/reflect.xhtml
   def reflect(i: Float, n: Float): Float = i - 2.0f * dot(n, i) * n
@@ -179,11 +437,32 @@ trait ShaderDSLOps extends ShaderDSLTypeExtensions:
   def reflect(i: vec3, n: vec3): vec3    = i - 2.0f * dot(n, i) * n
   def reflect(i: vec4, n: vec4): vec4    = i - 2.0f * dot(n, i) * n
 
+  // https://registry.khronos.org/OpenGL-Refpages/gl4/html/refract.xhtml
+  def refract(i: Float, n: Float, eta: Float): Float =
+    val k = 1.0f - eta * eta * (1.0f - dot(n, i) * dot(n, i))
+    if k < 0.0f then 0.0f
+    else eta * i - (eta * dot(n, i) + sqrt(k)) * n
+  def refract(i: vec2, n: vec2, eta: Float): vec2 = vec2(refract(i.x, n.x, eta), refract(i.y, n.y, eta))
+  def refract(i: vec3, n: vec3, eta: Float): vec3 =
+    vec3(refract(i.x, n.x, eta), refract(i.y, n.y, eta), refract(i.z, n.z, eta))
+  def refract(i: vec4, n: vec4, eta: Float): vec4 =
+    vec4(refract(i.x, n.x, eta), refract(i.y, n.y, eta), refract(i.z, n.z, eta), refract(i.w, n.w, eta))
+
   // https://registry.khronos.org/OpenGL-Refpages/gl4/html/round.xhtml
   def round(x: Float): Float = Math.round(x.toDouble).toFloat
   def round(x: vec2): vec2   = vec2(round(x.x), round(x.y))
   def round(x: vec3): vec3   = vec3(round(x.x), round(x.y), round(x.z))
   def round(x: vec4): vec4   = vec4(round(x.x), round(x.y), round(x.z), round(x.w))
+
+  // https://registry.khronos.org/OpenGL-Refpages/gl4/html/sign.xhtml
+  def sign(x: Float): Float = if x < 0.0f then -1.0f else if x > 0.0f then 1.0f else 0.0f
+  def sign(x: vec2): vec2   = vec2(sign(x.x), sign(x.y))
+  def sign(x: vec3): vec3   = vec3(sign(x.x), sign(x.y), sign(x.z))
+  def sign(x: vec4): vec4   = vec4(sign(x.x), sign(x.y), sign(x.z), sign(x.w))
+  def sign(x: Int): Int     = if x < 0 then -1 else if x > 0 then 1 else 0
+  def sign(x: ivec2): ivec2 = ivec2(sign(x.x), sign(x.y))
+  def sign(x: ivec3): ivec3 = ivec3(sign(x.x), sign(x.y), sign(x.z))
+  def sign(x: ivec4): ivec4 = ivec4(sign(x.x), sign(x.y), sign(x.z), sign(x.w))
 
   // https://registry.khronos.org/OpenGL-Refpages/gl4/html/sin.xhtml
   def sin(x: Float): Float = Math.sin(x.toDouble).toFloat
