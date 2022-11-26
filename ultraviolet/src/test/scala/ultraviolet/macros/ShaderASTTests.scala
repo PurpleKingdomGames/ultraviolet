@@ -1363,6 +1363,40 @@ class ShaderASTTests extends munit.FunSuite {
     )
   }
 
+  test("Shader blocks can be nested") {
+
+    inline def foo = 
+      Shader[FragEnv, Unit] { env2 =>
+        val f = env2.COLOR.x
+      }
+
+    inline def fragment =
+      Shader[FragEnv, Unit] { env =>
+        val x = env.UV.y
+        foo
+
+        Shader {
+          val b = 1.0f
+        }
+      }
+
+    val actual =
+      fragment.toGLSL[WebGL2].code
+
+    // DebugAST.toAST(fragment)
+    // println(actual)
+
+    assertEquals(
+      actual,
+      s"""
+      |float x=UV.y;
+      |float f=COLOR.x;
+      |float b=1.0;
+      |""".stripMargin.trim
+    )
+
+  }
+
 }
 
 object Importable:
