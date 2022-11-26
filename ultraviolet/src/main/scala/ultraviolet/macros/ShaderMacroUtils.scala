@@ -10,6 +10,7 @@ trait ShaderMacroUtils:
   def findReturnType: ShaderAST => Option[ShaderAST] =
     case v: ShaderAST.Empty             => None
     case v: ShaderAST.Block             => v.statements.reverse.headOption.flatMap(findReturnType)
+    case v: ShaderAST.Neg               => findReturnType(v.value)
     case v: ShaderAST.UBO               => None
     case v: ShaderAST.ShaderBlock       => v.statements.reverse.headOption.flatMap(findReturnType)
     case v: ShaderAST.Function          => v.returnType

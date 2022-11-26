@@ -1,5 +1,7 @@
 package ultraviolet.datatypes
 
+import ultraviolet.syntax.*
+
 class ShaderPrinterTests extends munit.FunSuite {
 
   test("The default printer can print an AST") {
@@ -90,8 +92,6 @@ class ShaderPrinterTests extends munit.FunSuite {
 
   test("Can output WebGL 1.0 and 2.0") {
 
-    import ultraviolet.syntax.*
-
     @SuppressWarnings(Array("scalafix:DisableSyntax.var"))
     case class Env(var COLOR: vec4)
 
@@ -143,6 +143,28 @@ class ShaderPrinterTests extends munit.FunSuite {
       |uniform samplerCube u_textureCube;
       |vec4 c=texture(u_texture2d,v_texcoord);
       |COLOR=texture(u_textureCube,normalize(v_normal))*c;
+      |""".stripMargin.trim
+    )
+
+  }
+
+  test("Print negative symbols") {
+
+    import ShaderAST.*
+    import ShaderAST.DataTypes.*
+
+    val ast =
+      Neg(Infix("/", ident("x"), ident("y"), Some(ident("x"))))
+
+    val actual =
+      ShaderPrinter.print[WebGL2](ast)
+
+    // println(actual)
+
+    assertEquals(
+      actual.mkString("\n"),
+      s"""
+      |-(x/y)
       |""".stripMargin.trim
     )
 

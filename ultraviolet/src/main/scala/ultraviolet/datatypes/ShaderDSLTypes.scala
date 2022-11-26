@@ -222,6 +222,24 @@ trait ShaderDSLTypes:
       array[L, T](args.toArray)
 
   final case class mat2(mat: Array[Float]):
+    def +(m: mat2): mat2 = mat2(mat.zip(m.mat).map(_ + _))
+    def -(m: mat2): mat2 = mat2(mat.zip(m.mat).map(_ - _))
+    def *(m: mat2): mat2 = mat2(mat.zip(m.mat).map(_ * _))
+    def /(m: mat2): mat2 = mat2(mat.zip(m.mat).map(_ / _))
+
+    def *(v: vec2): vec2 =
+      val col1 = Array(mat(0), mat(2))
+      val col2 = Array(mat(1), mat(3))
+      vec2(
+        x = col1(0) * v.x + col1(1) * v.y,
+        y = col2(0) * v.x + col2(1) * v.y
+      )
+
+    def +(f: Float): mat2 = mat2(mat.map(_ + f))
+    def -(f: Float): mat2 = mat2(mat.map(_ - f))
+    def *(f: Float): mat2 = mat2(mat.map(_ * f))
+    def /(f: Float): mat2 = mat2(mat.map(_ / f))
+
     def apply(index: Int): Float = mat(index)
     def update(i: Int, value: Float): Unit =
       mat(i) = value
@@ -233,6 +251,26 @@ trait ShaderDSLTypes:
       mat2(Array(m0, m1, m2, m3))
 
   final case class mat3(mat: Array[Float]):
+    def +(m: mat3): mat3 = mat3(mat.zip(m.mat).map(_ + _))
+    def -(m: mat3): mat3 = mat3(mat.zip(m.mat).map(_ - _))
+    def *(m: mat3): mat3 = mat3(mat.zip(m.mat).map(_ * _))
+    def /(m: mat3): mat3 = mat3(mat.zip(m.mat).map(_ / _))
+
+    def *(v: vec3): vec3 =
+      val col1 = Array(mat(0), mat(3), mat(6))
+      val col2 = Array(mat(1), mat(4), mat(7))
+      val col3 = Array(mat(2), mat(5), mat(8))
+      vec3(
+        x = col1(0) * v.x + col1(1) * v.y + col1(2) * v.z,
+        y = col2(0) * v.x + col2(1) * v.y + col2(2) * v.z,
+        z = col3(0) * v.x + col3(1) * v.y + col3(2) * v.z
+      )
+
+    def +(f: Float): mat3 = mat3(mat.map(_ + f))
+    def -(f: Float): mat3 = mat3(mat.map(_ - f))
+    def *(f: Float): mat3 = mat3(mat.map(_ * f))
+    def /(f: Float): mat3 = mat3(mat.map(_ / f))
+
     def apply(index: Int): Float = mat(index)
     def update(i: Int, value: Float): Unit =
       mat(i) = value
@@ -256,6 +294,28 @@ trait ShaderDSLTypes:
       )
 
   final case class mat4(mat: Array[Float]):
+    def +(m: mat4): mat4 = mat4(mat.zip(m.mat).map(_ + _))
+    def -(m: mat4): mat4 = mat4(mat.zip(m.mat).map(_ - _))
+    def *(m: mat4): mat4 = mat4(mat.zip(m.mat).map(_ * _))
+    def /(m: mat4): mat4 = mat4(mat.zip(m.mat).map(_ / _))
+
+    def *(v: vec4): vec4 = 
+      val col1 = Array(mat(0), mat(4), mat(8), mat(12))
+      val col2 = Array(mat(1), mat(5), mat(9), mat(13))
+      val col3 = Array(mat(2), mat(6), mat(10),mat(14))
+      val col4 = Array(mat(3), mat(7), mat(11),mat(15))
+      vec4(
+        x = col1(0) * v.x + col1(1) * v.y + col1(2) * v.z + col1(3) * v.w,
+        y = col2(0) * v.x + col2(1) * v.y + col2(2) * v.z + col2(3) * v.w,
+        z = col3(0) * v.x + col3(1) * v.y + col3(2) * v.z + col3(3) * v.w,
+        w = col4(0) * v.x + col4(1) * v.y + col4(2) * v.z + col4(3) * v.w
+      )
+
+    def +(f: Float): mat4 = mat4(mat.map(_ + f))
+    def -(f: Float): mat4 = mat4(mat.map(_ - f))
+    def *(f: Float): mat4 = mat4(mat.map(_ * f))
+    def /(f: Float): mat4 = mat4(mat.map(_ / f))
+
     def apply(index: Int): Float = mat(index)
     def update(i: Int, value: Float): Unit =
       mat(i) = value

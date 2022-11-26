@@ -818,13 +818,6 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
         val args: List[ShaderAST] = List(ShaderAST.DataTypes.ident(fnName))
         ShaderAST.CallFunction(name, args, args, None)
 
-      // Annotations
-
-      case Apply(Select(New(tree), _), List()) =>
-        walkTree(tree, envVarName)
-
-      //
-
       case Apply(Select(term, "apply"), xs) =>
         walkTerm(term, envVarName).find {
           case ShaderAST.CallFunction(_, _, _, _) => true
@@ -838,6 +831,16 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
 
           case _ =>
             ShaderAST.Block(xs.map(tt => walkTerm(tt, envVarName)))
+
+      case Select(term, "unary_-") =>
+        ShaderAST.Neg(walkTerm(term, envVarName))
+
+      // Annotations
+
+      case Apply(Select(New(tree), _), List()) =>
+        walkTree(tree, envVarName)
+
+      //
 
       // Infix operations
 

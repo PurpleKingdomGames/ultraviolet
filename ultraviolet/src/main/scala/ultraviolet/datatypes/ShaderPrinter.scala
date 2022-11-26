@@ -74,6 +74,11 @@ object ShaderPrinter:
       case Block(statements) =>
         renderStatements(statements)
 
+      case Neg(v) =>
+        render(v) match
+          case init :+ last => init :+ s"""-${maybeAddBrackets(last)}"""
+          case _            => Nil
+
       case UBO(uboDef) =>
         List(uboDef.render)
 
@@ -119,17 +124,9 @@ object ShaderPrinter:
         List(s"""$as(${render(value).mkString})""")
 
       case Infix(op, left, right, returnType) =>
-        val isSimpleValue = """^([a-zA-Z0-9\[\]\(\)\.\,_]+)$""".r
-        val hasBrackets   = """^\((.*)\)$""".r
-
-        def cleanUp(str: String): String =
-          str match
-            case s if hasBrackets.matches(s) || isSimpleValue.matches(s) => s
-            case s                                                       => s"""($s)"""
-
         val l = render(left).mkString
         val r = render(right).mkString
-        List(s"""${cleanUp(l)}$op${cleanUp(r)}""")
+        List(s"""${maybeAddBrackets(l)}$op${maybeAddBrackets(r)}""")
 
       case Assign(left, right) =>
         List(s"""${render(left).mkString}=${render(right).mkString}""")
@@ -330,6 +327,7 @@ object ShaderPrinter:
     a match
       case Empty()                       => None
       case Block(_)                      => None
+      case Neg(v)                        => decideType(v)
       case UBO(_)                        => None
       case ShaderBlock(_, _, _, _, _)    => None
       case Function(_, _, _, rt)         => rt.toList.flatMap(render).headOption
@@ -368,6 +366,13 @@ object ShaderPrinter:
   private def rf(f: Float): String =
     val s = f.toString
     if s.contains(".") then s else s + ".0"
+
+  private def maybeAddBrackets(str: String): String =
+    val isSimpleValue = """^([a-zA-Z0-9\[\]\(\)\.\,_]+)$""".r
+    val hasBrackets   = """^\((.*)\)$""".r
+    str match
+      case s if hasBrackets.matches(s) || isSimpleValue.matches(s) => s
+      case s                                                       => s"""($s)"""
 
   private def processFunctionStatements(
       statements: List[ShaderAST],

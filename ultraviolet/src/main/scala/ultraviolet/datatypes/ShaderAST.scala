@@ -12,6 +12,7 @@ object ShaderAST:
       x match
         case v: Empty        => Expr(v)
         case v: Block        => Expr(v)
+        case v: Neg          => Expr(v)
         case v: UBO          => Expr(v)
         case v: ShaderBlock  => Expr(v)
         case v: Function     => Expr(v)
@@ -46,6 +47,13 @@ object ShaderAST:
 
     def apply(statements: ShaderAST*): Block =
       Block(statements.toList)
+
+  final case class Neg(value: ShaderAST) extends ShaderAST
+  object Neg:
+    given ToExpr[Neg] with {
+      def apply(x: Neg)(using Quotes): Expr[Neg] =
+        '{ Neg(${ Expr(x.value) }) }
+    }
 
   final case class UBO(uboDef: UBODef) extends ShaderAST
   object UBO:
@@ -352,6 +360,7 @@ object ShaderAST:
               case v if p(v)                  => Option(v)
               case Empty()                    => rec(xs)
               case Block(s)                   => rec(s ++ xs)
+              case Neg(s)                     => rec(s :: xs)
               case UBO(_)                     => rec(xs)
               case ShaderBlock(_, _, _, _, s) => rec(s ++ xs)
               case Function(_, _, body, _)    => rec(body :: xs)
@@ -399,6 +408,7 @@ object ShaderAST:
               case v if p(v)                  => rec(xs, v :: acc)
               case Empty()                    => rec(xs, acc)
               case Block(s)                   => rec(s ++ xs, acc)
+              case Neg(s)                     => rec(s :: xs, acc)
               case UBO(_)                     => rec(xs, acc)
               case ShaderBlock(_, _, _, _, s) => rec(s ++ xs, acc)
               case Function(_, _, body, _)    => rec(body :: xs, acc)
@@ -448,6 +458,7 @@ object ShaderAST:
       ast match
         case v @ Empty()                              => f(v)
         case v @ Block(s)                             => f(Block(s.map(f)))
+        case v @ Neg(s)                               => f(Neg(f(s)))
         case v @ UBO(_)                               => f(v)
         case v @ ShaderBlock(in, out, n, h, s)        => f(ShaderBlock(in, out, n, h, s))
         case v @ Function(id, args, body, returnType) => f(Function(id, args, f(body), returnType))
@@ -487,6 +498,7 @@ object ShaderAST:
       ast match
         case Empty()                       => None
         case Block(_)                      => None
+        case Neg(v)                        => v.typeIdent
         case UBO(_)                        => None
         case ShaderBlock(_, _, _, _, _)    => None
         case Function(_, _, _, rt)         => rt.flatMap(_.typeIdent)
