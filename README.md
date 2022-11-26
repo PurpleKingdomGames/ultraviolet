@@ -50,3 +50,4 @@ Inlining external stuff:
 - A def that is essentially a call but reference val such as `inline def x = 1.0f` will have it's value inlined.
 - A def that is a function, laid out like a method e.g. `inline def foo(c: Int): Int = c + 1` will be embedded as a function called `foo`, the argument `c` will be ignored however, and the value passed will be inlined. Bit weird.
 - A def that is a lambda however, will be embedded with a new name and will work exactly as you'd expect, recommend you do this! `inline def foo: Int => Int = c => c + 1`
+- Structs are supported via classes, DO NOT USE A CASE CLASS.
