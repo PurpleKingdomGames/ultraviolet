@@ -102,6 +102,16 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
       case Export(_, _) =>
         throw ShaderError.Unsupported("Shaders do not support exports.")
 
+      case ClassDef(name, _, _, _, _) if name.endsWith("$") =>
+        throw ShaderError.Unsupported(
+          "Looks like you're trying to use a case class. Shaders only support simple, flat classes."
+        )
+
+      case ClassDef(_, DefDef("<init>", List(TermParamClause(Nil)), _, None), _, _, _) =>
+        throw ShaderError.Unsupported(
+          "Looks like you're trying to use a trait or a class with no members. Shaders only support simple, flat classes with members."
+        )
+
       case ClassDef(name, DefDef("<init>", List(TermParamClause(params)), _, None), _, _, _) =>
         ShaderAST.Struct(name, params.map(p => walkTree(p, envVarName)))
 
