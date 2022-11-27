@@ -31,8 +31,11 @@ credentials.sbt
 .dotty-ide-disabled
 *.swp
 
+# Scala-CLI specific
+.scala-build
+
+# Other
 node_modules
-elm-stuff
 .metals/
 .bloop
 metals.sbt
@@ -40,5 +43,3 @@ metals.sbt
 .ammonite
 .coursier
 
-indigo/site/public/
-website/build/
