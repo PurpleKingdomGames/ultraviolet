@@ -446,6 +446,10 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
       case t: Term =>
         walkTerm(t, envVarName)
 
+      case x =>
+        val sample = Printer.TreeStructure.show(x).take(100)
+        throw ShaderError.UnexpectedConstruction("Unexpected Statement: " + sample + "(..)")
+
   def walkTree(t: Tree, envVarName: Option[String]): ShaderAST =
     t match
       case TypeIdent("Unit") =>
@@ -468,6 +472,10 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
 
       case s: Statement =>
         walkStatement(s, envVarName)
+
+      case x =>
+        val sample = Printer.TreeStructure.show(x).take(100)
+        throw ShaderError.UnexpectedConstruction("Unexpected Tree: " + sample + "(..)")
 
   def walkTerm(t: Term, envVarName: Option[String]): ShaderAST =
     t match
@@ -1245,3 +1253,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
 
       case While(cond, body) =>
         ShaderAST.While(walkTerm(cond, envVarName), walkTerm(body, envVarName))
+
+      case x =>
+        val sample = Printer.TreeStructure.show(x).take(100)
+        throw ShaderError.UnexpectedConstruction("Unexpected Term: " + sample + "(..)")
