@@ -1418,6 +1418,46 @@ class ShaderASTTests extends munit.FunSuite {
 
   }
 
+  test("Shader blocks can be nested using an intermediary") {
+
+    trait IShader {
+      inline def frag: Shader[Unit, vec4]
+    }
+
+    class CustomShader extends IShader:
+      inline def frag =
+        Shader[Unit, vec4] { env =>
+          vec4(123.0f)
+        }
+
+    inline def fragment(inline s: CustomShader): Shader[FragEnv, Unit] =
+      Shader[FragEnv, Unit] { env =>
+        val x = env.UV.y
+
+        Shader {
+          val b = 1.0f
+        }
+
+        s.frag
+      }
+
+    val actual =
+      fragment(new CustomShader).toGLSL[WebGL2].code
+
+    // DebugAST.toAST(fragment(new CustomShader))
+    // println(actual)
+
+    assertEquals(
+      actual,
+      s"""
+      |float x=UV.y;
+      |float b=1.0;
+      |vec4(123.0);
+      |""".stripMargin.trim
+    )
+
+  }
+
   test("Matrix multiplication") {
 
     @SuppressWarnings(Array("scalafix:DisableSyntax.var"))

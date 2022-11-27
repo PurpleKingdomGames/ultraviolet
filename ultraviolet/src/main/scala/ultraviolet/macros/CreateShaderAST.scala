@@ -473,6 +473,9 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
       case s: Statement =>
         walkStatement(s, envVarName)
 
+      case Applied(TypeIdent("Shader"), _) =>
+        ShaderAST.DataTypes.ident("void")
+
       case x =>
         val sample = Printer.TreeStructure.show(x).take(100)
         throw ShaderError.UnexpectedConstruction("Unexpected Tree: " + sample + "(..)")
@@ -1090,6 +1093,22 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
             _
           ) =>
         ShaderAST.UBO(uboUtils.extractUBO(tt))
+
+      // Inlined call to a method on a class
+
+      case Inlined(
+            Some(
+              Select(
+                Inlined(_, _, Apply(Select(New(TypeIdent(_ /*class name*/ )), "<init>"), Nil)),
+                _ // method name
+              )
+            ),
+            _,
+            term
+          ) =>
+        walkTerm(term, envVarName)
+
+      //
 
       case Inlined(Some(tree: Tree), _, _) =>
         walkTree(tree, envVarName)
