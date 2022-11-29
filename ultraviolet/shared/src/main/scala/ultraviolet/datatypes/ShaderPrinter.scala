@@ -267,7 +267,12 @@ object ShaderPrinter:
         List(s"""${typeOf.getOrElse("void")}(${args.flatMap(render).mkString(",")})""")
 
       case DataTypes.swizzle(genType, swizzle, returnType) =>
-        List(s"${render(genType).mkString}.$swizzle")
+        genType match
+          case ShaderAST.Infix(_, _, _, _) =>
+            List(s"(${render(genType).mkString}).$swizzle")
+
+          case _ =>
+            List(s"${render(genType).mkString}.$swizzle")
 
       case Val(id, value, typeOf) =>
         val tOf = typeOf.getOrElse("void")
