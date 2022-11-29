@@ -1585,6 +1585,27 @@ class ShaderASTTests extends munit.FunSuite {
     )
   }
 
+  test("inline shader functions can take and use arguments") {
+
+    inline def fragment(angle: Float): Shader[Unit, Unit] =
+      Shader { _ =>
+        val a_rotation: Float = angle;
+      }
+
+    val actual =
+      fragment(12.0f).toGLSL[WebGL2].code
+
+    // DebugAST.toAST(fragment(12.0f))
+    // println(actual)
+
+    assertEquals(
+      actual,
+      s"""
+      |float a_rotation=12.0;
+      |""".stripMargin.trim
+    )
+  }
+
 }
 
 object Importable:
