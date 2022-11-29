@@ -291,14 +291,17 @@ object ShaderPrinter:
           case _ =>
             List(s"""$tOf $id=${render(value).mkString}""")
 
-      case Annotated(label, _, value) =>
+      case Annotated(label, param, value) =>
         val lbl = render(label).mkString
         value match
           case v @ Val(id, value, typeOf) if lbl == "const" =>
-            List(s"""$lbl ${render(v).mkString}""")
+            List(s"""const ${render(v).mkString}""")
 
           case v @ Val(id, value, typeOf) if lbl == "define" =>
-            List(s"""#$lbl $id ${render(value).mkString}""")
+            List(s"""#define $id ${render(value).mkString}""")
+
+          case v @ Val(id, value, typeOf) if lbl == "layout" =>
+            List(s"""layout (location = ${render(param).mkString}) in ${render(Val(id, Empty(), typeOf)).mkString}""")
 
           case v @ Val(id, value, typeOf) =>
             List(s"""$lbl ${render(Val(id, Empty(), typeOf)).mkString}""")

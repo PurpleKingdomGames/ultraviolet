@@ -1564,6 +1564,27 @@ class ShaderASTTests extends munit.FunSuite {
     )
   }
 
+  test("layout locations") {
+
+    inline def fragment =
+      Shader { _ =>
+        @layout(7) val a_rotation: Float = 0.0;
+      }
+
+    val actual =
+      fragment.toGLSL[WebGL2].code
+
+    // DebugAST.toAST(fragment)
+    // println(actual)
+
+    assertEquals(
+      actual,
+      s"""
+      |layout (location = 7) in float a_rotation;
+      |""".stripMargin.trim
+    )
+  }
+
 }
 
 object Importable:

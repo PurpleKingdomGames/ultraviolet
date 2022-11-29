@@ -166,10 +166,16 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
         val typeOf = extractInferredType(typ)
         val body   = walkTerm(term, envVarName)
 
-        val maybeAnnotation: Option[ShaderAST.DataTypes.ident] =
+        val maybeAnnotation: Option[(ShaderAST.DataTypes.ident, ShaderAST)] =
           v.symbol.annotations.headOption.map(p => walkTerm(p, envVarName)).flatMap {
-            case a: ShaderAST.DataTypes.ident => Option(a)
-            case _                            => None
+            case a: ShaderAST.DataTypes.ident =>
+              Option((a, ShaderAST.Empty()))
+
+            case ShaderAST.New(anno, List(annoTerm)) =>
+              Option((ShaderAST.DataTypes.ident(anno), annoTerm))
+
+            case _ =>
+              None
           }
 
         body match
@@ -255,16 +261,22 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
               case None =>
                 v
 
-              case Some(label) =>
-                ShaderAST.Annotated(label, ShaderAST.Empty(), v)
+              case Some((label, param)) =>
+                ShaderAST.Annotated(label, param, v)
 
       case v @ ValDef(name, typ, None) =>
         val typeOf = extractInferredType(typ)
 
-        val maybeAnnotation: Option[ShaderAST.DataTypes.ident] =
+        val maybeAnnotation: Option[(ShaderAST.DataTypes.ident, ShaderAST)] =
           v.symbol.annotations.headOption.map(p => walkTerm(p, envVarName)).flatMap {
-            case a: ShaderAST.DataTypes.ident => Option(a)
-            case _                            => None
+            case a: ShaderAST.DataTypes.ident =>
+              Option((a, ShaderAST.Empty()))
+
+            case ShaderAST.New(anno, List(annoTerm)) =>
+              Option((ShaderAST.DataTypes.ident(anno), annoTerm))
+
+            case _ =>
+              None
           }
 
         val vv = ShaderAST.Val(name, ShaderAST.Empty(), typeOf)
@@ -273,25 +285,10 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
           case None =>
             vv
 
-          case Some(label) =>
-            ShaderAST.Annotated(label, ShaderAST.Empty(), vv)
+          case Some((label, param)) =>
+            ShaderAST.Annotated(label, param, vv)
 
       case d @ DefDef(fnName, args, rt, Some(term)) =>
-        val maybeAnnotation: Option[ShaderAST.Annotated] =
-          d.symbol.annotations.headOption.flatMap {
-            case Apply(Select(New(TypeIdent(id @ "ShaderDef")), _), List(namespace)) =>
-              Option(
-                ShaderAST.Annotated(
-                  ShaderAST.DataTypes.ident(id),
-                  walkTerm(namespace, envVarName),
-                  ShaderAST.Empty()
-                )
-              )
-
-            case x =>
-              None
-          }
-
         val argNamesTypes =
           args
             .collect { case TermParamClause(ps) => ps }
