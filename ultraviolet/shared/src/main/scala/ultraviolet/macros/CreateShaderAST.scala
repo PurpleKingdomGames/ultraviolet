@@ -738,6 +738,9 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
                 case r: ShaderAST.FunctionRef =>
                   Proxy(r.id, r.arg, r.returnType)
 
+                case ShaderAST.Block(List(r @ ShaderAST.FunctionRef(_, _, _))) =>
+                  Proxy(r.id, r.arg, r.returnType)
+
                 case _ =>
                   throw ShaderError.UnexpectedConstruction(
                     "You appear to be composing something other that a function."
