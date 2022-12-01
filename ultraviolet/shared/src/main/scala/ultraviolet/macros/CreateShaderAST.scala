@@ -95,6 +95,19 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
       case x =>
         typ.tpe.classSymbol.map(_.name)
 
+  def isOneLineLambda(args: List[Statement]): Boolean =
+    args.nonEmpty &&
+      args.forall {
+        case ValDef(name, _, Some(Literal(_))) if name.contains("$proxy") =>
+          true
+
+        case ValDef(name, _, Some(Ident(_))) if name.contains("$proxy") =>
+          true
+
+        case _ =>
+          false
+      }
+
   def walkStatement(s: Statement, envVarName: Option[String]): ShaderAST =
     s match
       case Import(_, _) =>
@@ -1234,11 +1247,45 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
       case Typed(term, _) =>
         walkTerm(term, envVarName)
 
+      case Block(args, fnBody) if isOneLineLambda(args) =>
+        val fnName = proxies.makeDefName
+
+        val body = walkTerm(fnBody, envVarName)
+
+        val arguments =
+          args.collect {
+            case ValDef(name, Inferred(), Some(value)) if name.contains("$proxy") =>
+              walkTerm(value, envVarName) -> name.substring(0, name.indexOf("$"))
+          }
+
+        val returnType =
+          findReturnType(body)
+
+        shaderDefs += FunctionLookup(
+          ShaderAST.Function(
+            id = fnName,
+            args = arguments.map((typ, n) => findReturnType(typ).getOrElse(typ) -> n),
+            body = body,
+            returnType = returnType
+          ),
+          false
+        )
+
+        ShaderAST.CallFunction(
+          id = fnName,
+          args = arguments.map(_._1),
+          argNames = arguments.map(_._2).map(n => ShaderAST.DataTypes.ident(n)),
+          returnType = returnType
+        )
+
       case Block(statements, Closure(Ident("$anonfun"), None)) =>
         val ss = statements
           .map(s => walkStatement(s, envVarName))
 
         ShaderAST.Block(ss)
+
+      case Block(Nil, term) =>
+        walkTerm(term, envVarName)
 
       case Block(statements, term) =>
         val ss =
