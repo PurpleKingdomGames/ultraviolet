@@ -32,3 +32,21 @@ object ShaderPrograms:
     }
 
   val frag2: String = fragment2.toGLSL[WebGL2].code
+
+  inline def glsl: String =
+    """
+    void fragment(){
+      float zero = 0.0;
+      float alpha = 1.0;
+      COLOR = vec4(UV, zero, alpha);
+    }
+    """
+
+  inline def fragment3 =
+    Shader {
+      raw(
+        glsl
+      )
+    }
+
+  val frag3: String = fragment3.toGLSL[WebGL2].code
