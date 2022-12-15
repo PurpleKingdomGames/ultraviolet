@@ -591,12 +591,9 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
             x
         }
 
-        def replaceName: ShaderAST => ShaderAST = {
+        def replaceName: PartialFunction[ShaderAST, ShaderAST] = {
           case ShaderAST.DataTypes.ident(id) if id.startsWith("_") =>
             ShaderAST.DataTypes.ident(varName)
-
-          case x =>
-            x
         }
 
         val n = ShaderAST.Assign(
