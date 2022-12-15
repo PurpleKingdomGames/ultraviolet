@@ -20,8 +20,23 @@ object syntax extends ShaderDSLOps:
   type Shader[In, Out] = ultraviolet.datatypes.Shader[In, Out]
   val Shader: ultraviolet.datatypes.Shader.type = ultraviolet.datatypes.Shader
 
-  type GLSLHeader[In, Out] = ultraviolet.datatypes.GLSLHeader
+  type GLSLHeader = ultraviolet.datatypes.GLSLHeader
   val GLSLHeader: ultraviolet.datatypes.GLSLHeader.type = ultraviolet.datatypes.GLSLHeader
+
+  type ShaderAST = ultraviolet.datatypes.ShaderAST
+  val ShaderAST: ultraviolet.datatypes.ShaderAST.type = ultraviolet.datatypes.ShaderAST
+
+  type ShaderPrinter[T] = ultraviolet.datatypes.ShaderPrinter[T]
+  val ShaderPrinter: ultraviolet.datatypes.ShaderPrinter.type = ultraviolet.datatypes.ShaderPrinter
+
+  type ShaderValid = ultraviolet.datatypes.ShaderValid
+  val ShaderValid: ultraviolet.datatypes.ShaderValid.type = ultraviolet.datatypes.ShaderValid
+
+  type UBODef = ultraviolet.datatypes.UBODef
+  val UBODef: ultraviolet.datatypes.UBODef.type = ultraviolet.datatypes.UBODef
+
+  type ShaderField = ultraviolet.datatypes.ShaderField
+  val ShaderField: ultraviolet.datatypes.ShaderField.type = ultraviolet.datatypes.ShaderField
 
   final class attribute             extends StaticAnnotation
   final class const                 extends StaticAnnotation
