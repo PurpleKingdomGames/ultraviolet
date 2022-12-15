@@ -893,7 +893,9 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
         ShaderAST.CallFunction(name, args, args, None)
 
       case Apply(Select(term, "apply"), xs) =>
-        walkTerm(term, envVarName).find {
+        val body = walkTerm(term, envVarName)
+
+        body.find {
           case ShaderAST.CallFunction(_, _, _, _) => true
           case ShaderAST.FunctionRef(_, _, _)     => true
           case _                                  => false
@@ -908,7 +910,12 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
             ShaderAST.CallFunction(id, xs.map(tt => walkTerm(tt, envVarName)), Nil, rt)
 
           case _ =>
-            ShaderAST.Block(xs.map(tt => walkTerm(tt, envVarName)))
+            (body, xs) match
+              case (ShaderAST.DataTypes.ident(name), List(arg)) =>
+                ShaderAST.CallFunction(name, List(walkTerm(arg, envVarName)), Nil, None)
+
+              case _ =>
+                ShaderAST.Block(xs.map(tt => walkTerm(tt, envVarName)))
 
       case Select(term, "unary_-") =>
         ShaderAST.Neg(walkTerm(term, envVarName))
