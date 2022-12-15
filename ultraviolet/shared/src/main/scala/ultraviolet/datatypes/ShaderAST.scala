@@ -367,54 +367,7 @@ object ShaderAST:
       find(_ == p).isDefined
 
     def find(p: ShaderAST => Boolean): Option[ShaderAST] =
-      @tailrec
-      def rec(remaining: List[ShaderAST]): Option[ShaderAST] =
-        remaining match
-          case Nil => None
-          case x :: xs =>
-            x match
-              case v if p(v)                  => Option(v)
-              case Empty()                    => rec(xs)
-              case Block(s)                   => rec(s ++ xs)
-              case Neg(s)                     => rec(s :: xs)
-              case UBO(_)                     => rec(xs)
-              case Struct(_, _)               => rec(xs)
-              case New(_, _)                  => rec(xs)
-              case ShaderBlock(_, _, _, _, s) => rec(s ++ xs)
-              case Function(_, _, body, _)    => rec(body :: xs)
-              case CallFunction(_, _, _, _)   => rec(xs)
-              case FunctionRef(_, _, _)       => rec(xs)
-              case Cast(v, _)                 => rec(v :: xs)
-              case Infix(_, l, r, _)          => rec(l :: r :: xs)
-              case Assign(l, r)               => rec(l :: r :: xs)
-              case If(_, t, e)                => rec(t :: (e.toList ++ xs))
-              case While(_, b)                => rec(b :: xs)
-              case For(_, _, _, b)            => rec(b :: xs)
-              case Switch(_, cs)              => rec(cs.map(_._2) ++ xs)
-              case Val(_, body, _)            => rec(body :: xs)
-              case Annotated(_, _, body)      => rec(body :: xs)
-              case RawLiteral(_)              => rec(xs)
-              case v: DataTypes.ident         => rec(xs)
-              case v: DataTypes.index         => rec(xs)
-              case v: DataTypes.bool          => rec(xs)
-              case v: DataTypes.float         => rec(xs)
-              case v: DataTypes.int           => rec(xs)
-              case v: DataTypes.vec2          => rec(v.args ++ xs)
-              case v: DataTypes.vec3          => rec(v.args ++ xs)
-              case v: DataTypes.vec4          => rec(v.args ++ xs)
-              case v: DataTypes.bvec2         => rec(v.args ++ xs)
-              case v: DataTypes.bvec3         => rec(v.args ++ xs)
-              case v: DataTypes.bvec4         => rec(v.args ++ xs)
-              case v: DataTypes.ivec2         => rec(v.args ++ xs)
-              case v: DataTypes.ivec3         => rec(v.args ++ xs)
-              case v: DataTypes.ivec4         => rec(v.args ++ xs)
-              case v: DataTypes.mat2          => rec(v.args ++ xs)
-              case v: DataTypes.mat3          => rec(v.args ++ xs)
-              case v: DataTypes.mat4          => rec(v.args ++ xs)
-              case v: DataTypes.array         => rec(xs)
-              case v: DataTypes.swizzle       => rec(v.genType :: xs)
-
-      rec(List(ast))
+      findAll(p).headOption
 
     def findAll(p: ShaderAST => Boolean): List[ShaderAST] =
       @tailrec
