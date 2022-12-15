@@ -1,8 +1,5 @@
 package ultraviolet
 
-import ultraviolet.datatypes.ShaderAST
-import ultraviolet.datatypes.ShaderPrinter
-import ultraviolet.datatypes.ShaderValid
 import ultraviolet.syntax.*
 
 object shadertoy:
@@ -45,7 +42,7 @@ object shadertoy:
 
   sealed trait ShaderToy
 
-  given ShaderPrinter[ShaderToy] = new ShaderPrinter {
+  given ShaderPrinter[ShaderToy] = new ShaderPrinter[ShaderToy] {
     val webGL2Printer = summon[ShaderPrinter[WebGL2]]
 
     def isValid(
@@ -154,6 +151,10 @@ object shadertoy:
       }
 
       pf.orElse(webGL2Printer.transformer)
+
+    def ubos(ast: ShaderAST): List[UBODef]          = ShaderPrinter.extractUbos(ast)
+    def uniforms(ast: ShaderAST): List[ShaderField] = ShaderPrinter.extractUniforms(ast)
+    def varyings(ast: ShaderAST): List[ShaderField] = ShaderPrinter.extractVaryings(ast)
 
     def printer: PartialFunction[ShaderAST, List[String]] = webGL2Printer.printer
   }

@@ -12,6 +12,9 @@ trait ShaderPrinter[T]:
   ): ShaderValid
   def transformer: PartialFunction[ShaderAST, ShaderAST]
   def printer: PartialFunction[ShaderAST, List[String]]
+  def ubos(ast: ShaderAST): List[UBODef]
+  def uniforms(ast: ShaderAST): List[ShaderField]
+  def varyings(ast: ShaderAST): List[ShaderField]
 
 object ShaderPrinter:
 
@@ -38,6 +41,10 @@ object ShaderPrinter:
         ShaderAST.Annotated(ShaderAST.DataTypes.ident("varying"), param, v)
     }
 
+    def ubos(ast: ShaderAST): List[UBODef]          = ShaderPrinter.extractUbos(ast)
+    def uniforms(ast: ShaderAST): List[ShaderField] = ShaderPrinter.extractUniforms(ast)
+    def varyings(ast: ShaderAST): List[ShaderField] = ShaderPrinter.extractVaryings(ast)
+
     def printer: PartialFunction[ShaderAST, List[String]] = PartialFunction.empty
 
   given ShaderPrinter[WebGL2] = new ShaderPrinter:
@@ -59,6 +66,10 @@ object ShaderPrinter:
       case ShaderAST.CallFunction("textureCube", args, argNames, returnType) =>
         ShaderAST.CallFunction("texture", args, argNames, returnType)
     }
+
+    def ubos(ast: ShaderAST): List[UBODef]          = ShaderPrinter.extractUbos(ast)
+    def uniforms(ast: ShaderAST): List[ShaderField] = ShaderPrinter.extractUniforms(ast)
+    def varyings(ast: ShaderAST): List[ShaderField] = ShaderPrinter.extractVaryings(ast)
 
     def printer: PartialFunction[ShaderAST, List[String]] = PartialFunction.empty
 
@@ -439,3 +450,55 @@ object ShaderPrinter:
       renderStatements(init) ++ end
 
     (body, returnType)
+
+  def extractUbos(ast: ShaderAST): List[UBODef] =
+    ast
+      .findAll {
+        case ShaderAST.UBO(_) => true
+        case _                => false
+      }
+      .flatMap {
+        case ShaderAST.UBO(ubo) => List(ubo)
+        case _                  => Nil
+      }
+
+  @SuppressWarnings(Array("scalafix:DisableSyntax.throw"))
+  def extractUniforms(ast: ShaderAST): List[ShaderField] =
+    ast
+      .findAll {
+        case ShaderAST.Annotated(ShaderAST.DataTypes.ident("uniform"), _, ShaderAST.Val(_, _, _)) => true
+        case _                                                                                    => false
+      }
+      .flatMap {
+        case ShaderAST.Annotated(name, param, ShaderAST.Val(id, value, typeOf)) =>
+          List(
+            ShaderField(
+              id,
+              typeOf.getOrElse(throw ShaderError.Metadata("Uniform declaration missing return type."))
+            )
+          )
+
+        case _ => Nil
+      }
+
+  @SuppressWarnings(Array("scalafix:DisableSyntax.throw"))
+  def extractVaryings(ast: ShaderAST): List[ShaderField] =
+    ast
+      .findAll {
+        case ShaderAST.Annotated(ShaderAST.DataTypes.ident("varying"), _, ShaderAST.Val(_, _, _)) => true
+        case ShaderAST.Annotated(ShaderAST.DataTypes.ident("in"), _, ShaderAST.Val(_, _, _))      => true
+        case ShaderAST.Annotated(ShaderAST.DataTypes.ident("out"), _, ShaderAST.Val(_, _, _))     => true
+        case _                                                                                    => false
+      }
+      .flatMap {
+        case ShaderAST.Annotated(name, param, ShaderAST.Val(id, value, typeOf)) =>
+          List(
+            ShaderField(
+              id,
+              typeOf.getOrElse(throw ShaderError.Metadata("Varying declaration missing return type."))
+            )
+          )
+
+        case _ =>
+          Nil
+      }
