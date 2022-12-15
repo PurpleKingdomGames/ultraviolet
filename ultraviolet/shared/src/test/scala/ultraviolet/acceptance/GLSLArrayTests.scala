@@ -31,6 +31,60 @@ class GLSLArrayTests extends munit.FunSuite {
     )
   }
 
+  test("arrays - component access") {
+
+    case class Env(VERTICES: array[16, vec2])
+
+    inline def fragment =
+      Shader[Env] { env =>
+        val foo = env.VERTICES(2)
+        val arr: array[4, Float] = array[4, Float](0.0f, 2.0f, 3.0f, 4.0f)
+        val bar = arr(1)
+      }
+
+    val actual =
+      fragment.toGLSL[WebGL2].code
+
+    // DebugAST.toAST(fragment)
+    // println(actual)
+
+    assertEquals(
+      actual,
+      s"""
+      |vec2 foo=VERTICES[2];
+      |float arr[4]=float[4](0.0,2.0,3.0,4.0);
+      |float bar=arr[1];
+      |""".stripMargin.trim
+    )
+  }
+
+  test("arrays - as return type") {
+
+    case class Env(VERTICES: array[16, vec2])
+
+    inline def fragment =
+      Shader[Env] { env =>
+        def func(): array[16, vec2] = env.VERTICES
+        val foo = func()
+      }
+
+    val actual =
+      fragment.toGLSL[WebGL2].code
+
+    // DebugAST.toAST(fragment)
+    // println(actual)
+
+    assertEquals(
+      actual,
+      s"""
+      |vec2[16] func(){
+      |  return VERTICES;
+      |}
+      |vec2 foo=func();
+      |""".stripMargin.trim
+    )
+  }
+
   test("arrays - more complicated example") {
 
     case class Env(
@@ -74,7 +128,7 @@ class GLSLArrayTests extends munit.FunSuite {
       |  vec2[MAX_VERTICES] polygon;
       |  int i=0;
       |  while(i<count){
-      |    polygon[i]=(v(i)/SIZE);
+      |    polygon[i]=(v[i]/SIZE);
       |    i=i+1;
       |  }
       |  return polygon;
