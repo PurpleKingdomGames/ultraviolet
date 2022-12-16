@@ -1,6 +1,7 @@
 package ultraviolet.acceptance
 
 import ultraviolet.DebugAST
+import ultraviolet.macros.ShaderMacros
 import ultraviolet.syntax.*
 
 class GLSLArrayTests extends munit.FunSuite {
@@ -37,9 +38,9 @@ class GLSLArrayTests extends munit.FunSuite {
 
     inline def fragment =
       Shader[Env] { env =>
-        val foo = env.VERTICES(2)
+        val foo                  = env.VERTICES(2)
         val arr: array[4, Float] = array[4, Float](0.0f, 2.0f, 3.0f, 4.0f)
-        val bar = arr(1)
+        val bar                  = arr(1)
       }
 
     val actual =
@@ -65,7 +66,7 @@ class GLSLArrayTests extends munit.FunSuite {
     inline def fragment =
       Shader[Env] { env =>
         def func(): array[16, vec2] = env.VERTICES
-        val foo = func()
+        val foo                     = func()
       }
 
     val actual =
@@ -80,7 +81,7 @@ class GLSLArrayTests extends munit.FunSuite {
       |vec2[16] func(){
       |  return VERTICES;
       |}
-      |vec2 foo=func();
+      |vec2[16] foo=func();
       |""".stripMargin.trim
     )
   }
@@ -114,11 +115,11 @@ class GLSLArrayTests extends munit.FunSuite {
         val polygon: array[MAX_VERTICES.type, vec2] = toUvSpace(iCount, env.VERTICES);
       }
 
-    val actual =
-      fragment.toGLSL[WebGL2].code
-
     // DebugAST.toAST(fragment)
     // println(actual)
+
+    val actual =
+      fragment.toGLSL[WebGL2].code
 
     assertEquals(
       actual,

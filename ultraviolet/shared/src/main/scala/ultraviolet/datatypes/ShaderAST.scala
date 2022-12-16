@@ -203,7 +203,7 @@ object ShaderAST:
         '{ Switch(${ Expr(x.on) }, ${ Expr(x.cases) }) }
     }
 
-  final case class Val(id: String, value: ShaderAST, typeOf: Option[String]) extends ShaderAST
+  final case class Val(id: String, value: ShaderAST, typeOf: Option[ShaderAST]) extends ShaderAST
   object Val:
     given ToExpr[Val] with {
       def apply(x: Val)(using Quotes): Expr[Val] =
@@ -489,7 +489,7 @@ object ShaderAST:
         case While(_, _)                   => None
         case For(_, _, _, _)               => None
         case Switch(_, _)                  => None
-        case Val(id, value, typeOf)        => typeOf.map(t => ShaderAST.DataTypes.ident(t))
+        case Val(id, value, typeOf)        => typeOf.flatMap(_.typeIdent)
         case Annotated(_, _, value)        => value.typeIdent
         case RawLiteral(_)                 => None
         case n @ DataTypes.ident(_)        => Option(n)
