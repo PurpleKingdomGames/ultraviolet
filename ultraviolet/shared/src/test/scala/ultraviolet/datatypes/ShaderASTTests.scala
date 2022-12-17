@@ -19,14 +19,12 @@ class ShaderASTTests extends munit.FunSuite {
 
     val ast = ShaderMacros.toAST(fragment).main
     
-    // This doesn't seem to work.
     ast.traverse {
       case v @ ShaderAST.Val(id, _, _) =>
         acc += id
         v
     }
 
-    // FINDS NOTHING.
     assertEquals(acc.length, 2)
     assertEquals(acc.toList, List("h", "i"))
   }
