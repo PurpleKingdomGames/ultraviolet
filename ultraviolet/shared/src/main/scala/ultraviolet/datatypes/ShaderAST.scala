@@ -203,7 +203,7 @@ object ShaderAST:
         '{ Switch(${ Expr(x.on) }, ${ Expr(x.cases) }) }
     }
 
-  final case class Val(id: String, value: ShaderAST, typeOf: Option[String]) extends ShaderAST
+  final case class Val(id: String, value: ShaderAST, typeOf: Option[ShaderAST]) extends ShaderAST
   object Val:
     given ToExpr[Val] with {
       def apply(x: Val)(using Quotes): Expr[Val] =
@@ -367,54 +367,7 @@ object ShaderAST:
       find(_ == p).isDefined
 
     def find(p: ShaderAST => Boolean): Option[ShaderAST] =
-      @tailrec
-      def rec(remaining: List[ShaderAST]): Option[ShaderAST] =
-        remaining match
-          case Nil => None
-          case x :: xs =>
-            x match
-              case v if p(v)                  => Option(v)
-              case Empty()                    => rec(xs)
-              case Block(s)                   => rec(s ++ xs)
-              case Neg(s)                     => rec(s :: xs)
-              case UBO(_)                     => rec(xs)
-              case Struct(_, _)               => rec(xs)
-              case New(_, _)                  => rec(xs)
-              case ShaderBlock(_, _, _, _, s) => rec(s ++ xs)
-              case Function(_, _, body, _)    => rec(body :: xs)
-              case CallFunction(_, _, _, _)   => rec(xs)
-              case FunctionRef(_, _, _)       => rec(xs)
-              case Cast(v, _)                 => rec(v :: xs)
-              case Infix(_, l, r, _)          => rec(l :: r :: xs)
-              case Assign(l, r)               => rec(l :: r :: xs)
-              case If(_, t, e)                => rec(t :: (e.toList ++ xs))
-              case While(_, b)                => rec(b :: xs)
-              case For(_, _, _, b)            => rec(b :: xs)
-              case Switch(_, cs)              => rec(cs.map(_._2) ++ xs)
-              case Val(_, body, _)            => rec(body :: xs)
-              case Annotated(_, _, body)      => rec(body :: xs)
-              case RawLiteral(_)              => rec(xs)
-              case v: DataTypes.ident         => rec(xs)
-              case v: DataTypes.index         => rec(xs)
-              case v: DataTypes.bool          => rec(xs)
-              case v: DataTypes.float         => rec(xs)
-              case v: DataTypes.int           => rec(xs)
-              case v: DataTypes.vec2          => rec(v.args ++ xs)
-              case v: DataTypes.vec3          => rec(v.args ++ xs)
-              case v: DataTypes.vec4          => rec(v.args ++ xs)
-              case v: DataTypes.bvec2         => rec(v.args ++ xs)
-              case v: DataTypes.bvec3         => rec(v.args ++ xs)
-              case v: DataTypes.bvec4         => rec(v.args ++ xs)
-              case v: DataTypes.ivec2         => rec(v.args ++ xs)
-              case v: DataTypes.ivec3         => rec(v.args ++ xs)
-              case v: DataTypes.ivec4         => rec(v.args ++ xs)
-              case v: DataTypes.mat2          => rec(v.args ++ xs)
-              case v: DataTypes.mat3          => rec(v.args ++ xs)
-              case v: DataTypes.mat4          => rec(v.args ++ xs)
-              case v: DataTypes.array         => rec(xs)
-              case v: DataTypes.swizzle       => rec(v.genType :: xs)
-
-      rec(List(ast))
+      findAll(p).headOption
 
     def findAll(p: ShaderAST => Boolean): List[ShaderAST] =
       @tailrec
@@ -474,47 +427,48 @@ object ShaderAST:
 
       crush(ast)
 
-    def traverse(f: ShaderAST => ShaderAST): ShaderAST =
+    def traverse(modify: PartialFunction[ShaderAST, ShaderAST]): ShaderAST =
+      val f = modify.orElse(s => s)
       ast match
-        case v @ Empty()                              => f(v)
-        case v @ Block(s)                             => f(Block(s.map(f)))
-        case v @ Neg(s)                               => f(Neg(f(s)))
-        case v @ UBO(_)                               => f(v)
-        case v @ Struct(_, _)                         => f(v)
-        case v @ New(_, _)                            => f(v)
-        case v @ ShaderBlock(in, out, n, h, s)        => f(ShaderBlock(in, out, n, h, s))
-        case v @ Function(id, args, body, returnType) => f(Function(id, args, f(body), returnType))
-        case v @ CallFunction(_, _, _, _)             => f(v)
-        case v @ FunctionRef(_, _, _)                 => f(v)
-        case v @ Cast(value, as)                      => f(Cast(f(value), as))
-        case v @ Infix(op, l, r, returnType)          => f(Infix(op, f(l), f(r), returnType))
-        case v @ Assign(l, r)                         => f(Assign(f(l), f(r)))
-        case v @ If(c, t, e)                          => f(If(c, f(t), e.map(f)))
-        case v @ While(c, b)                          => f(While(c, f(b)))
-        case v @ For(i, c, n, b)                      => f(For(i, c, n, f(b)))
-        case v @ Switch(c, cs)                        => f(Switch(c, cs.map(p => p._1 -> f(p._2))))
-        case v @ Val(id, value, typeOf)               => f(Val(id, f(value), typeOf))
-        case v @ Annotated(id, param, value)          => f(Annotated(id, param, f(value)))
-        case v @ RawLiteral(_)                        => f(v)
-        case v @ DataTypes.bool(_)                    => f(v)
-        case v @ DataTypes.float(_)                   => f(v)
-        case v @ DataTypes.int(_)                     => f(v)
-        case v @ DataTypes.ident(_)                   => f(v)
-        case v @ DataTypes.index(_, _)                => f(v)
-        case v @ DataTypes.vec2(vs)                   => f(DataTypes.vec2(vs.map(f)))
-        case v @ DataTypes.vec3(vs)                   => f(DataTypes.vec3(vs.map(f)))
-        case v @ DataTypes.vec4(vs)                   => f(DataTypes.vec4(vs.map(f)))
-        case v @ DataTypes.bvec2(vs)                  => f(DataTypes.bvec2(vs.map(f)))
-        case v @ DataTypes.bvec3(vs)                  => f(DataTypes.bvec3(vs.map(f)))
-        case v @ DataTypes.bvec4(vs)                  => f(DataTypes.bvec4(vs.map(f)))
-        case v @ DataTypes.ivec2(vs)                  => f(DataTypes.ivec2(vs.map(f)))
-        case v @ DataTypes.ivec3(vs)                  => f(DataTypes.ivec3(vs.map(f)))
-        case v @ DataTypes.ivec4(vs)                  => f(DataTypes.ivec4(vs.map(f)))
-        case v @ DataTypes.mat2(vs)                   => f(DataTypes.mat2(vs.map(f)))
-        case v @ DataTypes.mat3(vs)                   => f(DataTypes.mat3(vs.map(f)))
-        case v @ DataTypes.mat4(vs)                   => f(DataTypes.mat4(vs.map(f)))
-        case v @ DataTypes.array(s, vs, t)            => f(DataTypes.array(s, vs.map(f), t))
-        case v @ DataTypes.swizzle(_, _, _)           => f(v)
+        case v @ Empty()                             => f(v)
+        case Block(s)                                => f(Block(s.map(_.traverse(f))))
+        case Neg(s)                                  => f(Neg(s.traverse(f)))
+        case v @ UBO(_)                              => f(v)
+        case Struct(name, members)                   => f(Struct(name, members.map(_.traverse(f))))
+        case New(name, args)                         => f(New(name, args.map(_.traverse(f))))
+        case ShaderBlock(in, out, n, h, s)           => f(ShaderBlock(in, out, n, h, s.map(_.traverse(f))))
+        case Function(id, args, body, returnType)    => f(Function(id, args, body.traverse(f), returnType))
+        case CallFunction(id, args, argNames, rt)    => f(CallFunction(id, args, argNames, rt))
+        case FunctionRef(id, arg, rt)                => f(FunctionRef(id, arg, rt))
+        case Cast(value, as)                         => f(Cast(value.traverse(f), as))
+        case Infix(op, l, r, returnType)             => f(Infix(op, l.traverse(f), r.traverse(f), returnType))
+        case Assign(l, r)                            => f(Assign(l.traverse(f), r.traverse(f)))
+        case If(c, t, e)                             => f(If(c, t.traverse(f), e.map(_.traverse(f))))
+        case While(c, b)                             => f(While(c, b.traverse(f)))
+        case For(i, c, n, b)                         => f(For(i, c, n, b.traverse(f)))
+        case Switch(c, cs)                           => f(Switch(c, cs.map(p => p._1 -> p._2.traverse(f))))
+        case Val(id, value, typeOf)                  => f(Val(id, value.traverse(f), typeOf))
+        case Annotated(id, param, value)             => f(Annotated(id, param, value.traverse(f)))
+        case v @ RawLiteral(_)                       => f(v)
+        case v @ DataTypes.bool(_)                   => f(v)
+        case v @ DataTypes.float(_)                  => f(v)
+        case v @ DataTypes.int(_)                    => f(v)
+        case v @ DataTypes.ident(_)                  => f(v)
+        case DataTypes.index(id, at)                 => f(DataTypes.index(id, at.traverse(f)))
+        case DataTypes.vec2(vs)                      => f(DataTypes.vec2(vs.map(_.traverse(f))))
+        case DataTypes.vec3(vs)                      => f(DataTypes.vec3(vs.map(_.traverse(f))))
+        case DataTypes.vec4(vs)                      => f(DataTypes.vec4(vs.map(_.traverse(f))))
+        case DataTypes.bvec2(vs)                     => f(DataTypes.bvec2(vs.map(_.traverse(f))))
+        case DataTypes.bvec3(vs)                     => f(DataTypes.bvec3(vs.map(_.traverse(f))))
+        case DataTypes.bvec4(vs)                     => f(DataTypes.bvec4(vs.map(_.traverse(f))))
+        case DataTypes.ivec2(vs)                     => f(DataTypes.ivec2(vs.map(_.traverse(f))))
+        case DataTypes.ivec3(vs)                     => f(DataTypes.ivec3(vs.map(_.traverse(f))))
+        case DataTypes.ivec4(vs)                     => f(DataTypes.ivec4(vs.map(_.traverse(f))))
+        case DataTypes.mat2(vs)                      => f(DataTypes.mat2(vs.map(_.traverse(f))))
+        case DataTypes.mat3(vs)                      => f(DataTypes.mat3(vs.map(_.traverse(f))))
+        case DataTypes.mat4(vs)                      => f(DataTypes.mat4(vs.map(_.traverse(f))))
+        case DataTypes.array(s, vs, t)               => f(DataTypes.array(s, vs.map(_.traverse(f)), t))
+        case DataTypes.swizzle(genType, swizzle, rt) => f(DataTypes.swizzle(genType.traverse(f), swizzle, rt))
 
     def typeIdent: Option[ShaderAST.DataTypes.ident] =
       ast match
@@ -535,7 +489,7 @@ object ShaderAST:
         case While(_, _)                   => None
         case For(_, _, _, _)               => None
         case Switch(_, _)                  => None
-        case Val(id, value, typeOf)        => typeOf.map(t => ShaderAST.DataTypes.ident(t))
+        case Val(id, value, typeOf)        => typeOf.flatMap(_.typeIdent)
         case Annotated(_, _, value)        => value.typeIdent
         case RawLiteral(_)                 => None
         case n @ DataTypes.ident(_)        => Option(n)

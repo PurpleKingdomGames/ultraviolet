@@ -209,8 +209,7 @@ trait ShaderDSLTypes:
   case object samplerCube
 
   final case class array[L <: Singleton, T](private val arr: Array[T])(using convert: L => Int):
-    def apply(index: Int): T = arr(index)
-    def length: Int          = arr.length
+    def length: Int       = arr.length
     def update(i: Int, value: T): Unit =
       arr(i) = value
 
@@ -220,6 +219,11 @@ trait ShaderDSLTypes:
 
     def apply[L <: Singleton, T: ClassTag](args: T*)(using convert: L => Int): array[L, T] =
       array[L, T](args.toArray)
+
+    extension [L <: Singleton, T](a: array[L, T])
+      // Index look up is done with an extension method because it allows us
+      // to differentiate this from a normal function call in the macros.
+      def apply(index: Int): T = a.arr(index)
 
   final case class mat2(mat: Array[Float]):
     def +(m: mat2): mat2 = mat2(mat.zip(m.mat).map(_ + _))
