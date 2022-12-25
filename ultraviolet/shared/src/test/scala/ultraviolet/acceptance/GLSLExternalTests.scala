@@ -271,7 +271,7 @@ class GLSLExternalTests extends munit.FunSuite {
     assertEquals(
       actual,
       s"""
-      |vec2 def0(in int _fillType,in vec4 _fallback,in sampler2D _srcChannel,in vec2 _channelPos,in vec2 _channelSize,in vec2 _uv,in vec2 _entitySize){
+      |vec4 def0(in int _fillType,in vec4 _fallback,in sampler2D _srcChannel,in vec2 _channelPos,in vec2 _channelSize,in vec2 _uv,in vec2 _entitySize,in vec2 _textureSize){
       |  return switch(_fillType){
       |    case 1:
       |      texture(_srcChannel,_channelPos+(_uv*_channelSize));

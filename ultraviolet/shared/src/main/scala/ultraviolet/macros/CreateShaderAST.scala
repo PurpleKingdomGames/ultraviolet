@@ -1236,26 +1236,21 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
       case Typed(
             Block(
               List(
-                DefDef(_, args, _, Some(term))
+                DefDef(_, args, rt, Some(term))
               ),
               Closure(Ident("$anonfun"), None)
             ),
-            typeInfo
+            _
           ) =>
         val typesRendered: List[ShaderAST] =
-          typeInfo match
-            case Applied(_, types) =>
-              types.map(p => walkTree(p, envVarName))
-
-            case _ =>
-              args
-                .collect { case TermParamClause(ps) => ps }
-                .flatten
-                .collect { case ValDef(_, t, _) => extractInferredType(t) }
-                .collect { case Some(s) => ShaderAST.DataTypes.ident(s) }
+          args
+            .collect { case TermParamClause(ps) => ps }
+            .flatten
+            .collect { case ValDef(_, t, _) => extractInferredType(t) }
+            .collect { case Some(s) => ShaderAST.DataTypes.ident(s) }
 
         val returnType: Option[ShaderAST] =
-          typesRendered.reverse.headOption
+          extractInferredType(rt).map(s => ShaderAST.DataTypes.ident(s))
 
         val argNames =
           args
@@ -1264,7 +1259,6 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
             .collect { case ValDef(name, _, _) => name }
 
         val arguments = typesRendered
-          .dropRight(1)
           .zip(argNames)
           .map { case (typ, nme) => typ -> nme }
 
