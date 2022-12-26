@@ -1,6 +1,7 @@
 package ultraviolet.acceptance
 
 import ultraviolet.DebugAST
+import ultraviolet.macros.ShaderMacros
 import ultraviolet.syntax.*
 
 class GLSLSwitchStatementTests extends munit.FunSuite {
@@ -225,6 +226,84 @@ class GLSLSwitchStatementTests extends munit.FunSuite {
       |  return val1;
       |}
       |p2(1);
+      |""".stripMargin.trim
+    )
+  }
+
+  test("pattern matching can be used to return a lambda function") {
+
+    inline def fragment =
+      Shader[FragEnv, Int] { _ =>
+        def p1: Int => Int = flag =>
+          flag match
+            case 0 => 10
+            case 1 => 20
+            case 2 => 30
+            case _ => -100
+        p1(2)
+
+        def p2: Int => Int = flag =>
+          val amount = 5 // Forces the function body to be a Block
+          flag match
+            case 0 => amount
+            case 1 => 20
+            case 2 =>
+              val thirty = 30
+              thirty
+            case _ => -100
+        p2(1)
+      }
+
+    val actual =
+      fragment.toGLSL[WebGL2].code
+
+    // DebugAST.toAST(fragment)
+    // println(ShaderMacros.toAST(fragment))
+    // println(actual)
+
+    assertEquals(
+      actual,
+      s"""
+      |int def0(in int flag){
+      |  int val0;
+      |  switch(flag){
+      |    case 0:
+      |      val0=10;
+      |      break;
+      |    case 1:
+      |      val0=20;
+      |      break;
+      |    case 2:
+      |      val0=30;
+      |      break;
+      |    default:
+      |      val0=-100;
+      |      break;
+      |  }
+      |  return val0;
+      |}
+      |int def1(in int flag){
+      |  int amount=5;
+      |  int val1;
+      |  switch(flag){
+      |    case 0:
+      |      val1=amount;
+      |      break;
+      |    case 1:
+      |      val1=20;
+      |      break;
+      |    case 2:
+      |      int thirty=30;
+      |      val1=thirty;
+      |      break;
+      |    default:
+      |      val1=-100;
+      |      break;
+      |  }
+      |  return val1;
+      |}
+      |def0(2);
+      |def1(1);
       |""".stripMargin.trim
     )
   }
