@@ -303,6 +303,12 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
                   findReturnType(body)
             }
 
+        def register(fnDef: ShaderAST.Function, isAnon: Boolean): ShaderAST =
+          shaderDefs += FunctionLookup(fnDef, !isAnon)
+
+          if isAnon then ShaderAST.FunctionRef(fn, fnDef.args.map(_._1), returnType)
+          else fnDef
+
         body match
           case ShaderAST.Block(List(ShaderAST.FunctionRef(id, arg, rt))) =>
             proxies.add(fn, id, arg, rt)
@@ -325,11 +331,14 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
                 )
               )
 
-            ShaderAST.Function(
-              fn,
-              argNamesTypes.map(p => ShaderAST.DataTypes.ident(p._1) -> p._2),
-              ShaderAST.Block(statements ++ fnBody.statements),
-              returnType
+            register(
+              ShaderAST.Function(
+                fn,
+                argNamesTypes.map(p => ShaderAST.DataTypes.ident(p._1) -> p._2),
+                ShaderAST.Block(statements ++ fnBody.statements),
+                returnType
+              ),
+              isAnon
             )
 
           case ShaderAST.Block(statements :+ ShaderAST.Switch(on, cases))
@@ -351,11 +360,14 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
                 )
               )
 
-            ShaderAST.Function(
-              fn,
-              argNamesTypes.map(p => ShaderAST.DataTypes.ident(p._1) -> p._2),
-              ShaderAST.Block(statements ++ fnBody.statements),
-              returnType
+            register(
+              ShaderAST.Function(
+                fn,
+                argNamesTypes.map(p => ShaderAST.DataTypes.ident(p._1) -> p._2),
+                ShaderAST.Block(statements ++ fnBody.statements),
+                returnType
+              ),
+              isAnon
             )
 
           case ShaderAST.If(cond, thn, Some(els)) =>
@@ -375,11 +387,14 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
                 )
               )
 
-            ShaderAST.Function(
-              fn,
-              argNamesTypes.map(p => ShaderAST.DataTypes.ident(p._1) -> p._2),
-              fnBody,
-              returnType
+            register(
+              ShaderAST.Function(
+                fn,
+                argNamesTypes.map(p => ShaderAST.DataTypes.ident(p._1) -> p._2),
+                fnBody,
+                returnType
+              ),
+              isAnon
             )
 
           case ShaderAST.Switch(on, cases)
@@ -401,33 +416,26 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
                 )
               )
 
-            ShaderAST.Function(
-              fn,
-              argNamesTypes.map(p => ShaderAST.DataTypes.ident(p._1) -> p._2),
-              fnBody,
-              returnType
+            register(
+              ShaderAST.Function(
+                fn,
+                argNamesTypes.map(p => ShaderAST.DataTypes.ident(p._1) -> p._2),
+                fnBody,
+                returnType
+              ),
+              isAnon
             )
 
-          case _ =>
-            shaderDefs += FunctionLookup(
+          case b =>
+            register(
               ShaderAST.Function(
                 fn,
                 argNamesTypes.map(p => ShaderAST.DataTypes.ident(p._1) -> p._2),
                 body,
                 returnType
               ),
-              !isAnon
+              isAnon
             )
-
-            if isAnon then
-              ShaderAST.FunctionRef(fn, argNamesTypes.map(p => ShaderAST.DataTypes.ident(p._1)), returnType)
-            else
-              ShaderAST.Function(
-                fn,
-                argNamesTypes.map(p => ShaderAST.DataTypes.ident(p._1) -> p._2),
-                body,
-                returnType
-              )
 
       case DefDef(_, _, _, _) =>
         throw ShaderError.UnexpectedConstruction("Unexpected def construction")
@@ -1236,39 +1244,13 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
       case Typed(
             Block(
               List(
-                DefDef(_, args, rt, Some(term))
+                fn @ DefDef(_, args, rt, Some(term))
               ),
               Closure(Ident("$anonfun"), None)
             ),
             _
           ) =>
-        val typesRendered: List[ShaderAST] =
-          args
-            .collect { case TermParamClause(ps) => ps }
-            .flatten
-            .collect { case ValDef(_, t, _) => extractInferredType(t) }
-            .collect { case Some(s) => ShaderAST.DataTypes.ident(s) }
-
-        val returnType: Option[ShaderAST] =
-          extractInferredType(rt).map(s => ShaderAST.DataTypes.ident(s))
-
-        val argNames =
-          args
-            .collect { case TermParamClause(ps) => ps }
-            .flatten
-            .collect { case ValDef(name, _, _) => name }
-
-        val arguments = typesRendered
-          .zip(argNames)
-          .map { case (typ, nme) => typ -> nme }
-
-        val fn = proxies.makeDefName
-        shaderDefs += FunctionLookup(
-          ShaderAST.Function(fn, arguments, walkTerm(term, envVarName), returnType),
-          false
-        )
-        val nmes = argNames.map(ShaderAST.DataTypes.ident.apply)
-        ShaderAST.CallFunction(fn, arguments.map(_._1), nmes, returnType)
+        walkTree(fn, envVarName)
 
       case Typed(term, _) =>
         walkTerm(term, envVarName)

@@ -243,7 +243,7 @@ class GLSLExternalTests extends munit.FunSuite {
 
         val fillType: Int              = 0
         val fallback: vec4             = vec4(1.0)
-        val srcChannel: sampler2D.type = sampler2D
+        @uniform val srcChannel: sampler2D.type = sampler2D
         val channelPos: vec2           = vec2(2.0)
         val channelSize: vec2          = vec2(3.0)
         val uv: vec2                   = vec2(4.0)
@@ -272,21 +272,23 @@ class GLSLExternalTests extends munit.FunSuite {
       actual,
       s"""
       |vec4 def0(in int _fillType,in vec4 _fallback,in sampler2D _srcChannel,in vec2 _channelPos,in vec2 _channelSize,in vec2 _uv,in vec2 _entitySize,in vec2 _textureSize){
-      |  return switch(_fillType){
+      |  vec4 val0;
+      |  switch(_fillType){
       |    case 1:
-      |      texture(_srcChannel,_channelPos+(_uv*_channelSize));
+      |      val0=texture(_srcChannel,_channelPos+(_uv*_channelSize));
       |      break;
       |    case 2:
-      |      texture(_srcChannel,_channelPos+((fract(_uv*(_entitySize/_textureSize)))*_channelSize));
+      |      val0=texture(_srcChannel,_channelPos+((fract(_uv*(_entitySize/_textureSize)))*_channelSize));
       |      break;
       |    default:
-      |      _fallback;
+      |      val0=_fallback;
       |      break;
       |  }
+      |  return val0;
       |}
       |int fillType=0;
       |vec4 fallback=vec4(1.0);
-      |sampler2D srcChannel=sampler2D;
+      |uniform sampler2D srcChannel;
       |vec2 channelPos=vec2(2.0);
       |vec2 channelSize=vec2(3.0);
       |vec2 uv=vec2(4.0);
