@@ -1190,6 +1190,14 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
           None
         )
 
+      // Swizzle a function call
+      case Select(term @ Apply(Ident(_), _), swzl) if isSwizzle.matches(swzl) =>
+        ShaderAST.DataTypes.swizzle(
+          walkTerm(term, envVarName),
+          swzl,
+          None
+        )
+
       // Inlined external def
 
       case Inlined(Some(Apply(Ident(name), args)), ds, x @ Typed(term, typeTree)) =>

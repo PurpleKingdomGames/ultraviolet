@@ -6,7 +6,7 @@ import ultraviolet.syntax.*
 class GLSLSwizzleTests extends munit.FunSuite {
 
   @SuppressWarnings(Array("scalafix:DisableSyntax.var"))
-  case class FragEnv(UV: vec2, var COLOR: vec4)
+  case class FragEnv(UV: vec2, var COLOR: vec4, SRC_CHANNEL: sampler2D.type)
 
   test("swizzling") {
     inline def fragment1: Shader[FragEnv, vec4] =
@@ -104,6 +104,38 @@ class GLSLSwizzleTests extends munit.FunSuite {
       |}
       |vec3 normal=vec3(1.0);
       |vec3 rotatedNormal=(vec4(normal,1.0)*rotationZ(ROTATION)).xyz;
+      |""".stripMargin.trim
+    )
+  }
+
+  test("swizzling a function call") {
+    inline def fragment: Shader[FragEnv, Float] =
+      Shader { env =>
+        def foo(): vec4 =
+          vec4(1.0)
+        foo().xyz
+        foo().w
+
+        texture2D(env.SRC_CHANNEL, vec2(0.0f, 1.0f)).xyz
+        texture2D(env.SRC_CHANNEL, vec2(0.0f, 1.0f)).w
+      }
+
+    val actual =
+      fragment.toGLSL[WebGL2].code
+
+    // DebugAST.toAST(fragment)
+    // println(actual)
+
+    assertEquals(
+      actual,
+      s"""
+      |vec4 foo(){
+      |  return vec4(1.0);
+      |}
+      |foo().xyz;
+      |foo().w;
+      |texture(SRC_CHANNEL,vec2(0.0,1.0)).xyz;
+      |texture(SRC_CHANNEL,vec2(0.0,1.0)).w;
       |""".stripMargin.trim
     )
   }
