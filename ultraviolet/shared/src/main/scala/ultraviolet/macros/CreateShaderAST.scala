@@ -645,13 +645,20 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
               Block(
                 Nil,
                 Block(
-                  List(DefDef("$anonfun", _, _, Some(body))),
+                  List(
+                    DefDef(
+                      "$anonfun",
+                      List(TermParamClause(List(ValDef(maybeName, _, None)))),
+                      _,
+                      Some(body)
+                    )
+                  ),
                   _
                 )
               )
             )
           ) if forLoopName == "cfor" || forLoopName == "_for" =>
-        val varName = proxies.makeVarName
+        val varName = if maybeName.contains("$") then proxies.makeVarName else maybeName
         val init    = walkTerm(initial, envVarName)
         val i = ShaderAST.Val(
           varName,

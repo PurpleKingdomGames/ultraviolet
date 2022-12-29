@@ -132,4 +132,36 @@ class GLSLLoopTests extends munit.FunSuite {
     )
   }
 
+  test("for loops (_for) - use the value.") {
+
+    @SuppressWarnings(Array("scalafix:DisableSyntax.var"))
+    inline def fragment: Shader[FragEnv, Float] =
+      Shader { _ =>
+        val v: array[3, vec2] = array[3, vec2](vec2(1.0f), vec2(2.0f), vec2(3.0f))
+        var xs: Float         = 0.0f
+        _for(0, _ < 3, _ + 1) { i =>
+          xs = xs + v(i).x
+        }
+        xs
+      }
+
+    val actual =
+      fragment.toGLSL[WebGL2].code
+
+    // DebugAST.toAST(fragment)
+    // println(actual)
+
+    assertEquals(
+      actual,
+      s"""
+      |vec2 v[3]=vec2[3](vec2(1.0),vec2(2.0),vec2(3.0));
+      |float xs=0.0;
+      |for(int i=0;i<3;i=i+1){
+      |  xs=xs+v[i].x;
+      |}
+      |xs;
+      |""".stripMargin.trim
+    )
+  }
+
 }
