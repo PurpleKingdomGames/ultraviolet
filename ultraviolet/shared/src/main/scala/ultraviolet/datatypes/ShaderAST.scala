@@ -31,6 +31,7 @@ object ShaderAST:
         case v: Val          => Expr(v)
         case v: Annotated    => Expr(v)
         case v: RawLiteral   => Expr(v)
+        case v: Field        => Expr(v)
   }
 
   final case class Empty() extends ShaderAST
@@ -224,6 +225,13 @@ object ShaderAST:
         '{ RawLiteral(${ Expr(x.value) }) }
     }
 
+  final case class Field(term: ShaderAST, field: ShaderAST) extends ShaderAST
+  object Field:
+    given ToExpr[Field] with {
+      def apply(x: Field)(using Quotes): Expr[Field] =
+        '{ Field(${ Expr(x.term) }, ${ Expr(x.field) }) }
+    }
+
   enum DataTypes extends ShaderAST:
     case ident(id: String)
     case index(id: String, at: ShaderAST)
@@ -397,6 +405,7 @@ object ShaderAST:
               case Val(_, body, _)            => rec(body :: xs, acc)
               case Annotated(_, _, body)      => rec(body :: xs, acc)
               case RawLiteral(_)              => rec(xs, acc)
+              case Field(t, _)                => rec(t :: xs, acc)
               case v: DataTypes.ident         => rec(xs, acc)
               case v: DataTypes.index         => rec(xs, acc)
               case v: DataTypes.bool          => rec(xs, acc)
@@ -450,6 +459,7 @@ object ShaderAST:
         case Val(id, value, typeOf)                  => f(Val(id, value.traverse(f), typeOf))
         case Annotated(id, param, value)             => f(Annotated(id, param, value.traverse(f)))
         case v @ RawLiteral(_)                       => f(v)
+        case Field(t, n)                             => f(Field(t.traverse(f), n))
         case v @ DataTypes.bool(_)                   => f(v)
         case v @ DataTypes.float(_)                  => f(v)
         case v @ DataTypes.int(_)                    => f(v)
@@ -492,6 +502,7 @@ object ShaderAST:
         case Val(id, value, typeOf)        => typeOf.flatMap(_.typeIdent)
         case Annotated(_, _, value)        => value.typeIdent
         case RawLiteral(_)                 => None
+        case Field(t, n)                   => None
         case n @ DataTypes.ident(_)        => Option(n)
         case DataTypes.index(_, _)         => None
         case DataTypes.bool(_)             => Option(ShaderAST.DataTypes.ident("bool"))

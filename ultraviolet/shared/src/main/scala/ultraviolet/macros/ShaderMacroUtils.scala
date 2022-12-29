@@ -29,6 +29,7 @@ trait ShaderMacroUtils:
     case v: ShaderAST.Val               => findReturnType(v.value)
     case v: ShaderAST.Annotated         => findReturnType(v.value)
     case v: ShaderAST.RawLiteral        => None
+    case v: ShaderAST.Field             => None
     case v: ShaderAST.DataTypes.ident   => v.typeIdent
     case v: ShaderAST.DataTypes.index   => v.typeIdent
     case v: ShaderAST.DataTypes.bool    => v.typeIdent

@@ -332,6 +332,15 @@ object ShaderPrinter:
 
       case RawLiteral(body) =>
         List(body)
+
+      case Field(term, field) =>
+        render(term).zip(render(field)).headOption match
+          case Some((t, f)) =>
+            List(s"$t.$f")
+
+          case None =>
+            throw ShaderError.PrintError("Failed to render shader, unexpected field construction.")
+
     }
 
     val p =
@@ -393,6 +402,7 @@ object ShaderPrinter:
       case Val(_, _, typeOf)             => typeOf.toList.flatMap(render).headOption
       case Annotated(_, _, value)        => decideType(value)
       case RawLiteral(_)                 => None
+      case Field(_, _)                   => None
       case DataTypes.ident(_)            => None
       case DataTypes.index(_, _)         => None
       case DataTypes.bool(_)             => Option("bool")

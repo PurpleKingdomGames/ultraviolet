@@ -161,4 +161,50 @@ class GLSLArrayTests extends munit.FunSuite {
     )
   }
 
+  test("arrays - component access") {
+
+    inline def fragment =
+      Shader {
+        @const val foo = array[3, vec2](vec2(2.5f), vec2(7.0f), vec2(1.5f))
+        foo(1).y
+      }
+
+    val actual =
+      fragment.toGLSL[WebGL2].code
+
+    // DebugAST.toAST(fragment)
+    // println(actual)
+
+    assertEquals(
+      actual,
+      s"""
+      |const vec2 foo[3]=vec2[3](vec2(2.5),vec2(7.0),vec2(1.5));
+      |foo[1].y;
+      |""".stripMargin.trim
+    )
+  }
+
+  test("arrays - swizzle") {
+
+    inline def fragment =
+      Shader {
+        @const val foo = array[1, vec4](vec4(1.0f))
+        foo(0).xyz
+      }
+
+    val actual =
+      fragment.toGLSL[WebGL2].code
+
+    // DebugAST.toAST(fragment)
+    // println(actual)
+
+    assertEquals(
+      actual,
+      s"""
+      |const vec4 foo[1]=vec4[1](vec4(1.0));
+      |foo[0].xyz;
+      |""".stripMargin.trim
+    )
+  }
+
 }

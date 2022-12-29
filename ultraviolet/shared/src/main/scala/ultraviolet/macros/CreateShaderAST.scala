@@ -166,7 +166,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
       case TypeDef(_, _) =>
         throw ShaderError.Unsupported("Shaders do not support fancy types. :-)")
 
-      case ValDef(name, _, _)  if isGLSLReservedWord(name) =>
+      case ValDef(name, _, _) if isGLSLReservedWord(name) =>
         throw ShaderError.GLSLReservedWord(name)
 
       case v @ ValDef(name, typ, Some(term)) =>
@@ -652,7 +652,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
             )
           ) if forLoopName == "cfor" || forLoopName == "_for" =>
         val varName = proxies.makeVarName
-        val init = walkTerm(initial, envVarName)
+        val init    = walkTerm(initial, envVarName)
         val i = ShaderAST.Val(
           varName,
           init,
@@ -935,6 +935,19 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
 
           case _ =>
             ShaderAST.DataTypes.ident(s"-$namespace.$name.$field")
+
+      // Read a component of an array
+      case Select(
+            term @ Apply(
+              Apply(TypeApply(Select(Ident("array"), "apply"), _), List(_)),
+              List(Literal(IntConstant(_)))
+            ),
+            component
+          ) =>
+        ShaderAST.Field(
+          walkTerm(term, envVarName),
+          ShaderAST.DataTypes.ident(component)
+        )
 
       // Native method call.
       case Apply(Ident(name), List(Inlined(None, Nil, Ident(defRef)))) =>
