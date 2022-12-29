@@ -628,9 +628,9 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
 
       case Apply(
             Apply(
-              TypeApply(Ident("cfor"), _),
+              TypeApply(Ident(forLoopName), _),
               List(
-                Literal(IntConstant(initial)),
+                initial,
                 Block(
                   List(DefDef("$anonfun", _, _, Some(condition))),
                   Closure(Ident("$anonfun"), None)
@@ -650,12 +650,13 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
                 )
               )
             )
-          ) =>
+          ) if forLoopName == "cfor" || forLoopName == "_for" =>
         val varName = proxies.makeVarName
+        val init = walkTerm(initial, envVarName)
         val i = ShaderAST.Val(
           varName,
-          ShaderAST.DataTypes.int(initial),
-          Option(ShaderAST.DataTypes.ident("int"))
+          init,
+          findReturnType(init)
         )
 
         val c = walkTerm(condition, envVarName).traverse {
@@ -682,35 +683,6 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
         val b = walkTerm(body, envVarName).traverse(replaceName)
 
         ShaderAST.For(i, c, n, b)
-
-      case Apply(
-            Apply(
-              TypeApply(Ident("cfor"), _),
-              List(
-                _,
-                Block(
-                  List(DefDef("$anonfun", _, _, Some(condition))),
-                  Closure(Ident("$anonfun"), None)
-                ),
-                Block(
-                  List(DefDef("$anonfun", _, _, Some(next))),
-                  Closure(Ident("$anonfun"), None)
-                )
-              )
-            ),
-            List(
-              Block(
-                Nil,
-                Block(
-                  List(DefDef("$anonfun", _, _, Some(body))),
-                  _
-                )
-              )
-            )
-          ) =>
-        throw ShaderError.Unsupported(
-          "Shaders do not support for-loops (cfor) constructed using types other than `Int`."
-        )
 
       // Primitives
 
