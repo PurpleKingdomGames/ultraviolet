@@ -23,3 +23,5 @@ object Shader:
   extension [In, Out](inline ctx: Shader[In, Out])
     inline def toGLSL[T](using ShaderPrinter[T]): ShaderOutput = ShaderMacros.toAST(ctx).render
     inline def run(in: In): Out                                = ctx(in)
+
+    inline def map[B](f: Out => B): Shader[In, B] = (in: In) => f(ctx.run(in))
