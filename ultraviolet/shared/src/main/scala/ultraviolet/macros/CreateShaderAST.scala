@@ -311,8 +311,14 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
             .collect { case TermParamClause(ps) => ps }
             .flatten
             .collect { case ValDef(name, typ, _) =>
+              val vName =
+                if name.contains("$") then
+                  val n = proxies.makeVarName
+                  proxies.add(name, n)
+                  n
+                else name
               val typeOf = extractInferredType(typ)
-              (typeOf.getOrElse("void"), name)
+              (typeOf.getOrElse("void"), vName)
             }
 
         val isAnon = fnName == "$anonfun"
@@ -789,7 +795,29 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
         val proxy = proxies.lookUp(id, Proxy(id, Nil, Option(ShaderAST.DataTypes.ident("void"))))
         ShaderAST.CallFunction(proxy.name, args.map(x => walkTerm(x, envVarName)), Nil, proxy.returnType)
 
-      case Apply(TypeApply(Select(g, op), _), List(f)) if op == "compose" || op == "andThen" =>
+      case Apply(TypeApply(Apply(TypeApply(Select(Ident("Shader"), "map"), _), List(shaderf)), _), List(mapf)) =>
+        (walkTerm(shaderf, envVarName), walkTerm(mapf, envVarName)) match
+          case (
+                ShaderAST.ShaderBlock(
+                  _,
+                  _,
+                  _,
+                  _,
+                  List(
+                    ShaderAST.Block(statements :+ last)
+                  )
+                ),
+                ShaderAST.Block(List(ShaderAST.FunctionRef(fnName, _, rt)))
+              ) =>
+            ShaderAST.Block(
+              statements :+
+                ShaderAST.CallFunction(fnName, List(last), Nil, rt)
+            )
+
+          case _ =>
+            throw ShaderError.UnexpectedConstruction("Unexpected structure when processing Shader.map operation.")
+
+      case Apply(TypeApply(Select(g, op), _), List(f)) if op == "compose" || op == "andThen" || op == "map" =>
         def toProxy(t: Term): Proxy =
           t match
             case Ident(name) =>
