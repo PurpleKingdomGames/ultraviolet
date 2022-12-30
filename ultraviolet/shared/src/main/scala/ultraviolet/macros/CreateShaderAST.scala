@@ -507,29 +507,35 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
             Some(
               Apply(Select(Ident("Shader"), "fromFile"), List(Literal(StringConstant(_))))
             ),
-            Nil,
+            _,
             Typed(
-              Inlined(
-                Some(
-                  Apply(
-                    Select(Ident("Shader"), "apply"),
-                    List(
-                      Inlined(
-                        Some(_),
-                        Nil,
-                        Typed(
+              TypeApply(
+                Select(
+                  Inlined(
+                    Some(
+                      Apply(
+                        Select(Ident("Shader"), "apply"),
+                        List(
                           Inlined(
-                            Some(TypeIdent(_)),
+                            Some(_),
                             Nil,
-                            term
-                          ),
-                          _
+                            Typed(
+                              Inlined(
+                                Some(TypeIdent(_)),
+                                Nil,
+                                term
+                              ),
+                              _
+                            )
+                          )
                         )
                       )
-                    )
-                  )
+                    ),
+                    _,
+                    _
+                  ),
+                  _
                 ),
-                _,
                 _
               ),
               _
