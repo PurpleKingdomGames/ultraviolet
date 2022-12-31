@@ -125,7 +125,7 @@ object indigo:
               "fragment",
               Nil,
               ShaderAST.Block(statements),
-              Some(ShaderAST.DataTypes.ident("vec4"))
+              ShaderAST.DataTypes.ident("vec4")
             ) =>
           val nonEmpty = statements
             .filterNot(_.isEmpty)
@@ -143,20 +143,20 @@ object indigo:
                   ShaderAST.Assign(ShaderAST.DataTypes.ident("COLOR"), last.headOption.getOrElse(ShaderAST.Empty()))
                 )
             ),
-            None
+            ShaderAST.unknownType
           )
 
         case ShaderAST.Function(
               "fragment",
               Nil,
               body,
-              Some(ShaderAST.DataTypes.ident("vec4"))
+              ShaderAST.DataTypes.ident("vec4")
             ) =>
           ShaderAST.Function(
             "fragment",
             Nil,
             ShaderAST.Assign(ShaderAST.DataTypes.ident("COLOR"), body),
-            None
+            ShaderAST.unknownType
           )
       }
 

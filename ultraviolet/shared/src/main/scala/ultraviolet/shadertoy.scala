@@ -81,7 +81,7 @@ object shadertoy:
                     (ShaderAST.DataTypes.ident("vec2") -> "fragCoord")
                   ),
                   body,
-                  Some(ShaderAST.DataTypes.ident("vec4"))
+                  ShaderAST.DataTypes.ident("vec4")
                 ) =>
               true
 
@@ -108,7 +108,7 @@ object shadertoy:
               "mainImage",
               List(typ1 -> fragColor, typ2 -> fragCoord),
               ShaderAST.Block(statements),
-              Some(ShaderAST.DataTypes.ident("vec4"))
+              ShaderAST.DataTypes.ident("vec4")
             ) =>
           val nonEmpty = statements
             .filterNot(_.isEmpty)
@@ -129,14 +129,14 @@ object shadertoy:
                   ShaderAST.Assign(ShaderAST.DataTypes.ident("fragColor"), last.headOption.getOrElse(ShaderAST.Empty()))
                 )
             ),
-            None
+            ShaderAST.DataTypes.ident("void")
           )
 
         case ShaderAST.Function(
               "mainImage",
               List(typ1 -> fragColor, typ2 -> fragCoord),
               body,
-              Some(ShaderAST.DataTypes.ident("vec4"))
+              ShaderAST.DataTypes.ident("vec4")
             ) =>
           ShaderAST.Function(
             "mainImage",
@@ -145,7 +145,7 @@ object shadertoy:
               typ2                                                                           -> fragCoord
             ),
             ShaderAST.Assign(ShaderAST.DataTypes.ident("fragColor"), body),
-            None
+            ShaderAST.DataTypes.ident("void")
           )
       }
 

@@ -99,7 +99,7 @@ object ShaderAST:
         }
     }
 
-  final case class Function(id: String, args: List[(ShaderAST, String)], body: ShaderAST, returnType: Option[ShaderAST])
+  final case class Function(id: String, args: List[(ShaderAST, String)], body: ShaderAST, returnType: ShaderAST)
       extends ShaderAST
   object Function:
     given ToExpr[Function] with {
@@ -110,7 +110,7 @@ object ShaderAST:
   final case class CallFunction(
       id: String,
       args: List[ShaderAST],
-      returnType: Option[ShaderAST]
+      returnType: ShaderAST
   ) extends ShaderAST
   object CallFunction:
     given ToExpr[CallFunction] with {
@@ -119,7 +119,7 @@ object ShaderAST:
     }
 
   // Allows things high up the tree to gain a reference to created functions.
-  final case class FunctionRef(id: String, arg: List[ShaderAST], returnType: Option[ShaderAST]) extends ShaderAST
+  final case class FunctionRef(id: String, arg: List[ShaderAST], returnType: ShaderAST) extends ShaderAST
   object FunctionRef:
     given ToExpr[FunctionRef] with {
       def apply(x: FunctionRef)(using Quotes): Expr[FunctionRef] =
@@ -140,7 +140,7 @@ object ShaderAST:
       op: String,
       left: ShaderAST,
       right: ShaderAST,
-      returnType: Option[ShaderAST]
+      returnType: ShaderAST
   ) extends ShaderAST
   object Infix:
     given ToExpr[Infix] with {
@@ -201,7 +201,7 @@ object ShaderAST:
         '{ Switch(${ Expr(x.on) }, ${ Expr(x.cases) }) }
     }
 
-  final case class Val(id: String, value: ShaderAST, typeOf: Option[ShaderAST]) extends ShaderAST
+  final case class Val(id: String, value: ShaderAST, typeOf: ShaderAST) extends ShaderAST
   object Val:
     given ToExpr[Val] with {
       def apply(x: Val)(using Quotes): Expr[Val] =
@@ -247,7 +247,7 @@ object ShaderAST:
     case mat2(args: List[ShaderAST])
     case mat3(args: List[ShaderAST])
     case mat4(args: List[ShaderAST])
-    case array(size: Int, args: List[ShaderAST], typeOf: Option[String])
+    case array(size: Int, args: List[ShaderAST], typeOf: ShaderAST)
     case swizzle(genType: ShaderAST, swizzle: String, returnType: ShaderAST)
 
   object DataTypes:
@@ -361,6 +361,8 @@ object ShaderAST:
       def apply(x: swizzle)(using Quotes): Expr[swizzle] =
         '{ swizzle(${ Expr(x.genType) }, ${ Expr(x.swizzle) }, ${ Expr(x.returnType) }) }
     }
+
+  val unknownType: ShaderAST.DataTypes.ident = ShaderAST.DataTypes.ident("void")
 
   extension (ast: ShaderAST)
     def isEmpty: Boolean =
@@ -477,47 +479,47 @@ object ShaderAST:
         case DataTypes.array(s, vs, t)               => f(DataTypes.array(s, vs.map(_.traverse(f)), t))
         case DataTypes.swizzle(genType, swizzle, rt) => f(DataTypes.swizzle(genType.traverse(f), swizzle, rt))
 
-    def typeIdent: Option[ShaderAST.DataTypes.ident] =
+    def typeIdent: ShaderAST.DataTypes.ident =
       ast match
-        case Empty()                       => None
-        case Block(_)                      => None
+        case Empty()                       => unknownType
+        case Block(_)                      => unknownType
         case Neg(v)                        => v.typeIdent
-        case UBO(_)                        => None
-        case Struct(name, _)               => Option(ShaderAST.DataTypes.ident(name))
-        case New(name, _)                  => Option(ShaderAST.DataTypes.ident(name))
-        case ShaderBlock(_, _, _, _)       => None
-        case Function(_, _, _, rt)         => rt.flatMap(_.typeIdent)
-        case CallFunction(_, _, rt)        => rt.flatMap(_.typeIdent)
-        case FunctionRef(_, _, rt)         => rt.flatMap(_.typeIdent)
-        case Cast(_, as)                   => Option(ShaderAST.DataTypes.ident(as))
-        case Infix(_, _, _, rt)            => rt.flatMap(_.typeIdent)
-        case Assign(_, _)                  => None
-        case If(_, _, _)                   => None
-        case While(_, _)                   => None
-        case For(_, _, _, _)               => None
-        case Switch(_, _)                  => None
-        case Val(id, value, typeOf)        => typeOf.flatMap(_.typeIdent)
+        case UBO(_)                        => unknownType
+        case Struct(name, _)               => ShaderAST.DataTypes.ident(name)
+        case New(name, _)                  => ShaderAST.DataTypes.ident(name)
+        case ShaderBlock(_, _, _, _)       => unknownType
+        case Function(_, _, _, rt)         => rt.typeIdent
+        case CallFunction(_, _, rt)        => rt.typeIdent
+        case FunctionRef(_, _, rt)         => rt.typeIdent
+        case Cast(_, as)                   => ShaderAST.DataTypes.ident(as)
+        case Infix(_, _, _, rt)            => rt.typeIdent
+        case Assign(_, _)                  => unknownType
+        case If(_, _, _)                   => unknownType
+        case While(_, _)                   => unknownType
+        case For(_, _, _, _)               => unknownType
+        case Switch(_, _)                  => unknownType
+        case Val(id, value, typeOf)        => typeOf.typeIdent
         case Annotated(_, _, value)        => value.typeIdent
-        case RawLiteral(_)                 => None
-        case Field(t, n)                   => None
-        case n @ DataTypes.ident(_)        => Option(n)
-        case DataTypes.index(_, _)         => None
-        case DataTypes.bool(_)             => Option(ShaderAST.DataTypes.ident("bool"))
-        case DataTypes.float(_)            => Option(ShaderAST.DataTypes.ident("float"))
-        case DataTypes.int(_)              => Option(ShaderAST.DataTypes.ident("int"))
-        case DataTypes.vec2(_)             => Option(ShaderAST.DataTypes.ident("vec2"))
-        case DataTypes.vec3(_)             => Option(ShaderAST.DataTypes.ident("vec3"))
-        case DataTypes.vec4(_)             => Option(ShaderAST.DataTypes.ident("vec4"))
-        case DataTypes.bvec2(_)            => Option(ShaderAST.DataTypes.ident("bvec2"))
-        case DataTypes.bvec3(_)            => Option(ShaderAST.DataTypes.ident("bvec3"))
-        case DataTypes.bvec4(_)            => Option(ShaderAST.DataTypes.ident("bvec4"))
-        case DataTypes.ivec2(_)            => Option(ShaderAST.DataTypes.ident("ivec2"))
-        case DataTypes.ivec3(_)            => Option(ShaderAST.DataTypes.ident("ivec3"))
-        case DataTypes.ivec4(_)            => Option(ShaderAST.DataTypes.ident("ivec4"))
-        case DataTypes.mat2(_)             => Option(ShaderAST.DataTypes.ident("mat2"))
-        case DataTypes.mat3(_)             => Option(ShaderAST.DataTypes.ident("mat3"))
-        case DataTypes.mat4(_)             => Option(ShaderAST.DataTypes.ident("mat4"))
-        case DataTypes.array(_, _, typeOf) => typeOf.map(t => ShaderAST.DataTypes.ident(t + "[]"))
+        case RawLiteral(_)                 => unknownType
+        case Field(t, n)                   => unknownType
+        case n @ DataTypes.ident(_)        => n
+        case DataTypes.index(_, _)         => unknownType
+        case DataTypes.bool(_)             => ShaderAST.DataTypes.ident("bool")
+        case DataTypes.float(_)            => ShaderAST.DataTypes.ident("float")
+        case DataTypes.int(_)              => ShaderAST.DataTypes.ident("int")
+        case DataTypes.vec2(_)             => ShaderAST.DataTypes.ident("vec2")
+        case DataTypes.vec3(_)             => ShaderAST.DataTypes.ident("vec3")
+        case DataTypes.vec4(_)             => ShaderAST.DataTypes.ident("vec4")
+        case DataTypes.bvec2(_)            => ShaderAST.DataTypes.ident("bvec2")
+        case DataTypes.bvec3(_)            => ShaderAST.DataTypes.ident("bvec3")
+        case DataTypes.bvec4(_)            => ShaderAST.DataTypes.ident("bvec4")
+        case DataTypes.ivec2(_)            => ShaderAST.DataTypes.ident("ivec2")
+        case DataTypes.ivec3(_)            => ShaderAST.DataTypes.ident("ivec3")
+        case DataTypes.ivec4(_)            => ShaderAST.DataTypes.ident("ivec4")
+        case DataTypes.mat2(_)             => ShaderAST.DataTypes.ident("mat2")
+        case DataTypes.mat3(_)             => ShaderAST.DataTypes.ident("mat3")
+        case DataTypes.mat4(_)             => ShaderAST.DataTypes.ident("mat4")
+        case DataTypes.array(_, _, typeOf) => ShaderAST.DataTypes.ident(typeOf.typeIdent.id + "[]")
         case DataTypes.swizzle(v, _, _)    => v.typeIdent
 
     def inType: Option[String] =

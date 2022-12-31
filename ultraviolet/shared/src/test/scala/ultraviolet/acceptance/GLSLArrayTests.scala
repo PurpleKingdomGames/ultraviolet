@@ -81,7 +81,7 @@ class GLSLArrayTests extends munit.FunSuite {
       |vec2[16] func(){
       |  return VERTICES;
       |}
-      |vec2[16] foo=func();
+      |vec2 foo[16]=func();
       |""".stripMargin.trim
     )
   }
@@ -135,7 +135,7 @@ class GLSLArrayTests extends munit.FunSuite {
       |  return polygon;
       |}
       |int iCount=int(COUNT);
-      |vec2[MAX_VERTICES] polygon=toUvSpace(iCount,VERTICES);
+      |vec2 polygon[MAX_VERTICES]=toUvSpace(iCount,VERTICES);
       |""".stripMargin.trim
     )
   }

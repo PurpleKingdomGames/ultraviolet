@@ -28,9 +28,9 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
       case l =>
         throw ShaderError.Unsupported(s"Swizzle of length $l found, which is greater than the max length of 4.")
 
-  def extractInferredType(typ: TypeTree): Option[String] =
-    def mapName(name: Option[String]): Option[String] =
-      name
+  def extractInferredType(typ: TypeTree): String =
+    def mapName(name: String): String =
+      Option(name)
         .map {
           case "Boolean"      => "bool"
           case "Float"        => "float"
@@ -52,23 +52,24 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
           case n              => n
         }
         .filterNot {
-          case "Unit" | "array" =>
+          case "Unit" | "array" | "Any" =>
             true
           case n if n.startsWith("Function") =>
             true
           case _ =>
             false
         }
+        .getOrElse("void")
 
     typ match
       case Applied(TypeIdent("array"), List(Singleton(Literal(IntConstant(size))), TypeIdent(typeName))) =>
-        mapName(Option(typeName)).map(_ + s"[${size.toString()}]")
+        mapName(typeName) + s"[${size.toString()}]"
 
       case Applied(TypeIdent("array"), List(Singleton(Ident(varName)), TypeIdent(typeName))) =>
-        mapName(Option(typeName)).map(_ + s"[$varName]")
+        mapName(typeName) + s"[$varName]"
 
       case _ =>
-        mapName(typ.tpe.classSymbol.map(_.name))
+        mapName(typ.tpe.classSymbol.map(_.name).getOrElse("void"))
 
   def extractInferredTypeParam(typ: TypeTree): Option[String] =
     def extract(t: Tree): Option[String] =
@@ -183,17 +184,21 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
       case v @ ValDef(name, typ, Some(term)) =>
         val body = walkTerm(term, envVarName)
 
-        val typeOf: Option[ShaderAST] =
-          extractInferredType(typ)
-            .map(s => ShaderAST.DataTypes.ident(s))
-            .orElse {
+        val typeOf: ShaderAST =
+          extractInferredType(typ) match
+            case "void" =>
               body match
                 case ShaderAST.CallFunction(name, _, _) =>
-                  shaderDefs.find(_.fn.id == name).flatMap(_.fn.returnType)
+                  shaderDefs
+                    .find(_.fn.id == name)
+                    .map(_.fn.returnType)
+                    .getOrElse(ShaderAST.unknownType)
 
                 case _ =>
-                  None
-            }
+                  ShaderAST.unknownType
+
+            case s =>
+              ShaderAST.DataTypes.ident(s)
 
         val maybeAnnotation: Option[(ShaderAST.DataTypes.ident, ShaderAST)] =
           v.symbol.annotations.headOption.map(p => walkTerm(p, envVarName)).flatMap {
@@ -266,18 +271,11 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
             val v =
               body match
                 case arr @ ShaderAST.DataTypes.array(size, args, typeOfArray) =>
-                  typeOfArray match
-                    case None =>
-                      throw ShaderError.Unsupported("Shader arrays must be fully typed")
-
-                    case Some(tOf) =>
-                      val (tName, tSize) = tOf.splitAt(tOf.indexOf("["))
-
-                      ShaderAST.Val(
-                        name + tSize,
-                        body,
-                        Option(ShaderAST.DataTypes.ident(tName))
-                      )
+                  ShaderAST.Val(
+                    name,
+                    body,
+                    typeOfArray
+                  )
 
                 case _ =>
                   ShaderAST.Val(name, body, typeOf)
@@ -290,7 +288,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
                 ShaderAST.Annotated(label, param, v)
 
       case v @ ValDef(name, typ, None) =>
-        val typeOf = extractInferredType(typ).map(s => ShaderAST.DataTypes.ident(s))
+        val typeOf = ShaderAST.DataTypes.ident(extractInferredType(typ))
 
         val maybeAnnotation: Option[(ShaderAST.DataTypes.ident, ShaderAST)] =
           v.symbol.annotations.headOption.map(p => walkTerm(p, envVarName)).flatMap {
@@ -329,7 +327,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
                   n
                 else name
               val typeOf = extractInferredType(typ)
-              (typeOf.getOrElse("void"), vName)
+              (typeOf, vName)
             }
 
         val isAnon = fnName == "$anonfun"
@@ -337,16 +335,17 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
         val body   = walkTerm(term, envVarName)
 
         val returnType =
-          extractInferredType(rt)
-            .map(s => ShaderAST.DataTypes.ident(s))
-            .orElse {
+          extractInferredType(rt) match
+            case "void" =>
               rt match
                 case rtt @ TypeIdent(_) =>
-                  Option(walkTree(rtt, envVarName))
+                  walkTree(rtt, envVarName)
 
                 case _ =>
                   findReturnType(body)
-            }
+
+            case s =>
+              ShaderAST.DataTypes.ident(s)
 
         def register(fnDef: ShaderAST.Function, isAnon: Boolean): ShaderAST =
           shaderDefs += FunctionLookup(fnDef, !isAnon)
@@ -362,7 +361,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
           case ShaderAST.Block(statements :+ (ifs @ ShaderAST.If(_, _, Some(_)))) =>
             val name                              = proxies.makeVarName
             val resVal: ShaderAST.DataTypes.ident = ShaderAST.DataTypes.ident(name)
-            val typeOf                            = extractInferredType(rt).map(s => ShaderAST.DataTypes.ident(s))
+            val typeOf                            = ShaderAST.DataTypes.ident(extractInferredType(rt))
             val fnBody =
               ShaderAST.Block(
                 List(
@@ -383,10 +382,10 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
             )
 
           case ShaderAST.Block(statements :+ ShaderAST.Switch(on, cases))
-              if returnType.isDefined && !returnType.contains(ShaderAST.DataTypes.ident("void")) =>
+              if !(returnType == ShaderAST.DataTypes.ident("void")) =>
             val name   = proxies.makeVarName
             val resVal = ShaderAST.DataTypes.ident(name)
-            val typeOf = extractInferredType(rt).map(s => ShaderAST.DataTypes.ident(s))
+            val typeOf = ShaderAST.DataTypes.ident(extractInferredType(rt))
             val fnBody =
               ShaderAST.Block(
                 List(
@@ -414,7 +413,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
           case ifs @ ShaderAST.If(_, _, Some(_)) =>
             val name                              = proxies.makeVarName
             val resVal: ShaderAST.DataTypes.ident = ShaderAST.DataTypes.ident(name)
-            val typeOf                            = extractInferredType(rt).map(s => ShaderAST.DataTypes.ident(s))
+            val typeOf                            = ShaderAST.DataTypes.ident(extractInferredType(rt))
             val fnBody =
               ShaderAST.Block(
                 List(
@@ -434,11 +433,10 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
               isAnon
             )
 
-          case ShaderAST.Switch(on, cases)
-              if returnType.isDefined && !returnType.contains(ShaderAST.DataTypes.ident("void")) =>
+          case ShaderAST.Switch(on, cases) if !(returnType == ShaderAST.DataTypes.ident("void")) =>
             val name   = proxies.makeVarName
             val resVal = ShaderAST.DataTypes.ident(name)
-            val typeOf = extractInferredType(rt).map(s => ShaderAST.DataTypes.ident(s))
+            val typeOf = ShaderAST.DataTypes.ident(extractInferredType(rt))
             val fnBody =
               ShaderAST.Block(
                 List(
@@ -647,7 +645,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
             ShaderAST.DataTypes.ident(varName)
 
           case ShaderAST.Infix(op, left, right, rt) =>
-            ShaderAST.Infix(op, left, right, Option(ShaderAST.DataTypes.ident("int")))
+            ShaderAST.Infix(op, left, right, ShaderAST.DataTypes.ident("int"))
 
           case x =>
             x
@@ -756,7 +754,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
       //
 
       case Apply(Select(Ident(id), "apply"), args) =>
-        val proxy = proxies.lookUp(id, Proxy(id, Nil, Option(ShaderAST.DataTypes.ident("void"))))
+        val proxy = proxies.lookUp(id, Proxy(id, Nil, ShaderAST.unknownType))
         ShaderAST.CallFunction(proxy.name, args.map(x => walkTerm(x, envVarName)), proxy.returnType)
 
       // map
@@ -908,10 +906,10 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
           //   )
 
           case x =>
-            println("-------> flatMap")
-            println(x._1)
-            println(x._2)
-            println(shaderDefs.mkString("\n"))
+            // println("-------> flatMap")
+            // println(x._1)
+            // println(x._2)
+            // println(shaderDefs.mkString("\n"))
             throw ShaderError.UnexpectedConstruction("Unexpected structure when processing Shader.flatMap operation.")
 
       //
@@ -964,7 +962,12 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
           )
 
         shaderDefs += FunctionLookup(
-          ShaderAST.Function(fnName, List(fnInType -> vName), body, gProxy.returnType),
+          ShaderAST.Function(
+            fnName,
+            List(fnInType -> vName),
+            body,
+            gProxy.returnType
+          ),
           false
         )
         ShaderAST.FunctionRef(fnName, gProxy.argType, gProxy.returnType)
@@ -1101,7 +1104,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
             case None =>
               List(ShaderAST.DataTypes.ident(proxy.name))
 
-        ShaderAST.CallFunction(name, args, None)
+        ShaderAST.CallFunction(name, args, ShaderAST.unknownType)
 
       case Apply(Select(term, "apply"), xs) =>
         val body = walkTerm(term, envVarName)
@@ -1121,15 +1124,10 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
             ShaderAST.CallFunction(id, xs.map(tt => walkTerm(tt, envVarName)), rt)
 
           case _ =>
-            (body, xs) match
-              case (ShaderAST.DataTypes.ident(name), List(arg)) =>
-                ShaderAST.CallFunction(name, List(walkTerm(arg, envVarName)), None)
-
-              case _ =>
-                ShaderAST.Block(xs.map(tt => walkTerm(tt, envVarName)))
+            throw ShaderError.UnexpectedConstruction("Body was not a function reference.")
 
       case Apply(Select(Ident(maybeEnv), funcName), args) if envVarName.isDefined && maybeEnv == envVarName.get =>
-        ShaderAST.CallFunction(funcName, args.map(tt => walkTerm(tt, envVarName)), None)
+        ShaderAST.CallFunction(funcName, args.map(tt => walkTerm(tt, envVarName)), ShaderAST.unknownType)
 
       //
 
@@ -1166,12 +1164,13 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
             )
           ) =>
         // Update mutable collections - array's and mat's in our case.
-        val idx = walkTerm(index, envVarName)
+        val idx  = walkTerm(index, envVarName)
+        val body = walkTerm(rhs, envVarName)
         ShaderAST.Infix(
           "=",
           ShaderAST.DataTypes.index(id, idx),
-          walkTerm(rhs, envVarName),
-          None
+          body,
+          findReturnType(body)
         )
 
       case Apply(Select(term, op), xs) =>
@@ -1229,7 +1228,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
             ),
             _
           ) =>
-        val typeOf = extractInferredType(typ).map(_ + s"[${size.toString()}]")
+        val typeOf = ShaderAST.DataTypes.ident(extractInferredType(typ) + s"[${size.toString()}]")
         ShaderAST.DataTypes.array(size, args.map(a => walkTerm(a, envVarName)), typeOf)
 
       // array component access from a env var
@@ -1273,7 +1272,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
       //
 
       case Apply(Ident(name), terms) =>
-        ShaderAST.CallFunction(name, terms.map(tt => walkTerm(tt, envVarName)), None)
+        ShaderAST.CallFunction(name, terms.map(tt => walkTerm(tt, envVarName)), ShaderAST.unknownType)
 
       case Inlined(None, _, term) =>
         walkTerm(term, envVarName)
@@ -1325,7 +1324,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
         ShaderAST.DataTypes.swizzle(
           body,
           swzl,
-          body.typeIdent.getOrElse(inferSwizzleType(swzl))
+          inferSwizzleType(swzl)
         )
 
       // Swizzle a function call
@@ -1421,7 +1420,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
         shaderDefs += FunctionLookup(
           ShaderAST.Function(
             id = fnName,
-            args = arguments.map((typ, n) => findReturnType(typ).getOrElse(typ) -> n),
+            args = arguments.map((typ, n) => findReturnType(typ) -> n),
             body = body,
             returnType = returnType
           ),
