@@ -57,11 +57,11 @@ object ShaderPrinter:
       case ShaderAST.Annotated(ShaderAST.DataTypes.ident("attribute"), param, v @ ShaderAST.Val(_, _, _)) =>
         ShaderAST.Annotated(ShaderAST.DataTypes.ident("in"), param, v)
 
-      case ShaderAST.CallFunction("texture2D", args, argNames, returnType) =>
-        ShaderAST.CallFunction("texture", args, argNames, returnType)
+      case ShaderAST.CallFunction("texture2D", args, returnType) =>
+        ShaderAST.CallFunction("texture", args, returnType)
 
-      case ShaderAST.CallFunction("textureCube", args, argNames, returnType) =>
-        ShaderAST.CallFunction("texture", args, argNames, returnType)
+      case ShaderAST.CallFunction("textureCube", args, returnType) =>
+        ShaderAST.CallFunction("texture", args, returnType)
     }
 
     def ubos(ast: ShaderAST): List[UBODef]          = ShaderPrinter.extractUbos(ast)
@@ -141,7 +141,7 @@ object ShaderPrinter:
           List("}")
         ).flatten
 
-      case CallFunction(id, args, _, _) =>
+      case CallFunction(id, args, _) =>
         List(s"""$id(${args.flatMap(render).mkString(",")})""")
 
       case FunctionRef(_, _, _) =>
@@ -387,7 +387,7 @@ object ShaderPrinter:
       case New(name, _)                  => Option(name)
       case ShaderBlock(_, _, _, _)       => None
       case Function(_, _, _, rt)         => rt.toList.flatMap(render).headOption
-      case CallFunction(_, _, _, rt)     => rt.toList.flatMap(render).headOption
+      case CallFunction(_, _, rt)        => rt.toList.flatMap(render).headOption
       case FunctionRef(_, _, rt)         => rt.toList.flatMap(render).headOption
       case Cast(_, as)                   => Option(as)
       case Infix(_, _, _, rt)            => rt.toList.flatMap(render).headOption
@@ -418,7 +418,7 @@ object ShaderPrinter:
       case DataTypes.mat3(_)             => Option("mat3")
       case DataTypes.mat4(_)             => Option("mat4")
       case DataTypes.array(_, _, typeOf) => typeOf
-      case DataTypes.swizzle(_, _, rt)   => rt.toList.flatMap(render).headOption
+      case DataTypes.swizzle(_, _, rt)   => render(rt).headOption
 
   private def rf(f: Float): String =
     val s = f.toString

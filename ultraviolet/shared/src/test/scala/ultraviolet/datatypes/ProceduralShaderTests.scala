@@ -201,6 +201,6 @@ object ProceduralShaderSamples:
         )
       ),
       Block(
-        List(Block(List(Block(List(CallFunction("fn0", Nil, List(ShaderAST.DataTypes.ident("env")), None), Empty())))))
+        List(Block(List(Block(List(CallFunction("fn0", Nil, None), Empty())))))
       )
     )

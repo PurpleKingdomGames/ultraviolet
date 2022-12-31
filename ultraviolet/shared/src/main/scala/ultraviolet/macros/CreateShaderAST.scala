@@ -17,6 +17,17 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
   val shaderDefs: ListBuffer[FunctionLookup] = new ListBuffer()
   val structRegister: ListBuffer[String]     = new ListBuffer()
 
+  def inferSwizzleType(swizzle: String): ShaderAST =
+    swizzle.length match
+      case 0 =>
+        throw ShaderError.Unsupported("Swizzle of length 0 found.")
+      case 1 => ShaderAST.DataTypes.ident("float")
+      case 2 => ShaderAST.DataTypes.ident("vec2")
+      case 3 => ShaderAST.DataTypes.ident("vec3")
+      case 4 => ShaderAST.DataTypes.ident("vec4")
+      case l =>
+        throw ShaderError.Unsupported(s"Swizzle of length $l found, which is greater than the max length of 4.")
+
   def extractInferredType(typ: TypeTree): Option[String] =
     def mapName(name: Option[String]): Option[String] =
       name
@@ -177,7 +188,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
             .map(s => ShaderAST.DataTypes.ident(s))
             .orElse {
               body match
-                case ShaderAST.CallFunction(name, _, _, _) =>
+                case ShaderAST.CallFunction(name, _, _) =>
                   shaderDefs.find(_.fn.id == name).flatMap(_.fn.returnType)
 
                 case _ =>
@@ -746,7 +757,9 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
 
       case Apply(Select(Ident(id), "apply"), args) =>
         val proxy = proxies.lookUp(id, Proxy(id, Nil, Option(ShaderAST.DataTypes.ident("void"))))
-        ShaderAST.CallFunction(proxy.name, args.map(x => walkTerm(x, envVarName)), Nil, proxy.returnType)
+        ShaderAST.CallFunction(proxy.name, args.map(x => walkTerm(x, envVarName)), proxy.returnType)
+
+      // map
 
       case Apply(TypeApply(Apply(TypeApply(Select(Ident("Shader"), "map"), _), List(shaderf)), _), List(mapf)) =>
         (walkTerm(shaderf, envVarName), walkTerm(mapf, envVarName)) match
@@ -763,7 +776,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
               ) =>
             ShaderAST.Block(
               statements :+
-                ShaderAST.CallFunction(fnName, List(last), Nil, rt)
+                ShaderAST.CallFunction(fnName, List(last), rt)
             )
 
           case (
@@ -771,7 +784,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
                 ShaderAST.Block(List(ShaderAST.FunctionRef(fnName, _, rt)))
               ) =>
             ShaderAST.Block(
-              ShaderAST.CallFunction(fnName, List(only), Nil, rt)
+              ShaderAST.CallFunction(fnName, List(only), rt)
             )
 
           case (
@@ -779,7 +792,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
                 ShaderAST.Block(List(ShaderAST.FunctionRef(fnName, _, rt)))
               ) =>
             ShaderAST.Block(
-              ShaderAST.CallFunction(fnName, List(only), Nil, rt)
+              ShaderAST.CallFunction(fnName, List(only), rt)
             )
 
           case (
@@ -795,7 +808,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
               ) =>
             ShaderAST.Block(
               statements :+
-                ShaderAST.CallFunction(fnName, List(last), Nil, rt)
+                ShaderAST.CallFunction(fnName, List(last), rt)
             )
 
           case (
@@ -803,7 +816,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
                 ShaderAST.FunctionRef(fnName, _, rt)
               ) =>
             ShaderAST.Block(
-              ShaderAST.CallFunction(fnName, List(only), Nil, rt)
+              ShaderAST.CallFunction(fnName, List(only), rt)
             )
 
           case (
@@ -811,7 +824,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
                 ShaderAST.FunctionRef(fnName, _, rt)
               ) =>
             ShaderAST.Block(
-              ShaderAST.CallFunction(fnName, List(only), Nil, rt)
+              ShaderAST.CallFunction(fnName, List(only), rt)
             )
 
           case _ =>
@@ -831,7 +844,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
                 case ShaderAST.Block(List(r @ ShaderAST.FunctionRef(_, _, _))) =>
                   Proxy(r.id, r.arg, r.returnType)
 
-                case ShaderAST.CallFunction(id, args, _, returnType) =>
+                case ShaderAST.CallFunction(id, args, returnType) =>
                   Proxy(id, args, returnType)
 
                 case _ =>
@@ -858,11 +871,9 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
               ShaderAST.CallFunction(
                 id = fProxy.name,
                 args = List(ShaderAST.DataTypes.ident(vName)),
-                argNames = Nil,
                 returnType = fProxy.returnType
               )
             ),
-            argNames = Nil,
             returnType = gProxy.returnType
           )
 
@@ -1004,35 +1015,35 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
             case None =>
               List(ShaderAST.DataTypes.ident(proxy.name))
 
-        ShaderAST.CallFunction(name, args, args, None)
+        ShaderAST.CallFunction(name, args, None)
 
       case Apply(Select(term, "apply"), xs) =>
         val body = walkTerm(term, envVarName)
 
         body.find {
-          case ShaderAST.CallFunction(_, _, _, _) => true
-          case ShaderAST.FunctionRef(_, _, _)     => true
-          case _                                  => false
+          case ShaderAST.CallFunction(_, _, _) => true
+          case ShaderAST.FunctionRef(_, _, _)  => true
+          case _                               => false
         } match
-          case Some(ShaderAST.CallFunction(id, Nil, Nil, rt)) =>
-            ShaderAST.CallFunction(id, xs.map(tt => walkTerm(tt, envVarName)), Nil, rt)
+          case Some(ShaderAST.CallFunction(id, Nil, rt)) =>
+            ShaderAST.CallFunction(id, xs.map(tt => walkTerm(tt, envVarName)), rt)
 
-          case Some(ShaderAST.CallFunction(id, args, argNames, rt)) =>
-            ShaderAST.CallFunction(id, xs.map(tt => walkTerm(tt, envVarName)), argNames, rt)
+          case Some(ShaderAST.CallFunction(id, args, rt)) =>
+            ShaderAST.CallFunction(id, xs.map(tt => walkTerm(tt, envVarName)), rt)
 
           case Some(ShaderAST.FunctionRef(id, _, rt)) =>
-            ShaderAST.CallFunction(id, xs.map(tt => walkTerm(tt, envVarName)), Nil, rt)
+            ShaderAST.CallFunction(id, xs.map(tt => walkTerm(tt, envVarName)), rt)
 
           case _ =>
             (body, xs) match
               case (ShaderAST.DataTypes.ident(name), List(arg)) =>
-                ShaderAST.CallFunction(name, List(walkTerm(arg, envVarName)), Nil, None)
+                ShaderAST.CallFunction(name, List(walkTerm(arg, envVarName)), None)
 
               case _ =>
                 ShaderAST.Block(xs.map(tt => walkTerm(tt, envVarName)))
 
       case Apply(Select(Ident(maybeEnv), funcName), args) if envVarName.isDefined && maybeEnv == envVarName.get =>
-        ShaderAST.CallFunction(funcName, args.map(tt => walkTerm(tt, envVarName)), Nil, None)
+        ShaderAST.CallFunction(funcName, args.map(tt => walkTerm(tt, envVarName)), None)
 
       //
 
@@ -1092,10 +1103,6 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
             ShaderAST.CallFunction(
               "mod",
               List(lhs, rhs),
-              List(
-                ShaderAST.DataTypes.ident("x"),
-                ShaderAST.DataTypes.ident("y")
-              ),
               rt
             )
 
@@ -1117,10 +1124,6 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
             ShaderAST.CallFunction(
               "mod",
               List(lhs, rhs),
-              List(
-                ShaderAST.DataTypes.ident("x"),
-                ShaderAST.DataTypes.ident("y")
-              ),
               rt
             )
 
@@ -1184,7 +1187,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
       //
 
       case Apply(Ident(name), terms) =>
-        ShaderAST.CallFunction(name, terms.map(tt => walkTerm(tt, envVarName)), Nil, None)
+        ShaderAST.CallFunction(name, terms.map(tt => walkTerm(tt, envVarName)), None)
 
       case Inlined(None, _, term) =>
         walkTerm(term, envVarName)
@@ -1213,16 +1216,16 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
         walkTerm(term, envVarName)
 
       // Swizzle
-      case Inlined(Some(Apply(Ident(name), List(id @ Select(Ident(env), varName)))), _, rt)
-          if isSwizzle.matches(name) && envVarName.contains(env) =>
+      case Inlined(Some(Apply(Ident(swzl), List(id @ Select(Ident(env), varName)))), _, rt)
+          if isSwizzle.matches(swzl) && envVarName.contains(env) =>
         ShaderAST.DataTypes.swizzle(
           walkTerm(id, envVarName),
-          name,
-          Option(walkTree(rt, envVarName))
+          swzl,
+          Option(walkTree(rt, envVarName)).getOrElse(inferSwizzleType(swzl))
         )
 
       case Inlined(
-            Some(Apply(Ident(name), List(term))),
+            Some(Apply(Ident(swzl), List(term))),
             _,
             Typed(
               Apply(
@@ -1231,12 +1234,12 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
               ),
               _
             )
-          ) if isSwizzle.matches(name) =>
+          ) if isSwizzle.matches(swzl) =>
         val body = walkTerm(term, envVarName)
         ShaderAST.DataTypes.swizzle(
           body,
-          name,
-          body.typeIdent
+          swzl,
+          body.typeIdent.getOrElse(inferSwizzleType(swzl))
         )
 
       // Swizzle a function call
@@ -1244,7 +1247,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
         ShaderAST.DataTypes.swizzle(
           walkTerm(term, envVarName),
           swzl,
-          None
+          inferSwizzleType(swzl)
         )
 
       // Inlined external def
@@ -1342,7 +1345,6 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
         ShaderAST.CallFunction(
           id = fnName,
           args = arguments.map(_._1),
-          argNames = arguments.map(_._2).map(n => ShaderAST.DataTypes.ident(n)),
           returnType = returnType
         )
 
@@ -1394,7 +1396,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
             ShaderAST.DataTypes.ident(resolvedName)
 
           case Some(ShaderAST.Function(_, _, _, rt)) =>
-            ShaderAST.CallFunction(resolvedName, Nil, Nil, rt)
+            ShaderAST.CallFunction(resolvedName, Nil, rt)
 
       case Closure(_, _) =>
         ShaderAST.Empty()
