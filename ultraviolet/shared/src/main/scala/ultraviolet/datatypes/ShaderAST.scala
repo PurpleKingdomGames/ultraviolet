@@ -110,13 +110,12 @@ object ShaderAST:
   final case class CallFunction(
       id: String,
       args: List[ShaderAST],
-      argNames: List[ShaderAST],
       returnType: Option[ShaderAST]
   ) extends ShaderAST
   object CallFunction:
     given ToExpr[CallFunction] with {
       def apply(x: CallFunction)(using Quotes): Expr[CallFunction] =
-        '{ CallFunction(${ Expr(x.id) }, ${ Expr(x.args) }, ${ Expr(x.argNames) }, ${ Expr(x.returnType) }) }
+        '{ CallFunction(${ Expr(x.id) }, ${ Expr(x.args) }, ${ Expr(x.returnType) }) }
     }
 
   // Allows things high up the tree to gain a reference to created functions.
@@ -249,7 +248,7 @@ object ShaderAST:
     case mat3(args: List[ShaderAST])
     case mat4(args: List[ShaderAST])
     case array(size: Int, args: List[ShaderAST], typeOf: Option[String])
-    case swizzle(genType: ShaderAST, swizzle: String, returnType: Option[ShaderAST])
+    case swizzle(genType: ShaderAST, swizzle: String, returnType: ShaderAST)
 
   object DataTypes:
 
@@ -382,47 +381,47 @@ object ShaderAST:
           case Nil => acc.reverse
           case x :: xs =>
             x match
-              case v if p(v)                => rec(xs, v :: acc)
-              case Empty()                  => rec(xs, acc)
-              case Block(s)                 => rec(s ++ xs, acc)
-              case Neg(s)                   => rec(s :: xs, acc)
-              case UBO(_)                   => rec(xs, acc)
-              case Struct(_, _)             => rec(xs, acc)
-              case New(_, _)                => rec(xs, acc)
-              case ShaderBlock(_, _, _, s)  => rec(s ++ xs, acc)
-              case Function(_, _, body, _)  => rec(body :: xs, acc)
-              case CallFunction(_, _, _, _) => rec(xs, acc)
-              case FunctionRef(_, _, _)     => rec(xs, acc)
-              case Cast(v, _)               => rec(v :: xs, acc)
-              case Infix(_, l, r, _)        => rec(l :: r :: xs, acc)
-              case Assign(l, r)             => rec(l :: r :: xs, acc)
-              case If(_, t, e)              => rec(t :: (e.toList ++ xs), acc)
-              case While(_, b)              => rec(b :: xs, acc)
-              case For(_, _, _, b)          => rec(b :: xs, acc)
-              case Switch(_, cs)            => rec(cs.map(_._2) ++ xs, acc)
-              case Val(_, body, _)          => rec(body :: xs, acc)
-              case Annotated(_, _, body)    => rec(body :: xs, acc)
-              case RawLiteral(_)            => rec(xs, acc)
-              case Field(t, _)              => rec(t :: xs, acc)
-              case v: DataTypes.ident       => rec(xs, acc)
-              case v: DataTypes.index       => rec(xs, acc)
-              case v: DataTypes.bool        => rec(xs, acc)
-              case v: DataTypes.float       => rec(xs, acc)
-              case v: DataTypes.int         => rec(xs, acc)
-              case v: DataTypes.vec2        => rec(v.args ++ xs, acc)
-              case v: DataTypes.vec3        => rec(v.args ++ xs, acc)
-              case v: DataTypes.vec4        => rec(v.args ++ xs, acc)
-              case v: DataTypes.bvec2       => rec(v.args ++ xs, acc)
-              case v: DataTypes.bvec3       => rec(v.args ++ xs, acc)
-              case v: DataTypes.bvec4       => rec(v.args ++ xs, acc)
-              case v: DataTypes.ivec2       => rec(v.args ++ xs, acc)
-              case v: DataTypes.ivec3       => rec(v.args ++ xs, acc)
-              case v: DataTypes.ivec4       => rec(v.args ++ xs, acc)
-              case v: DataTypes.mat2        => rec(v.args ++ xs, acc)
-              case v: DataTypes.mat3        => rec(v.args ++ xs, acc)
-              case v: DataTypes.mat4        => rec(v.args ++ xs, acc)
-              case v: DataTypes.array       => rec(xs, acc)
-              case v: DataTypes.swizzle     => rec(v.genType :: xs, acc)
+              case v if p(v)               => rec(xs, v :: acc)
+              case Empty()                 => rec(xs, acc)
+              case Block(s)                => rec(s ++ xs, acc)
+              case Neg(s)                  => rec(s :: xs, acc)
+              case UBO(_)                  => rec(xs, acc)
+              case Struct(_, _)            => rec(xs, acc)
+              case New(_, _)               => rec(xs, acc)
+              case ShaderBlock(_, _, _, s) => rec(s ++ xs, acc)
+              case Function(_, _, body, _) => rec(body :: xs, acc)
+              case CallFunction(_, _, _)   => rec(xs, acc)
+              case FunctionRef(_, _, _)    => rec(xs, acc)
+              case Cast(v, _)              => rec(v :: xs, acc)
+              case Infix(_, l, r, _)       => rec(l :: r :: xs, acc)
+              case Assign(l, r)            => rec(l :: r :: xs, acc)
+              case If(_, t, e)             => rec(t :: (e.toList ++ xs), acc)
+              case While(_, b)             => rec(b :: xs, acc)
+              case For(_, _, _, b)         => rec(b :: xs, acc)
+              case Switch(_, cs)           => rec(cs.map(_._2) ++ xs, acc)
+              case Val(_, body, _)         => rec(body :: xs, acc)
+              case Annotated(_, _, body)   => rec(body :: xs, acc)
+              case RawLiteral(_)           => rec(xs, acc)
+              case Field(t, _)             => rec(t :: xs, acc)
+              case v: DataTypes.ident      => rec(xs, acc)
+              case v: DataTypes.index      => rec(xs, acc)
+              case v: DataTypes.bool       => rec(xs, acc)
+              case v: DataTypes.float      => rec(xs, acc)
+              case v: DataTypes.int        => rec(xs, acc)
+              case v: DataTypes.vec2       => rec(v.args ++ xs, acc)
+              case v: DataTypes.vec3       => rec(v.args ++ xs, acc)
+              case v: DataTypes.vec4       => rec(v.args ++ xs, acc)
+              case v: DataTypes.bvec2      => rec(v.args ++ xs, acc)
+              case v: DataTypes.bvec3      => rec(v.args ++ xs, acc)
+              case v: DataTypes.bvec4      => rec(v.args ++ xs, acc)
+              case v: DataTypes.ivec2      => rec(v.args ++ xs, acc)
+              case v: DataTypes.ivec3      => rec(v.args ++ xs, acc)
+              case v: DataTypes.ivec4      => rec(v.args ++ xs, acc)
+              case v: DataTypes.mat2       => rec(v.args ++ xs, acc)
+              case v: DataTypes.mat3       => rec(v.args ++ xs, acc)
+              case v: DataTypes.mat4       => rec(v.args ++ xs, acc)
+              case v: DataTypes.array      => rec(xs, acc)
+              case v: DataTypes.swizzle    => rec(v.genType :: xs, acc)
 
       rec(List(ast), Nil)
 
@@ -445,7 +444,7 @@ object ShaderAST:
         case New(name, args)                         => f(New(name, args.map(_.traverse(f))))
         case ShaderBlock(in, out, n, s)              => f(ShaderBlock(in, out, n, s.map(_.traverse(f))))
         case Function(id, args, body, returnType)    => f(Function(id, args, body.traverse(f), returnType))
-        case CallFunction(id, args, argNames, rt)    => f(CallFunction(id, args, argNames, rt))
+        case CallFunction(id, args, rt)              => f(CallFunction(id, args, rt))
         case FunctionRef(id, arg, rt)                => f(FunctionRef(id, arg, rt))
         case Cast(value, as)                         => f(Cast(value.traverse(f), as))
         case Infix(op, l, r, returnType)             => f(Infix(op, l.traverse(f), r.traverse(f), returnType))
@@ -488,7 +487,7 @@ object ShaderAST:
         case New(name, _)                  => Option(ShaderAST.DataTypes.ident(name))
         case ShaderBlock(_, _, _, _)       => None
         case Function(_, _, _, rt)         => rt.flatMap(_.typeIdent)
-        case CallFunction(_, _, _, rt)     => rt.flatMap(_.typeIdent)
+        case CallFunction(_, _, rt)        => rt.flatMap(_.typeIdent)
         case FunctionRef(_, _, rt)         => rt.flatMap(_.typeIdent)
         case Cast(_, as)                   => Option(ShaderAST.DataTypes.ident(as))
         case Infix(_, _, _, rt)            => rt.flatMap(_.typeIdent)
