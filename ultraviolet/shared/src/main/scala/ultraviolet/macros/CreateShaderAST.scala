@@ -813,14 +813,8 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
             ShaderAST.Block(
               ShaderAST.CallFunction(fnName, List(only), Nil, rt)
             )
-          /*
-ShaderBlock(Some(UBO1),Some(vec4),Some(env),List(vec4(List(ident(UV), float(2.0), float(1.0)))))
-FunctionRef(def0,List(ident(vec4)),Some(ident(float)))
-           */
-          case x =>
-            println("---------->")
-            println(x._1)
-            println(x._2)
+
+          case _ =>
             throw ShaderError.UnexpectedConstruction("Unexpected structure when processing Shader.map operation.")
 
       case Apply(TypeApply(Select(g, op), _), List(f)) if op == "compose" || op == "andThen" || op == "map" =>
@@ -1238,21 +1232,12 @@ FunctionRef(def0,List(ident(vec4)),Some(ident(float)))
               _
             )
           ) if isSwizzle.matches(name) =>
-        // if name == "g" then println("#######XXXXXX Swizzle: " + Printer.TreeStructure.show(x))
-        // else println("####### Swizzle: " + Printer.TreeStructure.show(x))
         val body = walkTerm(term, envVarName)
         ShaderAST.DataTypes.swizzle(
           body,
           name,
           body.typeIdent
         )
-
-      // case Inlined(Some(Apply(Ident(name), List(Ident(id)))), _, _) if isSwizzle.matches(name) =>
-      //   ShaderAST.DataTypes.swizzle(
-      //     ShaderAST.DataTypes.ident(id),
-      //     name,
-      //     None
-      //   )
 
       // Swizzle a function call
       case Select(term @ Apply(Ident(_), _), swzl) if isSwizzle.matches(swzl) =>
