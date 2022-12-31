@@ -9,15 +9,15 @@ class ShaderPrinterTests extends munit.FunSuite {
     val ast =
       ShaderAST.Block(
         List(
-          ShaderAST.Val("x", ShaderAST.DataTypes.float(1.0), Option(ShaderAST.DataTypes.ident("float"))),
+          ShaderAST.Val("x", ShaderAST.DataTypes.float(1.0), ShaderAST.DataTypes.ident("float")),
           ShaderAST.Block(
             List(
               ShaderAST.Annotated(
                 ShaderAST.DataTypes.ident("const"),
                 ShaderAST.Empty(),
-                ShaderAST.Val("y", ShaderAST.DataTypes.float(2.0), Option(ShaderAST.DataTypes.ident("float")))
+                ShaderAST.Val("y", ShaderAST.DataTypes.float(2.0), ShaderAST.DataTypes.ident("float"))
               ),
-              ShaderAST.Val("z", ShaderAST.DataTypes.float(3.0), Option(ShaderAST.DataTypes.ident("float")))
+              ShaderAST.Val("z", ShaderAST.DataTypes.float(3.0), ShaderAST.DataTypes.ident("float"))
             )
           )
         )
@@ -48,8 +48,8 @@ class ShaderPrinterTests extends munit.FunSuite {
       ): ShaderValid = ShaderValid.Valid
 
       def transformer: PartialFunction[ShaderAST, ShaderAST] = {
-        case ShaderAST.Val("x", ShaderAST.DataTypes.float(1.0), Some(ShaderAST.DataTypes.ident("float"))) =>
-          ShaderAST.Val("xx", ShaderAST.DataTypes.float(100.0), Option(ShaderAST.DataTypes.ident("float")))
+        case ShaderAST.Val("x", ShaderAST.DataTypes.float(1.0), ShaderAST.DataTypes.ident("float")) =>
+          ShaderAST.Val("xx", ShaderAST.DataTypes.float(100.0), ShaderAST.DataTypes.ident("float"))
       }
 
       def ubos(ast: ShaderAST): List[UBODef]          = ShaderPrinter.extractUbos(ast)
@@ -57,7 +57,7 @@ class ShaderPrinterTests extends munit.FunSuite {
       def varyings(ast: ShaderAST): List[ShaderField] = ShaderPrinter.extractVaryings(ast)
 
       def printer: PartialFunction[ShaderAST, List[String]] = {
-        case ShaderAST.Val("y", ShaderAST.DataTypes.float(2.0), Some(ShaderAST.DataTypes.ident("float"))) =>
+        case ShaderAST.Val("y", ShaderAST.DataTypes.float(2.0), ShaderAST.DataTypes.ident("float")) =>
           List("float foo")
       }
     }
@@ -65,15 +65,15 @@ class ShaderPrinterTests extends munit.FunSuite {
     val ast =
       ShaderAST.Block(
         List(
-          ShaderAST.Val("x", ShaderAST.DataTypes.float(1.0), Option(ShaderAST.DataTypes.ident("float"))),
+          ShaderAST.Val("x", ShaderAST.DataTypes.float(1.0), ShaderAST.DataTypes.ident("float")),
           ShaderAST.Block(
             List(
               ShaderAST.Annotated(
                 ShaderAST.DataTypes.ident("const"),
                 ShaderAST.Empty(),
-                ShaderAST.Val("y", ShaderAST.DataTypes.float(2.0), Option(ShaderAST.DataTypes.ident("float")))
+                ShaderAST.Val("y", ShaderAST.DataTypes.float(2.0), ShaderAST.DataTypes.ident("float"))
               ),
-              ShaderAST.Val("z", ShaderAST.DataTypes.float(3.0), Option(ShaderAST.DataTypes.ident("float")))
+              ShaderAST.Val("z", ShaderAST.DataTypes.float(3.0), ShaderAST.DataTypes.ident("float"))
             )
           )
         )
@@ -157,7 +157,7 @@ class ShaderPrinterTests extends munit.FunSuite {
     import ShaderAST.DataTypes.*
 
     val ast =
-      Neg(Infix("/", ident("x"), ident("y"), Some(ident("x"))))
+      Neg(Infix("/", ident("x"), ident("y"), ident("x")))
 
     val actual =
       ShaderPrinter.print[WebGL2](ast)
@@ -186,7 +186,7 @@ class ShaderPrinterTests extends munit.FunSuite {
               ShaderAST.Assign(ShaderAST.DataTypes.ident("pos"), ShaderAST.DataTypes.float(10.0f)),
               None
             ),
-            None
+            ShaderAST.unknownType
           )
         )
       )

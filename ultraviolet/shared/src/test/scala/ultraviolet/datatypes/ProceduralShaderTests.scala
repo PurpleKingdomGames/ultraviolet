@@ -197,10 +197,10 @@ object ProceduralShaderSamples:
           "fn0",
           List(ShaderAST.DataTypes.ident("") -> "env"),
           Block(List(Block(List(vec4(List(float(1), float(1), float(0), float(1))))))),
-          None
+          ShaderAST.DataTypes.ident("vec4")
         )
       ),
       Block(
-        List(Block(List(Block(List(CallFunction("fn0", Nil, None), Empty())))))
+        List(Block(List(Block(List(CallFunction("fn0", Nil, ShaderAST.DataTypes.ident("vec4")), Empty())))))
       )
     )

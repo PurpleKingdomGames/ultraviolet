@@ -31,10 +31,10 @@ final class ProxyManager:
   def lookUp(name: String): Proxy =
     lookUp(name, name)
 
-  def add(originalName: String, newName: String, arg: List[ShaderAST], returnType: Option[ShaderAST]): Unit =
+  def add(originalName: String, newName: String, arg: List[ShaderAST], returnType: ShaderAST): Unit =
     proxyLookUp += originalName -> Proxy(newName, arg, returnType)
   def add(originalName: String, newName: String): Unit =
-    add(originalName, newName, Nil, None)
+    add(originalName, newName, Nil, ShaderAST.unknownType)
   def add(name: String, proxy: Proxy): Unit =
     proxyLookUp += name -> proxy
 
@@ -45,6 +45,6 @@ final class ProxyManager:
   def lookUpInlineReplace(id: String): Option[ShaderAST] =
     proxyInlineReplace.get(id)
 
-final case class Proxy(name: String, argType: List[ShaderAST], returnType: Option[ShaderAST])
+final case class Proxy(name: String, argType: List[ShaderAST], returnType: ShaderAST)
 object Proxy:
-  def apply(name: String): Proxy = Proxy(name, Nil, None)
+  def apply(name: String): Proxy = Proxy(name, Nil, ShaderAST.unknownType)
