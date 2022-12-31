@@ -164,7 +164,7 @@ class ShaderTests extends munit.FunSuite {
 
     case class UBO1(UV: vec2)
 
-    inline def f: vec4 => Float = _.x
+    inline def f: vec4 => Float   = _.x
     inline def g(a: Float): Float = a * 20.0f
 
     inline def shader: Shader[UBO1, Float] =
@@ -204,7 +204,7 @@ class ShaderTests extends munit.FunSuite {
 
     case class UBO1(UV: vec2)
 
-    inline def f: vec4 => Float = _.x
+    inline def f: vec4 => Float  = _.x
     inline def g: Float => Float = _ * 20
 
     inline def shader: Shader[UBO1, Float] =
@@ -220,7 +220,7 @@ class ShaderTests extends munit.FunSuite {
       shader.run(UBO1(vec2(4.0f, 3.0f)))
 
     val expected =
-      9.0f
+      90.0f
 
     assertEquals(actual, expected)
 
@@ -233,7 +233,20 @@ class ShaderTests extends munit.FunSuite {
     assertEquals(
       actualCode,
       s"""
-      |x
+      |float def1(in float val0){
+      |  return val0*20;
+      |}
+      |float def2(in vec4 val1){
+      |  return val1.x;
+      |}
+      |float def3(in vec4 val2){
+      |  return def1(def2(val2));
+      |}
+      |float def0(in vec4 v){
+      |  float h=def3(v);
+      |  return h+10.0;
+      |}
+      |def0(vec4(UV,2.0,1.0));
       |""".stripMargin.trim
     )
   }
