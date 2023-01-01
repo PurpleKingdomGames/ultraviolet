@@ -35,6 +35,61 @@ Ultimately I'd like to be able to write Shaders in FP friendly Scala that can ta
 
 ## Gotcha's, foot guns, and weird stuff
 
+### UBO's must be in a 'top-level' Shader
+
+This example works perfectly:
+
+```scala
+case class UBO1(UV: vec2)
+
+inline def base: Float => Shader[UBO1, vec4] =
+  (z: Float) =>
+    Shader[UBO1, vec4] { env =>
+      vec4(env.UV, z, 1.0f)
+    }
+
+inline def toVec2(v4: vec4): Shader[UBO1, vec2] =
+  Shader[UBO1, vec2] { env =>
+    v4.xy
+  }
+
+inline def calc: Shader[UBO1, vec2] =
+  for
+    a <- base(20.0f)
+    b <- toVec2(a)
+  yield b + 1.0f
+
+inline def shader: Shader[UBO1, vec2] =
+  Shader[UBO1, vec2] { env =>
+    ubo[UBO1]
+    calc.run(env)
+  }
+```
+
+But bad things will happen if you try to do this, because the UBO would end up being defined inside a function, and UBO's must be declared at the top level:
+
+```scala
+case class UBO1(UV: vec2)
+
+inline def base: Float => Shader[UBO1, vec4] =
+  (z: Float) =>
+    Shader[UBO1, vec4] { env =>
+      ubo[UBO1]
+      vec4(env.UV, z, 1.0f)
+    }
+
+inline def toVec2(v4: vec4): Shader[UBO1, vec2] =
+  Shader[UBO1, vec2] { env =>
+    v4.xy
+  }
+
+inline def shader: Shader[UBO1, vec2] =
+  for
+    a <- base(20.0f)
+    b <- toVec2(a)
+  yield b + 1.0f
+```
+
 ### Just write a glsl as a String?
 
 This is completely valid but only if it's the only contents of the block:
