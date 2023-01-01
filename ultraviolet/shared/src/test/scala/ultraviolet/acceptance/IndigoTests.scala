@@ -21,4 +21,14 @@ class IndigoTests extends munit.FunSuite {
     assertEquals(Blit.fragment.output.code, Blit.fragment.expected)
   }
 
+  test("Real example: WebGL2Merge") {
+    // DebugAST.toAST(WebGL2Merge.vertex.shader)
+    // println(WebGL2Merge.vertex.shader)
+    assertEquals(WebGL2Merge.vertex.output.code, WebGL2Merge.vertex.expected)
+
+    // DebugAST.toAST(WebGL2Merge.fragment.shader)
+    // println(WebGL2Merge.fragment.shader)
+    assertEquals(WebGL2Merge.fragment.output.code, WebGL2Merge.fragment.expected)
+  }
+
 }
