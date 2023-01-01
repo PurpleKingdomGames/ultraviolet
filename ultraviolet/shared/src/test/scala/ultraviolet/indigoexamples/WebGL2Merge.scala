@@ -6,7 +6,10 @@ import ultraviolet.syntax.*
 object WebGL2Merge:
 
   case class IndigoMergeData(u_projection: mat4, u_scale: vec2)
-  case class IndigoFrameData(TIME: highp[Float], VIEWPORT_SIZE: vec2)
+  case class IndigoFrameData(
+      TIME: highp[Float], // Running time
+      VIEWPORT_SIZE: vec2 // Size of the viewport in pixels
+  )
 
   @SuppressWarnings(Array("scalafix:DisableSyntax.var"))
   case class VertexEnv(var gl_Position: vec4)
@@ -113,15 +116,104 @@ object WebGL2Merge:
       |}
       |""".stripMargin.trim
 
+  @SuppressWarnings(Array("scalafix:DisableSyntax.var", "scalafix:DisableSyntax.null"))
   object fragment:
     inline def shader =
       Shader {
-        def fragment: Unit = {}
+        Version300ES
+        PrecisionMediumPFloat
+
+        @in val SIZE: vec2 = null // In this case, screen size.
+        @in val UV: vec2 = null // Unscaled texture coordinates
+
+        @uniform val SRC_CHANNEL: sampler2D.type = sampler2D
+        @uniform val DST_CHANNEL: sampler2D.type = sampler2D
+
+        @out var fragColor: vec4 = null
+
+        ubo[IndigoFrameData]
+
+        // Constants
+        @const val PI: Float    = 3.141592653589793f;
+        @const val PI_2: Float  = PI * 0.5f;
+        @const val PI_4: Float  = PI * 0.25f;
+        @const val TAU: Float   = 2.0f * PI;
+        @const val TAU_2: Float = PI;
+        @const val TAU_4: Float = PI_2;
+        @const val TAU_8: Float = PI_4;
+
+        var SRC: vec4 = null // Pixel value from SRC texture
+        var DST: vec4 = null // Pixel value from DST texture
+
+        // Output
+        var COLOR: vec4 = null
+
+        //#fragment_start
+        def fragment(): Unit = ()
+        //#fragment_end
+
+        //#prepare_start
+        def prepare(): Unit = () // Placeholder only to appease src generator. No lights used.
+        //#prepare_end
+
+        //#light_start
+        def light(): Unit = () // Placeholder only to appease src generator. No lights used.
+        //#light_end
+
+        //#composite_start
+        def composite(): Unit = () // Placeholder only to appease src generator. No compositing required.
+        //#composite_end
+
+        def main: Unit =
+          SRC = texture2D(SRC_CHANNEL, UV)
+          DST = texture2D(DST_CHANNEL, UV)
+          COLOR = vec4(0.0f);
+
+          // Colour
+          fragment()
+
+          fragColor = COLOR
+        
       }
 
     val output = shader.toGLSL[Indigo]
 
     val expected: String =
       """
-      |x
+      |#version 300 es
+      |precision mediump float;
+      |in vec2 SIZE;
+      |in vec2 UV;
+      |uniform sampler2D SRC_CHANNEL;
+      |uniform sampler2D DST_CHANNEL;
+      |out vec4 fragColor;
+      |layout (std140) uniform IndigoFrameData {
+      |  highp float TIME;
+      |  vec2 VIEWPORT_SIZE;
+      |};
+      |const float PI=3.1415927;
+      |const float PI_2=PI*0.5;
+      |const float PI_4=PI*0.25;
+      |const float TAU=2.0*PI;
+      |const float TAU_2=PI;
+      |const float TAU_4=PI_2;
+      |const float TAU_8=PI_4;
+      |vec4 SRC;
+      |vec4 DST;
+      |vec4 COLOR;
+      |void fragment(){
+      |}
+      |void prepare(){
+      |}
+      |void light(){
+      |}
+      |void composite(){
+      |}
+      |void main(){
+      |  SRC=texture(SRC_CHANNEL,UV);
+      |  DST=texture(DST_CHANNEL,UV);
+      |  COLOR=vec4(0.0);
+      |  fragment();
+      |  fragColor=COLOR;
+      |}
       |""".stripMargin.trim
