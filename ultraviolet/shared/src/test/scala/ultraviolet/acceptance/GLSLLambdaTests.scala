@@ -8,7 +8,7 @@ class GLSLLambdaTests extends munit.FunSuite {
   @SuppressWarnings(Array("scalafix:DisableSyntax.var"))
   case class FragEnv(UV: vec2, var COLOR: vec4)
 
-  test("local unary lambda function (no val)") {
+  test("local lambda function (no val)") {
     inline def fragment: Shader[FragEnv, vec4] =
       Shader { _ =>
         ((r: Float, g: Float) => vec4(r, g, 0.0f, 1.0f))(10.0f, 20.0f)
@@ -31,7 +31,7 @@ class GLSLLambdaTests extends munit.FunSuite {
     )
   }
 
-  test("local unary lambda function fun") {
+  test("local lambda function fun") {
     inline def fragment: Shader[FragEnv, vec4] =
       Shader { _ =>
         val p = ((r: Float, g: Float) => vec4(r, g, 0.0f, 1.0f))(10.0f, 20.0f)
@@ -72,7 +72,7 @@ class GLSLLambdaTests extends munit.FunSuite {
     )
   }
 
-  test("local unary lambda function (val)") {
+  test("local lambda function (val)") {
     inline def fragment: Shader[FragEnv, vec3] =
       Shader { _ =>
         val f: Float => vec3 = r => vec3(r, 0.0f, 0.0f)
@@ -100,7 +100,7 @@ class GLSLLambdaTests extends munit.FunSuite {
     )
   }
 
-  test("local unary lambda function (def)") {
+  test("local lambda function (def)") {
     inline def fragment: Shader[FragEnv, vec3] =
       Shader { _ =>
         def f: Float => vec3 = r => vec3(r, 0.0f, 0.0f)
