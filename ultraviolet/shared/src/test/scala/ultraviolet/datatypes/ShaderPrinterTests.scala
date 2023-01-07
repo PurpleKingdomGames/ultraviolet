@@ -114,7 +114,7 @@ class ShaderPrinterTests extends munit.FunSuite {
     // DebugAST.toAST(fragment)
 
     val webgl1 =
-      fragment.toGLSL[ShaderPrinter.WebGL1].code
+      fragment.toGLSL[ShaderPrinter.WebGL1].toOutput.code
 
     // println(webgl1)
 
@@ -132,7 +132,7 @@ class ShaderPrinterTests extends munit.FunSuite {
     )
 
     val webgl2 =
-      fragment.toGLSL[ShaderPrinter.WebGL2].code
+      fragment.toGLSL[ShaderPrinter.WebGL2].toOutput.code
 
     // println(webgl2)
 

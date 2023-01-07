@@ -21,7 +21,7 @@ class GLSLExamplesTests extends munit.FunSuite {
       }
 
     val actual =
-      shader.toGLSL[WebGL2].code
+      shader.toGLSL[WebGL2].toOutput.code
 
     assertEquals(
       actual,
@@ -54,7 +54,7 @@ class GLSLExamplesTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL[WebGL2].code
+      fragment.toGLSL[WebGL2].toOutput.code
 
     assertEquals(
       actual,
@@ -91,7 +91,7 @@ class GLSLExamplesTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL[WebGL2].code
+      fragment.toGLSL[WebGL2].toOutput.code
 
     val expected =
       s"""

@@ -17,7 +17,7 @@ class GLSLArrayTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL[WebGL2].code
+      fragment.toGLSL[WebGL2].toOutput.code
 
     // DebugAST.toAST(fragment)
     // println(actual)
@@ -44,7 +44,7 @@ class GLSLArrayTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL[WebGL2].code
+      fragment.toGLSL[WebGL2].toOutput.code
 
     // DebugAST.toAST(fragment)
     // println(actual)
@@ -70,7 +70,7 @@ class GLSLArrayTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL[WebGL2].code
+      fragment.toGLSL[WebGL2].toOutput.code
 
     // DebugAST.toAST(fragment)
     // println(actual)
@@ -119,7 +119,7 @@ class GLSLArrayTests extends munit.FunSuite {
     // println(actual)
 
     val actual =
-      fragment.toGLSL[WebGL2].code
+      fragment.toGLSL[WebGL2].toOutput.code
 
     assertEquals(
       actual,
@@ -148,7 +148,7 @@ class GLSLArrayTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL[WebGL2].code
+      fragment.toGLSL[WebGL2].toOutput.code
 
     // DebugAST.toAST(fragment)
     // println(actual)
@@ -170,7 +170,7 @@ class GLSLArrayTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL[WebGL2].code
+      fragment.toGLSL[WebGL2].toOutput.code
 
     // DebugAST.toAST(fragment)
     // println(actual)
@@ -194,7 +194,7 @@ class GLSLArrayTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL[WebGL2].code
+      fragment.toGLSL[WebGL2].toOutput.code
 
     // DebugAST.toAST(fragment)
     // println(actual)
@@ -221,7 +221,7 @@ class GLSLArrayTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL[WebGL2].code
+      fragment.toGLSL[WebGL2].toOutput.code
 
     // DebugAST.toAST(fragment)
     // println(actual)
@@ -244,7 +244,7 @@ class GLSLArrayTests extends munit.FunSuite {
       }
 
     val actual =
-      fragment.toGLSL[WebGL2].code
+      fragment.toGLSL[WebGL2].toOutput.code
 
     // DebugAST.toAST(fragment)
     // println(actual)
