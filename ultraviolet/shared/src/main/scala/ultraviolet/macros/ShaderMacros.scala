@@ -18,6 +18,7 @@ object ShaderMacros:
 
   private[macros] def toASTImpl[In, Out: Type](expr: Expr[Shader[In, Out]])(using q: Quotes): Expr[ProceduralShader] = {
     import q.reflect.*
+    import ShaderProgramValidation.*
 
     val createAST = new CreateShaderAST[q.type](using q)
 
@@ -37,10 +38,10 @@ object ShaderMacros:
 
     Expr(
       ProceduralShader(
-        createAST.shaderDefs.toList.filterNot(_.userDefined).map(_.fn),
+        createAST.shaderDefs.toList.filterNot(_.userDefined).map(_.fn).map(validate(Nil)),
         createAST.uboRegister.toList,
         createAST.annotationRegister.toList,
-        main
+        validate(Nil)(main)
       )
     )
   }
