@@ -4,6 +4,7 @@ import ultraviolet.datatypes.ShaderAST
 import ultraviolet.datatypes.ShaderAST.Annotated
 import ultraviolet.datatypes.ShaderAST.Assign
 import ultraviolet.datatypes.ShaderAST.Block
+import ultraviolet.datatypes.ShaderAST.CallExternalFunction
 import ultraviolet.datatypes.ShaderAST.CallFunction
 import ultraviolet.datatypes.ShaderAST.Cast
 import ultraviolet.datatypes.ShaderAST.DataTypes.*
@@ -81,6 +82,9 @@ object ShaderProgramValidation:
     case ast @ CallFunction(id, args, returnType) =>
       if knownRefs.contains(id) then ast
       else throw ShaderError.Validation(forwardRefMsg(id))
+
+    case ast @ CallExternalFunction(id, args, returnType) =>
+      ast
 
     case ast @ FunctionRef(id, arg, returnType) =>
       if knownRefs.contains(id) then ast
