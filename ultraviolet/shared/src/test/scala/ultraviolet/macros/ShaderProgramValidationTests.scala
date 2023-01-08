@@ -29,7 +29,7 @@ class ShaderProgramValidationTests extends munit.FunSuite {
         ShaderAST.DataTypes.ident("vec4")
       )
 
-    interceptMessage[ShaderError.Validation]("Something something about 'b'") {
+    interceptMessage[ShaderError.Validation](errorPrefix + "r is an illegal forward reference.") {
       ShaderProgramValidation.validate(0, Nil)(ast)
     }
   }
@@ -126,7 +126,7 @@ class ShaderProgramValidationTests extends munit.FunSuite {
         )
       )
 
-    interceptMessage[ShaderError.Validation]("Something something about no forward variable references") {
+    interceptMessage[ShaderError.Validation](errorPrefix + "foo is an illegal forward reference.") {
       ShaderProgramValidation.validate(0, Nil)(ast)
     }
   }
@@ -155,4 +155,28 @@ class ShaderProgramValidationTests extends munit.FunSuite {
 
     assertEquals(ast, result)
   }
+
+  test("validate a block of statements") {
+
+    val statements =
+      List(
+        ShaderAST.Val(
+          "foo",
+          ShaderAST.DataTypes.int(0),
+          ShaderAST.DataTypes.ident("int")
+        ),
+        ShaderAST.Val(
+          "bar",
+          ShaderAST.DataTypes.ident("foo"),
+          ShaderAST.DataTypes.ident("int")
+        )
+      )
+
+    val actual =
+      ShaderProgramValidation.validateStatementBlock(statements, 1, Nil)
+
+    assertEquals(actual, statements)
+
+  }
+
 }

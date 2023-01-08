@@ -25,6 +25,8 @@ import ultraviolet.datatypes.ShaderAST.Val
 import ultraviolet.datatypes.ShaderAST.While
 import ultraviolet.datatypes.*
 
+import scala.annotation.tailrec
+
 object ShaderProgramValidation:
 
   val ErrorMsgNestedFunction: String =
@@ -41,9 +43,8 @@ object ShaderProgramValidation:
     case ast @ Empty() =>
       ast
 
-    case ast @ Block(statements) =>
-      // Will need to accumulate references and validate?
-      ast
+    case Block(statements) =>
+      Block(validateStatementBlock(statements, level, knownRefs))
 
     case ast @ Neg(value) =>
       validate(level, knownRefs)(ast)
@@ -58,8 +59,7 @@ object ShaderProgramValidation:
       ast
 
     case ShaderBlock(inType, outType, envVarName, statements) =>
-      // Will need to accumulate references and validate?
-      ShaderBlock(inType, outType, envVarName, statements.map(validate(level, knownRefs)))
+      ShaderBlock(inType, outType, envVarName, validateStatementBlock(statements, level, knownRefs))
 
     case ShaderAST.Function(id, args, body, returnType) =>
       // Should not contain function
@@ -73,11 +73,7 @@ object ShaderProgramValidation:
         case None =>
           ()
 
-      // Should not contain forward references
-      // Will need to accumulate references and validate?
-      // val argNames = args.map(_._2)
-
-      ShaderAST.Function(id, args, body, returnType)
+      ShaderAST.Function(id, args, validate(level, knownRefs)(body), returnType)
 
     case ast @ CallFunction(id, args, returnType) =>
       if knownRefs.contains(id) then ast
@@ -210,3 +206,32 @@ object ShaderProgramValidation:
       swizzle(validate(level, knownRefs)(genType), swzl, returnType)
 
   }
+
+  def validateStatementBlock(statements: List[ShaderAST], level: Int, knownRefs: List[String]): List[ShaderAST] =
+    @tailrec
+    def rec(remaining: List[ShaderAST], newRefs: List[String], acc: List[ShaderAST]): List[ShaderAST] =
+      remaining match
+        case Nil =>
+          acc
+
+        case x :: xs =>
+          val checked = validate(level, newRefs)(x)
+
+          val foundRefs =
+            checked
+              .findAll {
+                case ShaderAST.Function(_, _, _, _) => true
+                case ShaderAST.FunctionRef(_, _, _) => true
+                case ShaderAST.Val(_, _, _)         => true
+                case _                              => false
+              }
+              .flatMap {
+                case ShaderAST.Function(ref, _, _, _) => List(ref)
+                case ShaderAST.FunctionRef(ref, _, _) => List(ref)
+                case ShaderAST.Val(ref, _, _)         => List(ref)
+                case _                                => Nil
+              }
+
+          rec(xs, newRefs ++ foundRefs, acc :+ checked)
+
+    rec(statements, Nil, Nil)
