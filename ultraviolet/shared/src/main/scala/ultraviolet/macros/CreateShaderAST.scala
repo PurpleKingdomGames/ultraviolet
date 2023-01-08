@@ -291,7 +291,6 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
               case a =>
                 a
 
-
       case v @ ValDef(name, typ, None) =>
         val typeOf = ShaderAST.DataTypes.ident(extractInferredType(typ))
         val vv     = ShaderAST.Val(name, ShaderAST.Empty(), typeOf)
@@ -970,7 +969,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
         val n  = proxies.lookUp(name).name
         envVarName match
           case Some(value) if value == ns =>
-            ShaderAST.DataTypes.ident(s"$n")
+            ShaderAST.DataTypes.external(s"$n")
 
           case _ =>
             ShaderAST.DataTypes.ident(s"$ns.$n")
@@ -979,7 +978,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
       case Select(Select(Ident(namespace), name), "unary_-") =>
         envVarName match
           case Some(value) if value == namespace =>
-            ShaderAST.DataTypes.ident(s"-$name")
+            ShaderAST.DataTypes.external(s"-$name")
 
           case _ =>
             ShaderAST.DataTypes.ident(s"-$namespace.$name")
@@ -988,7 +987,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
       case Select(Select(Ident(namespace), name), field) =>
         envVarName match
           case Some(value) if value == namespace =>
-            ShaderAST.DataTypes.ident(s"$name.$field")
+            ShaderAST.DataTypes.external(s"$name.$field")
 
           case _ =>
             ShaderAST.DataTypes.ident(s"$namespace.$name.$field")
@@ -997,7 +996,7 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
       case Select(Select(Select(Ident(namespace), name), field), "unary_-") =>
         envVarName match
           case Some(value) if value == namespace =>
-            ShaderAST.DataTypes.ident(s"-$name.$field")
+            ShaderAST.DataTypes.external(s"-$name.$field")
 
           case _ =>
             ShaderAST.DataTypes.ident(s"-$namespace.$name.$field")

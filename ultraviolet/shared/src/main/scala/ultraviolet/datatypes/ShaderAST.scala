@@ -231,6 +231,7 @@ object ShaderAST:
 
   enum DataTypes extends ShaderAST:
     case ident(id: String)
+    case external(id: String)
     case index(id: String, at: ShaderAST)
     case bool(b: Boolean)
     case float(v: Float)
@@ -265,29 +266,34 @@ object ShaderAST:
     given ToExpr[DataTypes] with {
       def apply(x: DataTypes)(using Quotes): Expr[DataTypes] =
         x match
-          case v: DataTypes.ident   => Expr(v)
-          case v: DataTypes.index   => Expr(v)
-          case v: DataTypes.bool    => Expr(v)
-          case v: DataTypes.float   => Expr(v)
-          case v: DataTypes.int     => Expr(v)
-          case v: DataTypes.vec2    => Expr(v)
-          case v: DataTypes.vec3    => Expr(v)
-          case v: DataTypes.vec4    => Expr(v)
-          case v: DataTypes.bvec2   => Expr(v)
-          case v: DataTypes.bvec3   => Expr(v)
-          case v: DataTypes.bvec4   => Expr(v)
-          case v: DataTypes.ivec2   => Expr(v)
-          case v: DataTypes.ivec3   => Expr(v)
-          case v: DataTypes.ivec4   => Expr(v)
-          case v: DataTypes.mat2    => Expr(v)
-          case v: DataTypes.mat3    => Expr(v)
-          case v: DataTypes.mat4    => Expr(v)
-          case v: DataTypes.array   => Expr(v)
-          case v: DataTypes.swizzle => Expr(v)
+          case v: DataTypes.ident    => Expr(v)
+          case v: DataTypes.external => Expr(v)
+          case v: DataTypes.index    => Expr(v)
+          case v: DataTypes.bool     => Expr(v)
+          case v: DataTypes.float    => Expr(v)
+          case v: DataTypes.int      => Expr(v)
+          case v: DataTypes.vec2     => Expr(v)
+          case v: DataTypes.vec3     => Expr(v)
+          case v: DataTypes.vec4     => Expr(v)
+          case v: DataTypes.bvec2    => Expr(v)
+          case v: DataTypes.bvec3    => Expr(v)
+          case v: DataTypes.bvec4    => Expr(v)
+          case v: DataTypes.ivec2    => Expr(v)
+          case v: DataTypes.ivec3    => Expr(v)
+          case v: DataTypes.ivec4    => Expr(v)
+          case v: DataTypes.mat2     => Expr(v)
+          case v: DataTypes.mat3     => Expr(v)
+          case v: DataTypes.mat4     => Expr(v)
+          case v: DataTypes.array    => Expr(v)
+          case v: DataTypes.swizzle  => Expr(v)
     }
     given ToExpr[ident] with {
       def apply(x: ident)(using Quotes): Expr[ident] =
         '{ ident(${ Expr(x.id) }) }
+    }
+    given ToExpr[external] with {
+      def apply(x: external)(using Quotes): Expr[external] =
+        '{ external(${ Expr(x.id) }) }
     }
     given ToExpr[index] with {
       def apply(x: index)(using Quotes): Expr[index] =
@@ -406,6 +412,7 @@ object ShaderAST:
               case RawLiteral(_)           => rec(xs, acc)
               case Field(t, _)             => rec(t :: xs, acc)
               case v: DataTypes.ident      => rec(xs, acc)
+              case v: DataTypes.external   => rec(xs, acc)
               case v: DataTypes.index      => rec(xs, acc)
               case v: DataTypes.bool       => rec(xs, acc)
               case v: DataTypes.float      => rec(xs, acc)
@@ -463,6 +470,7 @@ object ShaderAST:
         case v @ DataTypes.float(_)                  => f(v)
         case v @ DataTypes.int(_)                    => f(v)
         case v @ DataTypes.ident(_)                  => f(v)
+        case v @ DataTypes.external(_)               => f(v)
         case DataTypes.index(id, at)                 => f(DataTypes.index(id, at.traverse(f)))
         case DataTypes.vec2(vs)                      => f(DataTypes.vec2(vs.map(_.traverse(f))))
         case DataTypes.vec3(vs)                      => f(DataTypes.vec3(vs.map(_.traverse(f))))
@@ -503,6 +511,7 @@ object ShaderAST:
         case RawLiteral(_)                 => unknownType
         case Field(t, n)                   => unknownType
         case n @ DataTypes.ident(_)        => n
+        case n @ DataTypes.external(_)     => ShaderAST.DataTypes.ident(n.id)
         case DataTypes.index(_, _)         => unknownType
         case DataTypes.bool(_)             => ShaderAST.DataTypes.ident("bool")
         case DataTypes.float(_)            => ShaderAST.DataTypes.ident("float")

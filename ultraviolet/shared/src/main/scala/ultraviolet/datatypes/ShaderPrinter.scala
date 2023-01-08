@@ -236,6 +236,12 @@ object ShaderPrinter:
       case DataTypes.ident(id) =>
         List(s"$id")
 
+      case DataTypes.external(id) if id.endsWith(".length") =>
+        List(s"$id()")
+
+      case DataTypes.external(id) =>
+        List(s"$id")
+
       case DataTypes.index(id, at) =>
         render(at).map(idx => s"$id[$idx]")
 
@@ -408,6 +414,7 @@ object ShaderPrinter:
       case RawLiteral(_)                 => "void"
       case Field(_, _)                   => "void"
       case DataTypes.ident(_)            => "void"
+      case DataTypes.external(_)         => "void"
       case DataTypes.index(_, _)         => "void"
       case DataTypes.bool(_)             => "bool"
       case DataTypes.float(_)            => "float"
