@@ -2,6 +2,7 @@ package ultraviolet.macros
 
 import ultraviolet.datatypes.ProceduralShader
 import ultraviolet.datatypes.ShaderAST
+import ultraviolet.datatypes.ShaderDSLOps
 import ultraviolet.datatypes.ShaderError
 import ultraviolet.datatypes.UBODef
 import ultraviolet.datatypes.UBOField
@@ -38,13 +39,13 @@ object ShaderMacros:
 
     val defs =
       createAST.shaderDefs.toList.filterNot(_.userDefined).map(_.fn)
-      
+
     Expr(
       ProceduralShader(
-        defs.map(validate(0, Nil)),
+        defs.map(validate(0, ShaderDSLOps.allKeywords)),
         createAST.uboRegister.toList,
         createAST.annotationRegister.toList,
-        validate(0, defs.map(_.id))(main)
+        validate(0, ShaderDSLOps.allKeywords ++ defs.map(_.id))(main)
       )
     )
   }

@@ -958,48 +958,81 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
       // Read a field
 
       case Select(Inlined(None, Nil, Ident(obj)), fieldName) =>
-        ShaderAST.DataTypes.ident(s"$obj.$fieldName")
+        ShaderAST.Field(
+          ShaderAST.DataTypes.ident(obj),
+          ShaderAST.DataTypes.ident(fieldName)
+        )
 
       case Select(Ident(name), "unary_-") =>
         val n = proxies.lookUp(name).name
-        ShaderAST.DataTypes.ident(s"-$n")
+        ShaderAST.Neg(ShaderAST.DataTypes.ident(n))
 
       case Select(Ident(namespace), name) =>
         val ns = proxies.lookUp(namespace).name
         val n  = proxies.lookUp(name).name
         envVarName match
           case Some(value) if value == ns =>
-            ShaderAST.DataTypes.external(s"$n")
+            ShaderAST.DataTypes.external(n)
 
           case _ =>
-            ShaderAST.DataTypes.ident(s"$ns.$n")
+            ShaderAST.Field(
+              ShaderAST.DataTypes.ident(ns),
+              ShaderAST.DataTypes.ident(n)
+            )
 
       // Read a field - but of something namespaced, negated, e.g. -position.x
       case Select(Select(Ident(namespace), name), "unary_-") =>
         envVarName match
           case Some(value) if value == namespace =>
-            ShaderAST.DataTypes.external(s"-$name")
+            ShaderAST.Neg(ShaderAST.DataTypes.external(s"$name"))
 
           case _ =>
-            ShaderAST.DataTypes.ident(s"-$namespace.$name")
+            ShaderAST.Neg(
+              ShaderAST.Field(
+                ShaderAST.DataTypes.ident(namespace),
+                ShaderAST.DataTypes.ident(name)
+              )
+            )
 
       // Read a field - but of something namespaced, e.g. env.Position.x
       case Select(Select(Ident(namespace), name), field) =>
         envVarName match
           case Some(value) if value == namespace =>
-            ShaderAST.DataTypes.external(s"$name.$field")
+            ShaderAST.Field(
+              ShaderAST.DataTypes.external(name),
+              ShaderAST.DataTypes.ident(field)
+            )
 
           case _ =>
-            ShaderAST.DataTypes.ident(s"$namespace.$name.$field")
+            ShaderAST.Field(
+              ShaderAST.DataTypes.ident(namespace),
+              ShaderAST.Field(
+                ShaderAST.DataTypes.ident(name),
+                ShaderAST.DataTypes.ident(field)
+              )
+            )
 
       // Read a field - but of something namespaced, negated, e.g. -env.Position.x
       case Select(Select(Select(Ident(namespace), name), field), "unary_-") =>
         envVarName match
           case Some(value) if value == namespace =>
-            ShaderAST.DataTypes.external(s"-$name.$field")
+            ShaderAST.Neg(
+              ShaderAST.Field(
+                ShaderAST.DataTypes.external(name),
+                ShaderAST.DataTypes.ident(field)
+              )
+            )
 
           case _ =>
-            ShaderAST.DataTypes.ident(s"-$namespace.$name.$field")
+            ShaderAST.Neg(
+              ShaderAST.Field(
+                ShaderAST.DataTypes.ident(namespace),
+                ShaderAST.Field(
+                  ShaderAST.DataTypes.ident(name),
+                  ShaderAST.DataTypes.ident(field)
+                )
+              )
+            )
 
       // Read a component of an array
       case Select(

@@ -234,4 +234,4 @@ object ShaderProgramValidation:
 
           rec(xs, newRefs ++ foundRefs, acc :+ checked)
 
-    rec(statements, Nil, Nil)
+    rec(statements, knownRefs, Nil)

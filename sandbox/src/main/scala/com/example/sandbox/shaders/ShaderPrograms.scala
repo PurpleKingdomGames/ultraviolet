@@ -14,7 +14,7 @@ object ShaderPrograms:
       vec4(env.UV, zero, alpha)
     }
 
-  val frag1: String = fragment2.toGLSL[WebGL2].toOutput.code
+  val frag1: String = fragment1.toGLSL[WebGL2].toOutput.code
 
   inline def fragment2 =
     Shader[FragEnv] { env =>
