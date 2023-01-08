@@ -30,7 +30,7 @@ class ShaderProgramValidationTests extends munit.FunSuite {
       )
 
     interceptMessage[ShaderError.Validation]("Something something about 'b'") {
-      ShaderProgramValidation.validate(Nil)(ast)
+      ShaderProgramValidation.validate(0, Nil)(ast)
     }
   }
 
@@ -57,7 +57,7 @@ class ShaderProgramValidationTests extends munit.FunSuite {
       )
 
     interceptMessage[ShaderError.Validation](errorPrefix + ShaderProgramValidation.ErrorMsgNestedFunction) {
-      ShaderProgramValidation.validate(Nil)(ast)
+      ShaderProgramValidation.validate(0, Nil)(ast)
     }
   }
 
@@ -76,8 +76,10 @@ class ShaderProgramValidationTests extends munit.FunSuite {
         )
       )
 
-    interceptMessage[ShaderError.Validation]("Something something about global vars") {
-      ShaderProgramValidation.validate(Nil)(ast)
+    interceptMessage[ShaderError.Validation](
+      errorPrefix + "foo is a top level variable, and so must be a constant value or null."
+    ) {
+      ShaderProgramValidation.validate(0, Nil)(ast)
     }
   }
 
@@ -98,8 +100,8 @@ class ShaderProgramValidationTests extends munit.FunSuite {
         )
       )
 
-    interceptMessage[ShaderError.Validation]("Something something about no function forward references") {
-      ShaderProgramValidation.validate(Nil)(ast)
+    interceptMessage[ShaderError.Validation](errorPrefix + "makeVec2 is an illegal forward reference.") {
+      ShaderProgramValidation.validate(0, Nil)(ast)
     }
   }
 
@@ -125,8 +127,32 @@ class ShaderProgramValidationTests extends munit.FunSuite {
       )
 
     interceptMessage[ShaderError.Validation]("Something something about no forward variable references") {
-      ShaderProgramValidation.validate(Nil)(ast)
+      ShaderProgramValidation.validate(0, Nil)(ast)
     }
   }
 
+  test("Variables can reference previous variables") {
+    val ast: ShaderAST =
+      ShaderAST.ShaderBlock(
+        None,
+        None,
+        None,
+        List(
+          ShaderAST.Val(
+            "foo",
+            ShaderAST.DataTypes.int(0),
+            ShaderAST.DataTypes.ident("int")
+          ),
+          ShaderAST.Val(
+            "bar",
+            ShaderAST.DataTypes.ident("foo"),
+            ShaderAST.DataTypes.ident("int")
+          )
+        )
+      )
+
+    val result = ShaderProgramValidation.validate(0, Nil)(ast)
+
+    assertEquals(ast, result)
+  }
 }

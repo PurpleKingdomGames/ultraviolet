@@ -26,13 +26,17 @@ import ultraviolet.datatypes.*
 
 object ShaderProgramValidation:
 
-  val ErrorMsgNestedFunction: String = "It is not permitted to nest named functions, you can declare nexted anonymous functions, however."
+  val ErrorMsgNestedFunction: String =
+    "It is not permitted to nest named functions, you can declare nexted anonymous functions, however."
 
   private def forwardRefMsg(name: String): String =
-    s"-${name} is an illegal forward reference."
+    s"${name} is an illegal forward reference."
+
+  private def mustBeConstantMsg(name: String): String =
+    s"${name} is a top level variable, and so must be a constant value or null."
 
   @SuppressWarnings(Array("scalafix:DisableSyntax.throw"))
-  def validate(knownRefs: List[String]): ShaderAST => ShaderAST = {
+  def validate(level: Int, knownRefs: List[String]): ShaderAST => ShaderAST = {
     case ast @ Empty() =>
       ast
 
@@ -41,7 +45,7 @@ object ShaderProgramValidation:
       ast
 
     case ast @ Neg(value) =>
-      validate(knownRefs)(ast)
+      validate(level, knownRefs)(ast)
 
     case ast @ UBO(uboDef) =>
       ast
@@ -54,9 +58,9 @@ object ShaderProgramValidation:
 
     case ShaderBlock(inType, outType, envVarName, statements) =>
       // Will need to accumulate references and validate?
-      ShaderBlock(inType, outType, envVarName, statements)
+      ShaderBlock(inType, outType, envVarName, statements.map(validate(level, knownRefs)))
 
-    case ast @ ShaderAST.Function(id, args, body, returnType) =>
+    case ShaderAST.Function(id, args, body, returnType) =>
       // Should not contain function
       body.find {
         case ShaderAST.Function(_, _, _, _) => true
@@ -72,7 +76,7 @@ object ShaderProgramValidation:
       // Will need to accumulate references and validate?
       // val argNames = args.map(_._2)
 
-      ast
+      ShaderAST.Function(id, args, body, returnType)
 
     case ast @ CallFunction(id, args, returnType) =>
       if knownRefs.contains(id) then ast
@@ -83,43 +87,61 @@ object ShaderProgramValidation:
       else throw ShaderError.Validation(forwardRefMsg(id))
 
     case Cast(value, as) =>
-      Cast(validate(knownRefs)(value), as)
+      Cast(validate(level, knownRefs)(value), as)
 
     case Infix(op, left, right, returnType) =>
-      Infix(op, validate(knownRefs)(left), validate(knownRefs)(right), returnType)
+      Infix(op, validate(level + 1, knownRefs)(left), validate(level + 1, knownRefs)(right), returnType)
 
     case Assign(left, right) =>
-      Assign(validate(knownRefs)(left), validate(knownRefs)(right))
+      Assign(validate(level + 1, knownRefs)(left), validate(level + 1, knownRefs)(right))
 
     case If(condition, thenTerm, elseTerm) =>
-      If(validate(knownRefs)(condition), validate(knownRefs)(thenTerm), elseTerm.map(validate(knownRefs)))
+      If(
+        validate(level + 1, knownRefs)(condition),
+        validate(level + 1, knownRefs)(thenTerm),
+        elseTerm.map(validate(level + 1, knownRefs))
+      )
 
     case While(condition, body) =>
-      While(validate(knownRefs)(condition), validate(knownRefs)(body))
+      While(validate(level + 1, knownRefs)(condition), validate(level + 1, knownRefs)(body))
 
     case For(initial, condition, next, body) =>
       For(
-        validate(knownRefs)(initial),
-        validate(knownRefs)(condition),
-        validate(knownRefs)(next),
-        validate(knownRefs)(body)
+        validate(level + 1, knownRefs)(initial),
+        validate(level + 1, knownRefs)(condition),
+        validate(level + 1, knownRefs)(next),
+        validate(level + 1, knownRefs)(body)
       )
 
     case Switch(on, cases) =>
-      Switch(validate(knownRefs)(on), cases.map(c => c._1 -> validate(knownRefs)(c._2)))
+      Switch(validate(level + 1, knownRefs)(on), cases.map(c => c._1 -> validate(level + 1, knownRefs)(c._2)))
 
     case Val(id, value, typeOf) =>
-      // What level are we at? Top level cannot call a function for example...
-      Val(id, validate(knownRefs)(value), typeOf)
+      if level == 0 then
+        value.find {
+          case ShaderAST.Function(_, _, _, _)                         => true
+          case ShaderAST.FunctionRef(_, _, _)                         => true
+          case ShaderAST.CallFunction(_, _, _)                        => true
+          case ShaderAST.Block(List(ShaderAST.Function(_, _, _, _)))  => true
+          case ShaderAST.Block(List(ShaderAST.FunctionRef(_, _, _)))  => true
+          case ShaderAST.Block(List(ShaderAST.CallFunction(_, _, _))) => true
+          case _                                                      => false
+        } match
+          case Some(_) =>
+            throw ShaderError.Validation(mustBeConstantMsg(id))
+
+          case None =>
+            Val(id, validate(level + 1, knownRefs)(value), typeOf)
+      else Val(id, validate(level + 1, knownRefs)(value), typeOf)
 
     case Annotated(name, param, value) =>
-      Annotated(name, param, validate(knownRefs)(value))
+      Annotated(name, param, validate(level, knownRefs)(value))
 
     case ast @ RawLiteral(value) =>
       ast
 
     case Field(term, field) =>
-      Field(validate(knownRefs)(term), field)
+      Field(validate(level, knownRefs)(term), field)
 
     case ast @ ident(id) =>
       if knownRefs.contains(id) then ast
@@ -138,46 +160,46 @@ object ShaderProgramValidation:
     case ast @ int(_) =>
       ast
 
-    case ast @ vec2(_) =>
-      ast
+    case vec2(args) =>
+      vec2(args.map(validate(level, knownRefs)))
 
-    case ast @ vec3(_) =>
-      ast
+    case vec3(args) =>
+      vec3(args.map(validate(level, knownRefs)))
 
-    case ast @ vec4(_) =>
-      ast
+    case vec4(args) =>
+      vec4(args.map(validate(level, knownRefs)))
 
-    case ast @ bvec2(_) =>
-      ast
+    case bvec2(args) =>
+      bvec2(args.map(validate(level, knownRefs)))
 
-    case ast @ bvec3(_) =>
-      ast
+    case bvec3(args) =>
+      bvec3(args.map(validate(level, knownRefs)))
 
-    case ast @ bvec4(_) =>
-      ast
+    case bvec4(args) =>
+      bvec4(args.map(validate(level, knownRefs)))
 
-    case ast @ ivec2(_) =>
-      ast
+    case ivec2(args) =>
+      ivec2(args.map(validate(level, knownRefs)))
 
-    case ast @ ivec3(_) =>
-      ast
+    case ivec3(args) =>
+      ivec3(args.map(validate(level, knownRefs)))
 
-    case ast @ ivec4(_) =>
-      ast
+    case ivec4(args) =>
+      ivec4(args.map(validate(level, knownRefs)))
 
-    case ast @ mat2(_) =>
-      ast
+    case mat2(args) =>
+      mat2(args.map(validate(level, knownRefs)))
 
-    case ast @ mat3(_) =>
-      ast
+    case mat3(args) =>
+      mat3(args.map(validate(level, knownRefs)))
 
-    case ast @ mat4(_) =>
-      ast
+    case mat4(args) =>
+      mat4(args.map(validate(level, knownRefs)))
 
-    case ast @ array(_, _, _) =>
-      ast
+    case array(size, args, typeOf) =>
+      array(size, args.map(validate(level, knownRefs)), typeOf)
 
     case swizzle(genType, swzl, returnType) =>
-      swizzle(validate(knownRefs)(genType), swzl, returnType)
+      swizzle(validate(level, knownRefs)(genType), swzl, returnType)
 
   }

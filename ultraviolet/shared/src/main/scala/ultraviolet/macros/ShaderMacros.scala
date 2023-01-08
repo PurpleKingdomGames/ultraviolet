@@ -38,10 +38,10 @@ object ShaderMacros:
 
     Expr(
       ProceduralShader(
-        createAST.shaderDefs.toList.filterNot(_.userDefined).map(_.fn).map(validate(Nil)),
+        createAST.shaderDefs.toList.filterNot(_.userDefined).map(_.fn).map(validate(0, Nil)),
         createAST.uboRegister.toList,
         createAST.annotationRegister.toList,
-        validate(Nil)(main)
+        validate(0, Nil)(main)
       )
     )
   }
