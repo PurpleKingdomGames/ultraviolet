@@ -73,7 +73,7 @@ object ShaderProgramValidation:
         case None =>
           ()
 
-      ShaderAST.Function(id, args, validate(level, knownRefs)(body), returnType)
+      ShaderAST.Function(id, args, validate(level + 1, knownRefs ++ args.map(_._2))(body), returnType)
 
     case ast @ CallFunction(id, args, returnType) =>
       if knownRefs.contains(id) then ast
@@ -153,6 +153,9 @@ object ShaderProgramValidation:
     case ast @ index(id, at) =>
       if knownRefs.contains(id) then ast
       else throw ShaderError.Validation(forwardRefMsg(id))
+
+    case ast @ externalIndex(_, _) =>
+      ast
 
     case ast @ bool(_) =>
       ast

@@ -40,12 +40,28 @@ object ShaderMacros:
     val defs =
       createAST.shaderDefs.toList.filterNot(_.userDefined).map(_.fn)
 
+    val annotations =
+      createAST.annotationRegister.toList
+
+    val defRefs = defs.map(_.id)
+    val annotationRefs =
+      annotations.flatMap {
+        case ShaderAST.Annotated(_, _, ShaderAST.Val(id, _, _)) =>
+          List(id)
+
+        case ShaderAST.Annotated(_, _, ShaderAST.Annotated(_, _, ShaderAST.Val(id, _, _))) =>
+          List(id)
+
+        case _ =>
+          Nil
+      }
+
     Expr(
       ProceduralShader(
         defs.map(validate(0, ShaderDSLOps.allKeywords)),
         createAST.uboRegister.toList,
-        createAST.annotationRegister.toList,
-        validate(0, ShaderDSLOps.allKeywords ++ defs.map(_.id))(main)
+        annotations,
+        validate(0, ShaderDSLOps.allKeywords ++ defRefs ++ annotationRefs)(main)
       )
     )
   }

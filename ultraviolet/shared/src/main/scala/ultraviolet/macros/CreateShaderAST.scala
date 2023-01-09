@@ -1196,10 +1196,13 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
         val idx = walkTerm(index, envVarName)
         envVarName match
           case Some(value) if value == namespace =>
-            ShaderAST.DataTypes.index(name, idx)
+            ShaderAST.DataTypes.externalIndex(name, idx)
 
           case _ =>
-            ShaderAST.DataTypes.index(s"$namespace.$name", idx)
+            ShaderAST.Field(
+              ShaderAST.DataTypes.ident(namespace),
+              ShaderAST.DataTypes.index(name, idx)
+            )
 
       // array component access
       case Apply(

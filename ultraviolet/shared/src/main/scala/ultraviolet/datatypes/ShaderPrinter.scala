@@ -248,6 +248,9 @@ object ShaderPrinter:
       case DataTypes.index(id, at) =>
         render(at).map(idx => s"$id[$idx]")
 
+      case DataTypes.externalIndex(id, at) =>
+        render(at).map(idx => s"$id[$idx]")
+
       case DataTypes.bool(b) =>
         List(s"${b.toString}")
 
@@ -420,6 +423,7 @@ object ShaderPrinter:
       case DataTypes.ident(_)             => "void"
       case DataTypes.external(_)          => "void"
       case DataTypes.index(_, _)          => "void"
+      case DataTypes.externalIndex(_, _)  => "void"
       case DataTypes.bool(_)              => "bool"
       case DataTypes.float(_)             => "float"
       case DataTypes.int(_)               => "int"

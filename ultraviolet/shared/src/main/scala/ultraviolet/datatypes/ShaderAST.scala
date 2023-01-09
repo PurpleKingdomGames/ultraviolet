@@ -245,6 +245,7 @@ object ShaderAST:
     case ident(id: String)
     case external(id: String)
     case index(id: String, at: ShaderAST)
+    case externalIndex(id: String, at: ShaderAST)
     case bool(b: Boolean)
     case float(v: Float)
     case int(v: Int)
@@ -278,26 +279,27 @@ object ShaderAST:
     given ToExpr[DataTypes] with {
       def apply(x: DataTypes)(using Quotes): Expr[DataTypes] =
         x match
-          case v: DataTypes.ident    => Expr(v)
-          case v: DataTypes.external => Expr(v)
-          case v: DataTypes.index    => Expr(v)
-          case v: DataTypes.bool     => Expr(v)
-          case v: DataTypes.float    => Expr(v)
-          case v: DataTypes.int      => Expr(v)
-          case v: DataTypes.vec2     => Expr(v)
-          case v: DataTypes.vec3     => Expr(v)
-          case v: DataTypes.vec4     => Expr(v)
-          case v: DataTypes.bvec2    => Expr(v)
-          case v: DataTypes.bvec3    => Expr(v)
-          case v: DataTypes.bvec4    => Expr(v)
-          case v: DataTypes.ivec2    => Expr(v)
-          case v: DataTypes.ivec3    => Expr(v)
-          case v: DataTypes.ivec4    => Expr(v)
-          case v: DataTypes.mat2     => Expr(v)
-          case v: DataTypes.mat3     => Expr(v)
-          case v: DataTypes.mat4     => Expr(v)
-          case v: DataTypes.array    => Expr(v)
-          case v: DataTypes.swizzle  => Expr(v)
+          case v: DataTypes.ident         => Expr(v)
+          case v: DataTypes.external      => Expr(v)
+          case v: DataTypes.index         => Expr(v)
+          case v: DataTypes.externalIndex => Expr(v)
+          case v: DataTypes.bool          => Expr(v)
+          case v: DataTypes.float         => Expr(v)
+          case v: DataTypes.int           => Expr(v)
+          case v: DataTypes.vec2          => Expr(v)
+          case v: DataTypes.vec3          => Expr(v)
+          case v: DataTypes.vec4          => Expr(v)
+          case v: DataTypes.bvec2         => Expr(v)
+          case v: DataTypes.bvec3         => Expr(v)
+          case v: DataTypes.bvec4         => Expr(v)
+          case v: DataTypes.ivec2         => Expr(v)
+          case v: DataTypes.ivec3         => Expr(v)
+          case v: DataTypes.ivec4         => Expr(v)
+          case v: DataTypes.mat2          => Expr(v)
+          case v: DataTypes.mat3          => Expr(v)
+          case v: DataTypes.mat4          => Expr(v)
+          case v: DataTypes.array         => Expr(v)
+          case v: DataTypes.swizzle       => Expr(v)
     }
     given ToExpr[ident] with {
       def apply(x: ident)(using Quotes): Expr[ident] =
@@ -310,6 +312,10 @@ object ShaderAST:
     given ToExpr[index] with {
       def apply(x: index)(using Quotes): Expr[index] =
         '{ index(${ Expr(x.id) }, ${ Expr(x.at) }) }
+    }
+    given ToExpr[externalIndex] with {
+      def apply(x: externalIndex)(using Quotes): Expr[externalIndex] =
+        '{ externalIndex(${ Expr(x.id) }, ${ Expr(x.at) }) }
     }
     given ToExpr[bool] with {
       def apply(x: bool)(using Quotes): Expr[bool] =
@@ -427,6 +433,7 @@ object ShaderAST:
               case v: DataTypes.ident            => rec(xs, acc)
               case v: DataTypes.external         => rec(xs, acc)
               case v: DataTypes.index            => rec(xs, acc)
+              case v: DataTypes.externalIndex    => rec(xs, acc)
               case v: DataTypes.bool             => rec(xs, acc)
               case v: DataTypes.float            => rec(xs, acc)
               case v: DataTypes.int              => rec(xs, acc)
@@ -486,6 +493,7 @@ object ShaderAST:
         case v @ DataTypes.ident(_)                  => f(v)
         case v @ DataTypes.external(_)               => f(v)
         case DataTypes.index(id, at)                 => f(DataTypes.index(id, at.traverse(f)))
+        case DataTypes.externalIndex(id, at)         => f(DataTypes.externalIndex(id, at.traverse(f)))
         case DataTypes.vec2(vs)                      => f(DataTypes.vec2(vs.map(_.traverse(f))))
         case DataTypes.vec3(vs)                      => f(DataTypes.vec3(vs.map(_.traverse(f))))
         case DataTypes.vec4(vs)                      => f(DataTypes.vec4(vs.map(_.traverse(f))))
@@ -528,6 +536,7 @@ object ShaderAST:
         case n @ DataTypes.ident(_)         => n
         case n @ DataTypes.external(_)      => ShaderAST.DataTypes.ident(n.id)
         case DataTypes.index(_, _)          => unknownType
+        case DataTypes.externalIndex(_, _)  => unknownType
         case DataTypes.bool(_)              => ShaderAST.DataTypes.ident("bool")
         case DataTypes.float(_)             => ShaderAST.DataTypes.ident("float")
         case DataTypes.int(_)               => ShaderAST.DataTypes.ident("int")
