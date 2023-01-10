@@ -47,7 +47,7 @@ object ShaderProgramValidation:
       Block(validateStatementBlock(statements, level, knownRefs))
 
     case ast @ Neg(value) =>
-      validate(level, knownRefs)(ast)
+      Neg(validate(level, knownRefs)(value))
 
     case ast @ UBO(uboDef) =>
       ast
