@@ -32,13 +32,14 @@ class GLSLLambdaTests extends munit.FunSuite {
   }
 
   test("local lambda function fun") {
-    inline def fragment: Shader[FragEnv, vec4] =
+    inline def fragment: Shader[FragEnv, Unit] =
       Shader { _ =>
-        val p = ((r: Float, g: Float) => vec4(r, g, 0.0f, 1.0f))(10.0f, 20.0f)
+        def main: Unit =
+          val p = ((r: Float, g: Float) => vec4(r, g, 0.0f, 1.0f))(10.0f, 20.0f)
 
-        val q = (((v: Float) => vec2(v)) andThen ((vv: vec2) => vec4(vv, vv)))(1.0)
+          val q = (((v: Float) => vec2(v)) andThen ((vv: vec2) => vec4(vv, vv)))(1.0)
 
-        ((b: Float) => vec4(vec2(1.0), b, 0.5f))(30.0f) + p + q
+          ((b: Float) => vec4(vec2(1.0), b, 0.5f))(30.0f) + p + q
       }
 
     val actual =
@@ -65,19 +66,22 @@ class GLSLLambdaTests extends munit.FunSuite {
       |vec4 def4(in float b){
       |  return vec4(vec2(1.0),b,0.5);
       |}
-      |vec4 p=def0(10.0,20.0);
-      |vec4 q=def3(1.0);
-      |(def4(30.0)+p)+q;
+      |void main(){
+      |  vec4 p=def0(10.0,20.0);
+      |  vec4 q=def3(1.0);
+      |  (def4(30.0)+p)+q;
+      |}
       |""".stripMargin.trim
     )
   }
 
   test("local lambda function (val)") {
-    inline def fragment: Shader[FragEnv, vec3] =
+    inline def fragment: Shader[FragEnv, Unit] =
       Shader { _ =>
-        val f: Float => vec3 = r => vec3(r, 0.0f, 0.0f)
-        val g                = (b: Float) => vec3(0.0f, 0.0f, b)
-        f(1.0f) + g(2.0)
+        def main: Unit =
+          val f: Float => vec3 = r => vec3(r, 0.0f, 0.0f)
+          val g                = (b: Float) => vec3(0.0f, 0.0f, b)
+          f(1.0f) + g(2.0)
       }
 
     val actual =
@@ -95,17 +99,20 @@ class GLSLLambdaTests extends munit.FunSuite {
       |vec3 def1(in float b){
       |  return vec3(0.0,0.0,b);
       |}
-      |def0(1.0)+def1(2.0);
+      |void main(){
+      |  def0(1.0)+def1(2.0);
+      |}
       |""".stripMargin.trim
     )
   }
 
   test("local lambda function (def)") {
-    inline def fragment: Shader[FragEnv, vec3] =
+    inline def fragment: Shader[FragEnv, Unit] =
       Shader { _ =>
-        def f: Float => vec3 = r => vec3(r, 0.0f, 0.0f)
-        def g                = (b: Float) => vec3(0.0f, 0.0f, b)
-        f(1.0f) + g(2.0)
+        def main: Unit =
+          def f: Float => vec3 = r => vec3(r, 0.0f, 0.0f)
+          def g                = (b: Float) => vec3(0.0f, 0.0f, b)
+          f(1.0f) + g(2.0)
       }
 
     val actual =
@@ -123,20 +130,23 @@ class GLSLLambdaTests extends munit.FunSuite {
       |vec3 def1(in float b){
       |  return vec3(0.0,0.0,b);
       |}
-      |def0(1.0)+def1(2.0);
+      |void main(){
+      |  def0(1.0)+def1(2.0);
+      |}
       |""".stripMargin.trim
     )
   }
 
   test("compose (Function1)") {
-    inline def fragment: Shader[FragEnv, vec4] =
+    inline def fragment: Shader[FragEnv, Unit] =
       Shader { _ =>
-        val e: Float => Float = v => v - 0.5f
-        val f: Float => vec3  = r => vec3(r, 0.0f, 0.0f)
-        val g: vec3 => vec4   = val3 => vec4(val3, 0.5f)
-        val h: Float => vec4  = g compose f compose e
+        def main: Unit =
+          val e: Float => Float = v => v - 0.5f
+          val f: Float => vec3  = r => vec3(r, 0.0f, 0.0f)
+          val g: vec3 => vec4   = val3 => vec4(val3, 0.5f)
+          val h: Float => vec4  = g compose f compose e
 
-        h(1.0f)
+          h(1.0f)
       }
 
     val actual =
@@ -163,21 +173,24 @@ class GLSLLambdaTests extends munit.FunSuite {
       |vec4 def4(in float val1){
       |  return def3(def0(val1));
       |}
-      |def4(1.0);
+      |void main(){
+      |  def4(1.0);
+      |}
       |""".stripMargin.trim
     )
   }
 
   test("andThen (Function1)") {
-    inline def fragment: Shader[FragEnv, vec4] =
+    inline def fragment: Shader[FragEnv, Unit] =
       Shader { _ =>
-        val e: Float => Float = v => v - 0.5f
-        val f: Float => vec3  = r => vec3(r, 0.0f, 0.0f)
-        val g: vec3 => vec4   = val3 => vec4(val3, 0.5f)
-        val h: Float => vec4  = f andThen g
-        val i: Float => vec4  = e andThen h
+        def main: Unit =
+          val e: Float => Float = v => v - 0.5f
+          val f: Float => vec3  = r => vec3(r, 0.0f, 0.0f)
+          val g: vec3 => vec4   = val3 => vec4(val3, 0.5f)
+          val h: Float => vec4  = f andThen g
+          val i: Float => vec4  = e andThen h
 
-        i(1.0f)
+          i(1.0f)
       }
 
     val actual =
@@ -204,7 +217,9 @@ class GLSLLambdaTests extends munit.FunSuite {
       |vec4 def4(in float val1){
       |  return def3(def0(val1));
       |}
-      |def4(1.0);
+      |void main(){
+      |  def4(1.0);
+      |}
       |""".stripMargin.trim
     )
   }
@@ -216,7 +231,7 @@ class GLSLLambdaTests extends munit.FunSuite {
     inline def g: vec3 => vec4   = v3 => vec4(v3, 0.5f)
     inline def h: Float => vec4  = e andThen f andThen g
 
-    inline def fragment: Shader[FragEnv, vec4] =
+    inline def fragment: Shader[FragEnv, Unit] =
       Shader { _ =>
         h(1.0f)
       }

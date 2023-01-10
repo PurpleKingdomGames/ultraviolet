@@ -233,13 +233,13 @@ object ShaderPrinter:
           List(s"""}""")
         ).flatten
 
-      case DataTypes.ident(id) if id.endsWith(".length") =>
+      case DataTypes.ident(id) if id == "length" || id.endsWith(".length") =>
         List(s"$id()")
 
       case DataTypes.ident(id) =>
         List(s"$id")
 
-      case DataTypes.external(id) if id.endsWith(".length") =>
+      case DataTypes.external(id) if id == "length" || id.endsWith(".length") =>
         List(s"$id()")
 
       case DataTypes.external(id) =>

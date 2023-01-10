@@ -56,12 +56,17 @@ object ShaderMacros:
           Nil
       }
 
+    val additionalKeyword =
+      List(
+        "sampler2D"
+      )
+
     Expr(
       ProceduralShader(
-        defs.map(validate(0, ShaderDSLOps.allKeywords)),
+        validateFunctionList(defs, ShaderDSLOps.allKeywords ++ additionalKeyword),
         createAST.uboRegister.toList,
         annotations,
-        validate(0, ShaderDSLOps.allKeywords ++ defRefs ++ annotationRefs)(main)
+        validate(0, ShaderDSLOps.allKeywords ++ additionalKeyword ++ defRefs ++ annotationRefs)(main)
       )
     )
   }

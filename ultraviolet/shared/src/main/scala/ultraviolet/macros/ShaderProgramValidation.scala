@@ -106,11 +106,24 @@ object ShaderProgramValidation:
       While(validate(level + 1, knownRefs)(condition), validate(level + 1, knownRefs)(body))
 
     case For(initial, condition, next, body) =>
+      val checkedInit = validate(level + 1, knownRefs)(initial)
+
+      val additionalRefs =
+        checkedInit
+          .findAll {
+            case ShaderAST.Val(_, _, _) => true
+            case _                      => false
+          }
+          .flatMap {
+            case ShaderAST.Val(ref, _, _) => List(ref)
+            case _                        => Nil
+          }
+
       For(
-        validate(level + 1, knownRefs)(initial),
-        validate(level + 1, knownRefs)(condition),
-        validate(level + 1, knownRefs)(next),
-        validate(level + 1, knownRefs)(body)
+        checkedInit,
+        validate(level + 1, knownRefs ++ additionalRefs)(condition),
+        validate(level + 1, knownRefs ++ additionalRefs)(next),
+        validate(level + 1, knownRefs ++ additionalRefs)(body)
       )
 
     case Switch(on, cases) =>
@@ -236,5 +249,28 @@ object ShaderProgramValidation:
               }
 
           rec(xs, newRefs ++ foundRefs, acc :+ checked)
+
+    rec(statements, knownRefs, Nil)
+
+  def validateFunctionList(statements: List[ShaderAST.Function], knownRefs: List[String]): List[ShaderAST.Function] =
+    @tailrec
+    def rec(
+        remaining: List[ShaderAST.Function],
+        newRefs: List[String],
+        acc: List[ShaderAST.Function]
+    ): List[ShaderAST.Function] =
+      remaining match
+        case Nil =>
+          acc
+
+        case x :: xs =>
+          val checked = List(validate(0, newRefs)(x)).collect { case f: ShaderAST.Function =>
+            f
+          }
+
+          val foundRefs =
+            checked.map(_.id)
+
+          rec(xs, newRefs ++ foundRefs, acc ++ checked)
 
     rec(statements, knownRefs, Nil)

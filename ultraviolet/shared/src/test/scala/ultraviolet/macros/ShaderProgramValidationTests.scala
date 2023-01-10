@@ -29,7 +29,7 @@ class ShaderProgramValidationTests extends munit.FunSuite {
         ShaderAST.DataTypes.ident("vec4")
       )
 
-    interceptMessage[ShaderError.Validation](errorPrefix + "r is an illegal forward reference.") {
+    interceptMessage[ShaderError.Validation](errorPrefix + "b is an illegal forward reference.") {
       ShaderProgramValidation.validate(0, Nil)(ast)
     }
   }

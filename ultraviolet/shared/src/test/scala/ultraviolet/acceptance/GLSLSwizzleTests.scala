@@ -135,8 +135,9 @@ class GLSLSwizzleTests extends munit.FunSuite {
                0,           0,           1, 0,
                0,           0,           0, 1)
 
-        val normal: vec3 = vec3(1.0)
-        val rotatedNormal: vec3 = (vec4(normal, 1.0f) * rotationZ(env.ROTATION)).xyz
+        def main: Unit =
+          val normal: vec3 = vec3(1.0)
+          val rotatedNormal: vec3 = (vec4(normal, 1.0f) * rotationZ(env.ROTATION)).xyz
       }
 
     val actual =
@@ -151,8 +152,10 @@ class GLSLSwizzleTests extends munit.FunSuite {
       |mat4 rotationZ(in float angle){
       |  return mat4(cos(angle),-sin(angle),0.0,0.0,sin(angle),cos(angle),0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0);
       |}
-      |vec3 normal=vec3(1.0);
-      |vec3 rotatedNormal=(vec4(normal,1.0)*rotationZ(ROTATION)).xyz;
+      |void main(){
+      |  vec3 normal=vec3(1.0);
+      |  vec3 rotatedNormal=(vec4(normal,1.0)*rotationZ(ROTATION)).xyz;
+      |}
       |""".stripMargin.trim
     )
   }

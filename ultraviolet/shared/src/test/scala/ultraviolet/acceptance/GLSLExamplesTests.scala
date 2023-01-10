@@ -67,7 +67,7 @@ class GLSLExamplesTests extends munit.FunSuite {
       |  float fillAmount=(1.0-step(0.0,sdf))*fill.w;
       |  return vec4(fill.xyz*fillAmount,fillAmount);
       |}
-      |vec4 main(){
+      |void main(){
       |  float sdf=circleSdf(UV-0.5,0.5);
       |  calculateColour(UV,sdf);
       |}
