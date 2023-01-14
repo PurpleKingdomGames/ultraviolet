@@ -43,3 +43,7 @@ metals.sbt
 .ammonite
 .coursier
 
+# Direnv
+.direnv
+.envrc
+
