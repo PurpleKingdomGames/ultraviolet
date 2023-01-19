@@ -69,7 +69,23 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
         mapName(typeName) + s"[$varName]"
 
       case _ =>
-        mapName(typ.tpe.classSymbol.map(_.name).getOrElse("void"))
+        val res = mapName(typ.tpe.classSymbol.map(_.name).getOrElse("void"))
+
+        res match
+          case "void" =>
+            // One last roll of the dice. If we think this is a Shader, then it
+            // is a function x => Shader[?, rt], and we can grab the rt name...
+            if typ.tpe.show.contains("Shader") then
+              typ.tpe.typeArgs.lastOption match
+                case Some(TypeRef(_, value)) =>
+                  mapName(value)
+
+                case _ =>
+                  res
+            else res
+
+          case _ =>
+            res
 
   def extractInferredTypeParam(typ: TypeTree): Option[String] =
     def extract(t: Tree): Option[String] =

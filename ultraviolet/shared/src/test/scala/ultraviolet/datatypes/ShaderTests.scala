@@ -419,4 +419,40 @@ class ShaderTests extends munit.FunSuite {
     )
   }
 
+  test("Shader's can run functions that embed other shaders") {
+
+    inline def modifyVertex: vec4 => Shader[Unit, vec4] =
+      (input: vec4) =>
+        Shader[Unit, vec4] { _ =>
+          input + vec4(1.0f)
+        }
+
+    @SuppressWarnings(Array("scalafix:DisableSyntax.var", "scalafix:DisableSyntax.null"))
+    inline def shader(inline f: vec4 => Shader[Unit, vec4]): Shader[Unit, Unit] =
+      Shader {
+        var VERTEX: vec4 = null
+        def vertex: Unit =
+          VERTEX = f(VERTEX).run(())
+      }
+
+    val actualCode =
+      shader(modifyVertex).toGLSL[WebGL2].toOutput.code
+
+    // DebugAST.toAST(shader(modifyVertex))
+    // println(actualCode)
+
+    assertEquals(
+      actualCode,
+      s"""
+      |vec4 def0(in vec4 input){
+      |  return input+vec4(1.0);
+      |}
+      |vec4 VERTEX;
+      |void vertex(){
+      |  VERTEX=def0(VERTEX);
+      |}
+      |""".stripMargin.trim
+    )
+  }
+
 }
