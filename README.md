@@ -33,62 +33,75 @@ Ultimately I'd like to be able to write Shaders in FP friendly Scala that can ta
 
 # Language feature comparison
 
+***The goldren rule is: Keep It Simple!***
+
+GLSL is not a general purpose language like Scala is, and while it's possible to represent most of GLSL in Scala, the opposite is not true.
+
+GLSL is for doing maths on simple numeric data types, and as someone else described it, is "a very limited programming model."
+
+Go forth and do maths and make pretty pictures!
+
 ## Gotcha's, foot guns, and weird stuff
 
-### UBO's must be in a 'top-level' Shader
+### Strings? Where we're going, we don't need Strings.
 
-This example works perfectly:
+GLSL is a C-like language for doing maths. There are no `Char` or `String` types.
+
+### No functions as return types
+
+Functions are not first class citizens in GLSL, and so it is not possible (currently) to have a function as a return type of a function. Simple function composition does work, and the `Shader` type forms a monad you can `map` and `flatMap` over,
+
+### Limited support for product types
+
+You cannot make or use arbitrary Product types. For example, it is tempting to just make a little tuple in order to return two values from a function... but you can't.
+
+The closest thing you can do is make use of 'structs', which in Ultraviolet are represented by classes declared in the shader body - but this is quite limited / limiting.
 
 ```scala
-case class UBO1(UV: vec2)
+inline def fragment =
+  Shader[Unit, Unit] { _ =>
+    class Light(
+        val eyePosOrDir: vec3,
+        val isDirectional: Boolean,
+        val intensity: vec3,
+        val attenuation: Float
+    )
 
-inline def base: Float => Shader[UBO1, vec4] =
-  (z: Float) =>
-    Shader[UBO1, vec4] { env =>
-      vec4(env.UV, z, 1.0f)
-    }
+    def makeLight(): Light =
+      Light(vec3(1.0f), true, vec3(2.0f), 2.5f)
 
-inline def toVec2(v4: vec4): Shader[UBO1, vec2] =
-  Shader[UBO1, vec2] { env =>
-    v4.xy
-  }
-
-inline def calc: Shader[UBO1, vec2] =
-  for
-    a <- base(20.0f)
-    b <- toVec2(a)
-  yield b + 1.0f
-
-inline def shader: Shader[UBO1, vec2] =
-  Shader[UBO1, vec2] { env =>
-    ubo[UBO1]
-    calc.run(env)
+    def frag: Unit =
+      val x = makeLight()
+      val y = x.eyePosOrDir.y
   }
 ```
 
-But bad things will happen if you try to do this, because the UBO would end up being defined inside a function, and UBO's must be declared at the top level:
+### No sum types
 
-```scala
-case class UBO1(UV: vec2)
+There is no way to represent anything like an enum, the closest you can get is using an `int` as a flag to switch on in a pattern match.
 
-inline def base: Float => Shader[UBO1, vec4] =
-  (z: Float) =>
-    Shader[UBO1, vec4] { env =>
-      ubo[UBO1]
-      vec4(env.UV, z, 1.0f)
-    }
+### No forward referencing
 
-inline def toVec2(v4: vec4): Shader[UBO1, vec2] =
-  Shader[UBO1, vec2] { env =>
-    v4.xy
-  }
+In Scala, you can call functions at the bottom of a program from code living at the top. This type of thing is called a forward reference, and is not allowed in GLSL.
 
-inline def shader: Shader[UBO1, vec2] =
-  for
-    a <- base(20.0f)
-    b <- toVec2(a)
-  yield b + 1.0f
-```
+There are compile time validation checks for this.
+
+### No, your fancy library won't work here
+
+Almost every language feature you have available via UltraViolet has required work to allow it to be converted to GLSL. Bringing in your favourite library that adds arbitrary functionality will not work.
+
+### Nested functions and function purity
+
+Because functions in Scala are first-class citizens, you can do all sorts of fancy things with them that we take for granted as Scala developers. One such thing is being able to arbitrarily nest functions.
+
+In GLSL, functions are special, and can only exist at the top level of the program.
+
+In general, this is manageable problem, but there are two rules to follow:
+
+1. **'Named' functions e.g. `def foo(x: Float): vec2 = ???` _cannot_ be nested inside one another.** This is because Ultraviolet will preserve the order of your code including named functions, in order to avoid problems with forward references.
+2. **Anonymous functions _can_ be nested, but _must be pure_.**. Ultraviolet will re-organise anonymous functions, this is what allows us to simulate things like function composition. The price is that anonymous functions must be pure, i.e. they can only produce a value based on their arguments, and cannot make reference to other outside entities that Scala would normally consider to be 'in scope'.
+
+These rules should be enforced by compile time program validation.
 
 ### Just write a glsl as a String?
 
@@ -106,6 +119,7 @@ This is fine anywhere:
 ```scala
 Shader {
   RawGLSL("int foo = 10;")
+  // or
   raw("int bar = 11;")
 }
 ```
@@ -118,13 +132,13 @@ Shader {
 }
 ```
 
-Because we can't do string things in GLSL, and trim is a stringy thingy.
+Because we can't do string-y things in GLSL, and trim is a string operation.
 
 ### Pattern matching weirdness
 
 A pattern match is converted to a switch statement, and in GLSL you can only switch on an Int. So far that's limiting, but ok.
 
-What is totally unintuitive is that on some graphics hardware, in some implmentations, switch statements will process all branches irrespective of whether they're going to be used or not. Weird but... ok? No.
+What is totally unintuitive is that on some graphics hardware, in some implmentations, switch statements will process ***all*** branches irrespective of whether they're going to be used or not.
 
 The problem with that, is that if you declare the same variable name in two branches, the GLSL compiler will fail and tell you that you've redeclared it. Bonkers, but the takeaway is: Don't repeat variable names in pattern match branches...
 
@@ -132,9 +146,11 @@ The problem with that, is that if you declare the same variable name in two bran
 
 When writing shaders in Scala, Scala reserved words will be checked and errors shown by the compiler.
 
-You shouldn't have too much trouble with GLSL reserved words because many of them have the same status in Scala, but it's worth noting the GLSL is like C and that there will be words to avoid.
+You shouldn't have too much trouble with GLSL reserved words because many of them have the same status in Scala, and Ultraviolets validation should catch all the others at compile time.
 
-One thing to avoid: Do not call a function something like `def xy(v: vec4): ???` because this will likely interfere with the Swizzle mechanisms. Not at the point of definition but at the point of use.
+Naming conventions to avoid:
+- Do not call a function something like `def xy(v: vec4): ???` because this will likely interfere with the Swizzle mechanisms. Not at the point of definition but at the point of use.
+- Do not name anything `val0...N` or `def0...N`, as this is the naming scheme UltraViolet uses internally when it needs to create identifiers, and you'll end up in a mess.
 
 ## Comparison table
 
@@ -166,7 +182,7 @@ Only including the differences or note worthy features. If they're the same they
 Other comments:
 
 - Although Ultraviolet is based on GLSL 300, I've kept `texture2D` and `textureCube` from WebGL 1.0 for clarity, and these are rewritten to `texture` for WebGL 2.0. 
-- Preprocessor directives largely don't exist, but `#define` supported for special cases where you need to define a global value based on a non-constant value.
+- Preprocessor directives largely don't exist, but `#define` is supported for special cases where you need to define a global value based on a non-constant value.
 
 
 ## Things to know about inlining
@@ -178,5 +194,5 @@ Here, 'external' means 'not inside the body of your shader'.
 - You cannot inline external `val`s.
 - You can inline external `def`s into your code, but:
   - A def that is essentially a call by reference val such as `inline def x = 1.0f` will have it's value inlined.
-  - A def that is a function, laid out like a method e.g. `inline def foo(c: Int): Int = c + 1` will be embedded as a function called `foo` as expected, but the argument `c` will be ignored, and the value passed will be inlined. Bit weird!
-  - A def that is a lambda, however, will be embedded with a new name and will work exactly as you'd expect, recommend you do this! `inline def foo: Int => Int = c => c + 1`
+  - A def that is a function, laid out like a method e.g. `inline def foo(c: Int): Int = c + 1` will be inlined.
+  - A def that is an anonymous function will be embedded with a new name and will work exactly as you'd expect, i.e. `inline def foo: Int => Int = c => c + 1`
