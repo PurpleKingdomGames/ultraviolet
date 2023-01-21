@@ -1356,6 +1356,9 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
 
       //
 
+      case Inlined(Some(_: Tree), _, Typed(TypeApply(term, _), _)) =>
+        walkTree(term, envVarName)
+
       case Inlined(Some(tree: Tree), _, _) =>
         walkTree(tree, envVarName)
 

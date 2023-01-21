@@ -455,4 +455,76 @@ class ShaderTests extends munit.FunSuite {
     )
   }
 
+  test("Shaders can be create from within a companion (inlined)") {
+
+    inline def modifyVertex: vec4 => Shader[Foo.Env, vec4] =
+      (input: vec4) =>
+        Shader[Foo.Env, vec4] { _ =>
+          input + vec4(1.0f)
+        }
+
+    inline def actualCode =
+      Foo.shader(modifyVertex).toGLSL[WebGL2].toOutput.code
+
+    // DebugAST.toAST(actualCode)
+    // println(actualCode)
+
+    assertEquals(
+      actualCode,
+      s"""
+      |vec4 def0(in vec4 input){
+      |  return input+vec4(1.0);
+      |}
+      |vec4 VERTEX;
+      |void vertex(){
+      |  VERTEX=def0(VERTEX);
+      |}
+      |""".stripMargin.trim
+    )
+  }
+
+  test("Shaders can be create from within a companion (inlined + converted)") {
+
+    inline def modifyVertex: vec4 => Shader[Foo.Env, vec4] =
+      (input: vec4) =>
+        Shader[Foo.Env, vec4] { _ =>
+          input + vec4(1.0f)
+        }
+
+    val actualCode =
+      Foo.shaderResult(modifyVertex).toOutput.code
+
+    // DebugAST.toAST(shader(modifyVertex))
+    // println(actualCode)
+
+    assertEquals(
+      actualCode,
+      s"""
+      |vec4 def0(in vec4 input){
+      |  return input+vec4(1.0);
+      |}
+      |vec4 VERTEX;
+      |void vertex(){
+      |  VERTEX=def0(VERTEX);
+      |}
+      |""".stripMargin.trim
+    )
+  }
+
+}
+
+object Foo {
+  case class Env(id: Int)
+  case class Env2(id2: Int)
+
+  @SuppressWarnings(Array("scalafix:DisableSyntax.var", "scalafix:DisableSyntax.null"))
+  inline def shader(inline f: vec4 => Shader[Env, vec4]): Shader[Env2, Unit] =
+    Shader[Env2] { env =>
+      var VERTEX: vec4 = null
+      def vertex: Unit =
+        VERTEX = f(VERTEX).run(Env(0))
+    }
+
+  inline def shaderResult(inline f: vec4 => Shader[Env, vec4]): ShaderResult =
+    shader(f).toGLSL[WebGL2]
 }
