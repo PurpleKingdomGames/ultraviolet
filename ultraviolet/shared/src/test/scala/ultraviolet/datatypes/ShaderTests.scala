@@ -508,6 +508,51 @@ class ShaderTests extends munit.FunSuite {
     )
   }
 
+  test("Shaders can be create from within a companion (inlined + converted) (more complicated)") {
+
+    inline def circleSdf = (p: vec2, r: Float) => length(p) - r
+
+    inline def calculateColour = (uv: vec2, sdf: Float) =>
+      val fill       = vec4(uv, 0.0f, 1.0f)
+      val fillAmount = (1.0f - step(0.0f, sdf)) * fill.w
+      vec4(fill.xyz * fillAmount, fillAmount)
+
+    inline def modifyColor: vec4 => ultraviolet.syntax.Shader[Foo.Env, vec4] =
+      _ =>
+        Shader[Foo.Env, vec4] { env =>
+          val sdf = circleSdf(env.UV - 0.5f, 0.5f)
+          calculateColour(env.UV, sdf)
+        }
+
+    val actualCode =
+      Foo.shaderResult(modifyColor).toOutput.code
+
+    // DebugAST.toAST(Foo.shader(modifyColor))
+    // println(actualCode)
+
+    assertEquals(
+      actualCode,
+      s"""
+      |float def1(in vec2 p,in float r){
+      |  return length(p)-r;
+      |}
+      |vec4 def2(in vec2 uv,in float sdf){
+      |  vec4 fill=vec4(uv,0.0,1.0);
+      |  float fillAmount=(1.0-step(0.0,sdf))*fill.w;
+      |  return vec4(fill.xyz*fillAmount,fillAmount);
+      |}
+      |vec4 def0(in vec4 val0){
+      |  float sdf=def1(UV-0.5,0.5);
+      |  return def2(UV,sdf);
+      |}
+      |vec4 VERTEX;
+      |void vertex(){
+      |  VERTEX=def0(VERTEX);
+      |}
+      |""".stripMargin.trim
+    )
+  }
+
   test("Shader validation can be disabled to render illegal programs") {
 
     inline def shader: Shader[Unit, vec4] =
@@ -551,7 +596,7 @@ class ShaderTests extends munit.FunSuite {
 }
 
 object Foo {
-  case class Env(id: Int)
+  case class Env(id: Int, UV: vec2)
   case class Env2(id2: Int)
 
   @SuppressWarnings(Array("scalafix:DisableSyntax.var", "scalafix:DisableSyntax.null"))
@@ -559,7 +604,7 @@ object Foo {
     Shader[Env2] { env =>
       var VERTEX: vec4 = null
       def vertex: Unit =
-        VERTEX = f(VERTEX).run(Env(0))
+        VERTEX = f(VERTEX).run(Env(0, vec2(0.0f)))
     }
 
   inline def shaderResult(inline f: vec4 => Shader[Env, vec4]): ShaderResult =

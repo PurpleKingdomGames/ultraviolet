@@ -467,8 +467,19 @@ object ShaderPrinter:
               List((if returnType != "void" then "return " else "") + x)
 
             case x :: xs =>
-              // This case covers things like if statements
-              ((if returnType != "void" then "return " else "") + x) :: xs
+              x match
+                case s if s.contains("if") =>
+                  // This case covers one-line if statements
+                  ((if returnType != "void" then "return " else "") + x) :: xs
+
+                case _ =>
+                  x :: xs match
+                    case ss :+ s =>
+                      // When the last line is actually more than one line...
+                      ss :+ ((if returnType != "void" then "return " else "") + s)
+                      
+                    case _ =>
+                      ((if returnType != "void" then "return " else "") + x) :: xs
 
             case xs =>
               xs
