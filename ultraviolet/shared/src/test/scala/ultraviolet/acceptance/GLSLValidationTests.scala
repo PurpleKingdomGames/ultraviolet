@@ -14,9 +14,6 @@ class GLSLValidationTests extends munit.FunSuite {
 
     given p: ShaderPrinter[WebGL2] = new ShaderPrinter[WebGL2] {
 
-      val defaultConfig: ShaderPrinterConfig =
-        ShaderPrinterConfig.noHeaders
-
       def isValid(
           inType: Option[String],
           outType: Option[String],

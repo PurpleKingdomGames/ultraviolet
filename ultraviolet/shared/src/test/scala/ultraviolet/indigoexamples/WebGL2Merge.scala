@@ -70,7 +70,7 @@ object WebGL2Merge:
           env.gl_Position = env.u_projection * transform * VERTEX
       }
 
-    val output = shader.toGLSLDefaultHeaders[Indigo]
+    val output = shader.toGLSL[Indigo](ShaderHeader.Version300ES, ShaderHeader.PrecisionMediumPFloat)
 
     val expected: String =
       """
@@ -171,7 +171,7 @@ object WebGL2Merge:
         
       }
 
-    val output = shader.toGLSLDefaultHeaders[Indigo]
+    val output = shader.toGLSL[Indigo](ShaderHeader.Version300ES, ShaderHeader.PrecisionMediumPFloat)
 
     val expected: String =
       """

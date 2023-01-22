@@ -1,5 +1,6 @@
 package ultraviolet.datatypes
 
+import ultraviolet.datatypes.ShaderHeader
 import ultraviolet.macros.ShaderMacros
 
 import scala.deriving.Mirror
@@ -22,28 +23,25 @@ object Shader:
 
   extension [In, Out](inline ctx: Shader[In, Out])
 
-    inline def toGLSLDefaultHeaders[T](using p: ShaderPrinter[T]): ShaderResult =
-      try ShaderMacros.toAST(ctx).render(p.defaultConfig)
+    inline private def toGLSLWithHeaders[T](headers: List[ShaderHeader], useValidation: Boolean)(using
+        p: ShaderPrinter[T]
+    ): ShaderResult =
+      try
+        if useValidation then ShaderMacros.toAST(ctx).render(headers)
+        else ShaderMacros.toASTNoValidation(ctx).render(headers)
       catch {
         case e: ShaderError =>
           ShaderResult.Error(e.message)
       }
-    inline def toGLSLWithHeaders[T](headers: List[PrinterHeader])(using p: ShaderPrinter[T]): ShaderResult =
-      try ShaderMacros.toAST(ctx).render(ShaderPrinterConfig(headers))
-      catch {
-        case e: ShaderError =>
-          ShaderResult.Error(e.message)
-      }
-    inline def toGLSLNoHeaders[T](using ShaderPrinter[T]): ShaderResult =
-      try ShaderMacros.toAST(ctx).render(ShaderPrinterConfig.default)
-      catch {
-        case e: ShaderError =>
-          ShaderResult.Error(e.message)
-      }
+
     inline def toGLSL[T](using ShaderPrinter[T]): ShaderResult =
-      toGLSLNoHeaders
-    inline def toGLSL[T](headers: PrinterHeader*)(using ShaderPrinter[T]): ShaderResult =
-      toGLSLWithHeaders(headers.toList)
+      toGLSLWithHeaders(Nil, true)
+    inline def toGLSL[T](useValidation: Boolean)(using ShaderPrinter[T]): ShaderResult =
+      toGLSLWithHeaders(Nil, useValidation)
+    inline def toGLSL[T](headers: ShaderHeader*)(using ShaderPrinter[T]): ShaderResult =
+      toGLSLWithHeaders(headers.toList, true)
+    inline def toGLSL[T](useValidation: Boolean)(headers: ShaderHeader*)(using ShaderPrinter[T]): ShaderResult =
+      toGLSLWithHeaders(headers.toList, useValidation)
 
     inline def run(in: In): Out = ctx(in)
 

@@ -1,5 +1,7 @@
 package ultraviolet.datatypes
 
+import ultraviolet.datatypes.ShaderHeader
+
 import scala.annotation.tailrec
 import scala.deriving.Mirror
 import scala.quoted.*
@@ -19,7 +21,7 @@ object ProceduralShader:
 
   extension (p: ProceduralShader)
     @SuppressWarnings(Array("scalafix:DisableSyntax.throw"))
-    inline def render[T](config: ShaderPrinterConfig)(using printer: ShaderPrinter[T]): ShaderResult.Output =
+    inline def render[T](headers: List[ShaderHeader])(using printer: ShaderPrinter[T]): ShaderResult.Output =
       import ShaderAST.*
 
       val inType    = p.main.inType
@@ -43,7 +45,7 @@ object ProceduralShader:
             body.traverse(printer.transformer.orElse(n => n))
 
           val code =
-            (config.headers.map(_.header) ++ renderedUBOs ++ renderedAnnotations ++ renderedDefs ++ renderedBody)
+            (headers.map(_.value) ++ renderedUBOs ++ renderedAnnotations ++ renderedDefs ++ renderedBody)
               .mkString("\n")
               .trim
 

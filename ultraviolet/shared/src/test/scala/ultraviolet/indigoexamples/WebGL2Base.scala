@@ -217,7 +217,7 @@ object WebGL2Base:
         
       }
 
-    val output = shader.toGLSLDefaultHeaders[Indigo]
+    val output = shader.toGLSL[Indigo](ShaderHeader.Version300ES, ShaderHeader.PrecisionMediumPFloat)
 
     val expected: String =
       """
@@ -527,7 +527,7 @@ object WebGL2Base:
           fragColor = COLOR
         }
 
-    val output = shader.toGLSLDefaultHeaders[Indigo]
+    val output = shader.toGLSL[Indigo](ShaderHeader.Version300ES, ShaderHeader.PrecisionMediumPFloat)
 
     val expected: String =
       """

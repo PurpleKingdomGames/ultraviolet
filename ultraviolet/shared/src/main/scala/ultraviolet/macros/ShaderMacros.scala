@@ -15,9 +15,15 @@ import scala.quoted.*
 
 object ShaderMacros:
 
-  inline def toAST[In, Out](inline expr: Shader[In, Out]): ProceduralShader = ${ toASTImpl('{ expr }) }
+  inline def toAST[In, Out](inline expr: Shader[In, Out]): ProceduralShader = ${ toASTImpl('{ expr }, true) }
 
-  private[macros] def toASTImpl[In, Out: Type](expr: Expr[Shader[In, Out]])(using q: Quotes): Expr[ProceduralShader] = {
+  inline def toASTNoValidation[In, Out](inline expr: Shader[In, Out]): ProceduralShader = ${
+    toASTImpl('{ expr }, false)
+  }
+
+  private[macros] def toASTImpl[In, Out: Type](expr: Expr[Shader[In, Out]], useValidation: Boolean)(using
+      q: Quotes
+  ): Expr[ProceduralShader] = {
     import q.reflect.*
     import ShaderProgramValidation.*
 
@@ -66,7 +72,9 @@ object ShaderMacros:
         validateFunctionList(defs, ShaderDSLOps.allKeywords ++ additionalKeyword),
         createAST.uboRegister.toList,
         annotations,
-        validate(0, ShaderDSLOps.allKeywords ++ additionalKeyword ++ defRefs ++ annotationRefs)(main)
+        if useValidation then
+          validate(0, ShaderDSLOps.allKeywords ++ additionalKeyword ++ defRefs ++ annotationRefs)(main)
+        else main
       )
     )
   }

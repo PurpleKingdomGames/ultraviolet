@@ -41,9 +41,6 @@ class ShaderPrinterTests extends munit.FunSuite {
 
     given ShaderPrinter[Any] = new ShaderPrinter[Any] {
 
-      val defaultConfig: ShaderPrinterConfig =
-        ShaderPrinterConfig.noHeaders
-
       def isValid(
           inType: Option[String],
           outType: Option[String],
