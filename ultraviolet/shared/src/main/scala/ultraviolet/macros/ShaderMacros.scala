@@ -69,7 +69,8 @@ object ShaderMacros:
 
     Expr(
       ProceduralShader(
-        validateFunctionList(defs, ShaderDSLOps.allKeywords ++ additionalKeyword),
+        if useValidation then validateFunctionList(defs, ShaderDSLOps.allKeywords ++ additionalKeyword)
+        else defs,
         createAST.uboRegister.toList,
         annotations,
         if useValidation then
