@@ -30,18 +30,7 @@ object ShaderMacros:
     val createAST = new CreateShaderAST[q.type](using q)
 
     val main =
-      // Skip the initial noise... if possible
-      expr.asTerm match
-        // inline def has no arguments
-        case Inlined(_, _, Inlined(_, _, Inlined(_, _, term))) =>
-          createAST.walkTerm(term, None)
-
-        // inline def has arguments (which we ignore)
-        case Inlined(_, _, Inlined(_, _, Typed(term, _))) =>
-          createAST.walkTerm(term, None)
-
-        case term =>
-          createAST.walkTerm(term, None)
+      createAST.walkTerm(expr.asTerm, None)
 
     val defs =
       createAST.shaderDefs.toList.filterNot(_.userDefined).map(_.fn)
