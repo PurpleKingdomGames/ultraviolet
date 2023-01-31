@@ -640,5 +640,5 @@ object Foo {
     }
 
   inline def shaderResult(inline f: vec4 => Shader[Env, vec4]): ShaderResult =
-    shader(f).toGLSL[WebGL2](false)
+    shader(f).toGLSL[WebGL2]
 }
