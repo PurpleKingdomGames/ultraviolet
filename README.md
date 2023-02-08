@@ -117,6 +117,25 @@ The other 5% that cannot be implmented are stubbed, and simply return fixed valu
 
 ## Gotcha's, foot guns, and weird stuff
 
+### Compile time and Runtime errors
+
+> TL;DR: Some errors only happen at runtime, if you want to catch them early, write a simple test that exercises/run your shader.
+
+Ultraviolet has a series of phases, some of which we can run at compile time, and some (currently) have to run at runtime:
+
+1. (Compile) Generate shader AST from Scala code
+2. (Compile) General program validation (e.g. forward reference checks)
+3. (Runtime) Target specific validation (e.g. specific rules for targeting shadertoy)
+4. (Runtime) Print the output
+
+Compile time errors are the most common type of errors if you're using a standard output target like `.toGLSL[WebGL1]`/`.toGLSL[WebGL1]`.
+
+If you are getting compile time validation errors and you want to see the output anyway, you can disable it with `.toGLSL[WebGL1](useValidation = false)`.
+
+Runtime print errors are unusual, but the ones to look out for are from the **target specific validation phase**. An example of this kind of error would be that you've targeted shadertoy, but you haven't included a `mainImage` function, which is a requirement. There will be a runtime error to that effect, and the best why to find that ahead of time is just to write a simple test that forces the code to be evaluated. It could be as simple as:
+
+`assert(myShaderToy.toGLSL[ShaderToy].toOutput.code.nonEmpty)`
+
 ### Strings? Where we're going, we don't need Strings.
 
 GLSL is a C-like language for doing maths. There are no `Char` or `String` types.
