@@ -19,9 +19,9 @@ object CustomShader:
         val fillAmount = (1.0f - step(0.0f, sdf)) * fill.w
         vec4(fill.xyz * fillAmount, fillAmount)
 
-      def fragment: Unit =
+      def fragment(c: vec4): vec4 =
         val sdf = circleSdf(env.UV - 0.5f, 0.5f)
-        env.COLOR = calculateColour(env.UV, sdf)
+        calculateColour(env.UV, sdf)
     }
 
   val shaderId: ShaderId =

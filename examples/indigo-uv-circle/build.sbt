@@ -15,7 +15,7 @@ lazy val mygame =
     .settings( // Normal SBT settings
       name         := "ultravioletexample",
       version      := "0.0.1",
-      scalaVersion := "3.2.1",
+      scalaVersion := "3.3.0",
       organization := "example",
       libraryDependencies ++= Seq(
         "org.scalameta" %%% "munit" % "0.7.29" % Test
@@ -35,10 +35,10 @@ lazy val mygame =
       electronInstall       := indigoplugin.ElectronInstall.Latest,
       backgroundColor       := "black",
       libraryDependencies ++= Seq(
-        "io.indigoengine" %%% "indigo-json-circe" % "0.14.0",
-        "io.indigoengine" %%% "indigo"            % "0.14.0",
-        "io.indigoengine" %%% "indigo-extras"     % "0.14.0",
-        "io.indigoengine" %%% "ultraviolet"       % "0.1.0"
+        "io.indigoengine" %%% "indigo-json-circe" % "0.15.0-RC1",
+        "io.indigoengine" %%% "indigo"            % "0.15.0-RC1",
+        "io.indigoengine" %%% "indigo-extras"     % "0.15.0-RC1",
+        "io.indigoengine" %%% "ultraviolet"       % "0.1.1"
       )
     )
     .settings(
@@ -54,11 +54,11 @@ lazy val mygame =
     .settings(
       logo := "Ultraviolet Example (v" + version.value.toString + ")",
       usefulTasks := Seq(
-        UsefulTask("a", "runGame", "Run the game"),
-        UsefulTask("b", "buildGame", "Build web version"),
-        UsefulTask("c", "runGameFull", "Run the fully optimised game"),
-        UsefulTask("d", "buildGameFull", "Build the fully optimised web version"),
-        UsefulTask("e", "code", "Launch VSCode")
+        UsefulTask("runGame", "Run the game").noAlias,
+        UsefulTask("buildGame", "Build web version").noAlias,
+        UsefulTask("runGameFull", "Run the fully optimised game").noAlias,
+        UsefulTask("buildGameFull", "Build the fully optimised web version").noAlias,
+        UsefulTask("code", "Launch VSCode").noAlias
       ),
       logoColor        := scala.Console.MAGENTA,
       aliasColor       := scala.Console.YELLOW,

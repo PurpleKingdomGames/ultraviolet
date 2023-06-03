@@ -52,7 +52,7 @@ object UltravioletExample extends IndigoDemo[Unit, Unit, Unit, Unit]:
     Outcome(
       SceneUpdateFragment(
         Layer(
-          CustomEntity(
+          BlankEntity(
             0,
             0,
             400,
