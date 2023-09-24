@@ -343,7 +343,7 @@ class GLSLIfStatementTests extends munit.FunSuite {
     )
   }
 
-  test("if statements with !".only) {
+  test("if statements with !") {
     inline def fragment: Shader[FragEnv, vec4] =
       Shader { _ =>
         val p = true
