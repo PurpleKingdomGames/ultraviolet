@@ -214,8 +214,8 @@ class GLSLIfStatementTests extends munit.FunSuite {
 
     inline def fragment =
       Shader {
-        val amount        = 0.0f
-        
+        val amount = 0.0f
+
         def main(): Unit =
           val checkedAmount = abs(clamp(amount, 0.0f, 3.0f)).toInt
 
@@ -339,6 +339,34 @@ class GLSLIfStatementTests extends munit.FunSuite {
       |  }
       |}
       |color;
+      |""".stripMargin.trim
+    )
+  }
+
+  test("if statements with !".only) {
+    inline def fragment: Shader[FragEnv, vec4] =
+      Shader { _ =>
+        val p = true
+
+        if !p then vec4(1.0)
+        else vec4(2.0)
+      }
+
+    val actual =
+      fragment.toGLSL[WebGL2].toOutput.code
+
+    // DebugAST.toAST(fragment)
+    // println(actual)
+
+    assertEquals(
+      actual,
+      s"""
+      |bool p=true;
+      |if(!p){
+      |  vec4(1.0);
+      |}else{
+      |  vec4(2.0);
+      |}
       |""".stripMargin.trim
     )
   }

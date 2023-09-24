@@ -78,6 +78,11 @@ object ShaderPrinter:
           case init :+ last => init :+ s"""-${maybeAddBrackets(last)}"""
           case _            => Nil
 
+      case Not(v) =>
+        render(v) match
+          case init :+ last => init :+ s"""!${maybeAddBrackets(last)}"""
+          case _            => Nil
+
       case UBO(uboDef) =>
         List(uboDef.render)
 
@@ -394,6 +399,7 @@ object ShaderPrinter:
       case Empty()                        => "void"
       case Block(_)                       => "void"
       case Neg(v)                         => decideType(v)
+      case Not(v)                         => decideType(v)
       case UBO(_)                         => "void"
       case Struct(name, _)                => name
       case New(name, _)                   => name

@@ -12,6 +12,7 @@ object ShaderAST:
         case v: Empty                => Expr(v)
         case v: Block                => Expr(v)
         case v: Neg                  => Expr(v)
+        case v: Not                  => Expr(v)
         case v: UBO                  => Expr(v)
         case v: Struct               => Expr(v)
         case v: New                  => Expr(v)
@@ -56,6 +57,13 @@ object ShaderAST:
     given ToExpr[Neg] with {
       def apply(x: Neg)(using Quotes): Expr[Neg] =
         '{ Neg(${ Expr(x.value) }) }
+    }
+
+  final case class Not(value: ShaderAST) extends ShaderAST
+  object Not:
+    given ToExpr[Not] with {
+      def apply(x: Not)(using Quotes): Expr[Not] =
+        '{ Not(${ Expr(x.value) }) }
     }
 
   final case class UBO(uboDef: UBODef) extends ShaderAST
@@ -410,6 +418,7 @@ object ShaderAST:
               case Empty()                       => rec(xs, acc)
               case Block(s)                      => rec(s ++ xs, acc)
               case Neg(s)                        => rec(s :: xs, acc)
+              case Not(s)                        => rec(s :: xs, acc)
               case UBO(_)                        => rec(xs, acc)
               case Struct(_, _)                  => rec(xs, acc)
               case New(_, _)                     => rec(xs, acc)
@@ -467,6 +476,7 @@ object ShaderAST:
         case v @ Empty()                             => f(v)
         case Block(s)                                => f(Block(s.map(_.traverse(f))))
         case Neg(s)                                  => f(Neg(s.traverse(f)))
+        case Not(s)                                  => f(Not(s.traverse(f)))
         case v @ UBO(_)                              => f(v)
         case Struct(name, members)                   => f(Struct(name, members.map(_.traverse(f))))
         case New(name, args)                         => f(New(name, args.map(_.traverse(f))))
@@ -513,6 +523,7 @@ object ShaderAST:
         case Empty()                        => unknownType
         case Block(_)                       => unknownType
         case Neg(v)                         => v.typeIdent
+        case Not(v)                         => v.typeIdent
         case UBO(_)                         => unknownType
         case Struct(name, _)                => ShaderAST.DataTypes.ident(name)
         case New(name, _)                   => ShaderAST.DataTypes.ident(name)

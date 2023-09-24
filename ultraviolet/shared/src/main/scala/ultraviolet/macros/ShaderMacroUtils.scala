@@ -12,6 +12,7 @@ trait ShaderMacroUtils:
     case v: ShaderAST.Empty  => ShaderAST.unknownType
     case v: ShaderAST.Block  => v.statements.reverse.headOption.map(findReturnType).getOrElse(ShaderAST.unknownType)
     case v: ShaderAST.Neg    => findReturnType(v.value)
+    case v: ShaderAST.Not    => findReturnType(v.value)
     case v: ShaderAST.UBO    => ShaderAST.unknownType
     case v: ShaderAST.Struct => ShaderAST.DataTypes.ident(v.name)
     case v: ShaderAST.New    => ShaderAST.DataTypes.ident(v.name)

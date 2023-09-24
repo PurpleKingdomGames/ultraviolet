@@ -16,6 +16,7 @@ import ultraviolet.datatypes.ShaderAST.If
 import ultraviolet.datatypes.ShaderAST.Infix
 import ultraviolet.datatypes.ShaderAST.Neg
 import ultraviolet.datatypes.ShaderAST.New
+import ultraviolet.datatypes.ShaderAST.Not
 import ultraviolet.datatypes.ShaderAST.RawLiteral
 import ultraviolet.datatypes.ShaderAST.ShaderBlock
 import ultraviolet.datatypes.ShaderAST.Struct
@@ -48,6 +49,9 @@ object ShaderProgramValidation:
 
     case ast @ Neg(value) =>
       Neg(validate(level, knownRefs)(value))
+
+    case ast @ Not(value) =>
+      Not(validate(level, knownRefs)(value))
 
     case ast @ UBO(uboDef) =>
       ast

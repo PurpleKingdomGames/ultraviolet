@@ -1013,6 +1013,10 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
         val n = proxies.lookUp(name).name
         ShaderAST.Neg(ShaderAST.DataTypes.ident(n))
 
+      case Select(Ident(name), "unary_!") =>
+        val n = proxies.lookUp(name).name
+        ShaderAST.Not(ShaderAST.DataTypes.ident(n))
+
       case Select(Ident(namespace), name) =>
         val ns = proxies.lookUp(namespace).name
         val n  = proxies.lookUp(name).name
