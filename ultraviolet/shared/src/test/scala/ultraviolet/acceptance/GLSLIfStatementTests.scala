@@ -397,4 +397,37 @@ class GLSLIfStatementTests extends munit.FunSuite {
     )
   }
 
+  test("If statements can return and assign to var's") {
+
+    @SuppressWarnings(Array("scalafix:DisableSyntax.var", "scalafix:DisableSyntax.null"))
+    inline def fragment: Shader[FragEnv, vec4] =
+      Shader { _ =>
+        val x0       = vec2(1.0f, 2.0f)
+        var i1: vec2 = null
+        i1 = if x0.x > x0.y then vec2(1.0, 0.0) else vec2(0.0, 1.0)
+
+        vec4(i1, 0.0f, 1.0f)
+      }
+
+    val actual =
+      fragment.toGLSL[WebGL2].toOutput.code
+
+    // DebugAST.toAST(fragment)
+    // println(actual)
+
+    assertEquals(
+      actual,
+      s"""
+      |vec2 x0=vec2(1.0,2.0);
+      |vec2 i1;
+      |if(x0.x>x0.y){
+      |  i1=vec2(1.0,0.0);
+      |}else{
+      |  i1=vec2(0.0,1.0);
+      |}
+      |vec4(i1,0.0,1.0);
+      |""".stripMargin.trim
+    )
+  }
+
 }
