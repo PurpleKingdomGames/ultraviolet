@@ -1579,10 +1579,15 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
         throw new ShaderError.Unsupported("Shaders do not support calls to super.")
 
       case Assign(lhs, rhs) =>
-        ShaderAST.Assign(
-          walkTerm(lhs, envVarName),
-          walkTerm(rhs, envVarName)
-        )
+        val l = walkTerm(lhs, envVarName)
+        val r = walkTerm(rhs, envVarName)
+
+        (l, r) match
+          case (i @ ShaderAST.DataTypes.ident(_), f @ ShaderAST.If(_, _, Some(_))) =>
+            recursivelyAssignIf(i, f)
+
+          case (_, _) =>
+            ShaderAST.Assign(l, r)
 
       case If(condTerm, thenTerm, elseTerm) =>
         walkTerm(elseTerm, envVarName) match
