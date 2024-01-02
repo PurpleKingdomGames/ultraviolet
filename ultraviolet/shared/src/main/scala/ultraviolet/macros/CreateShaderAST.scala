@@ -1205,6 +1205,13 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
                 rt
               )
 
+          case "<<" | ">>" | "&" | "^" | "|" =>
+            // Bitwise ops
+            val lhs = walkTerm(term, envVarName)
+            val rhs = xs.headOption.map(tt => walkTerm(tt, envVarName)).getOrElse(ShaderAST.Empty())
+            val rt  = findReturnType(lhs)
+            ShaderAST.Infix(op, lhs, rhs, rt)
+
           case _ =>
             throw ShaderError.Unsupported("Shaders do not support infix operator: " + op)
 
@@ -1230,6 +1237,13 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
                 List(lhs, rhs),
                 rt
               )
+
+          case "<<" | ">>" | "&" | "^" | "|" =>
+            // Bitwise ops
+            val lhs = walkTerm(l, envVarName)
+            val rhs = walkTerm(r, envVarName)
+            val rt  = findReturnType(lhs)
+            ShaderAST.Infix(op, lhs, rhs, rt)
 
           case _ =>
             throw ShaderError.Unsupported("Shaders do not support infix operator: " + op)
