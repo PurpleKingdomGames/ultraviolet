@@ -193,16 +193,30 @@ addCommandAlias(
   applyCrossToAll("clean")
 )
 
+// Release
+
 addCommandAlias(
   "crossUltravioletRelease",
   List(
-    "crossCleanAll",
-    "crossBuildUltraviolet",
+    "crossCleanReleaseable",
+    "crossUpdateReleaseable",
+    "crossBuildReleaseable",
     "crossUltravioletPublishAllSigned",
     "sonatypeBundleRelease"
   ).mkString(";", ";", "")
 )
-
+addCommandAlias(
+  "crossCleanReleaseable",
+  applyCrossToAllReleaseable("clean")
+)
+addCommandAlias(
+  "crossUpdateReleaseable",
+  applyCrossToAllReleaseable("update")
+)
+addCommandAlias(
+  "crossBuildReleaseable",
+  applyCrossToAllReleaseable("compile")
+)
 addCommandAlias(
   "crossUltravioletPublishAllSigned",
   applyCrossToAllReleaseable("publishSigned")
