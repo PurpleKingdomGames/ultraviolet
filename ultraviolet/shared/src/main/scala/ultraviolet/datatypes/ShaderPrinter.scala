@@ -65,7 +65,7 @@ object ShaderPrinter:
     render(ast)
 
   @SuppressWarnings(Array("scalafix:DisableSyntax.throw"))
-  private def render(ast: ShaderAST)(using pp: ShaderPrinter[_]): List[String] =
+  private def render(ast: ShaderAST)(using pp: ShaderPrinter[?]): List[String] =
     val r: ShaderAST => List[String] = {
       case Empty() =>
         Nil
@@ -362,7 +362,7 @@ object ShaderPrinter:
 
     p(ast.traverse(pp.transformer.orElse(n => n)))
 
-  private def renderStatements(statements: List[ShaderAST])(using pp: ShaderPrinter[_]): List[String] =
+  private def renderStatements(statements: List[ShaderAST])(using pp: ShaderPrinter[?]): List[String] =
     val p =
       pp.printer.orElse {
         case ShaderAST.RawLiteral(raw) =>
@@ -397,7 +397,7 @@ object ShaderPrinter:
 
   private def addIndent: String => String = str => "  " + str
 
-  private def decideType(a: ShaderAST)(using pp: ShaderPrinter[_]): String =
+  private def decideType(a: ShaderAST)(using pp: ShaderPrinter[?]): String =
     a match
       case Empty()                        => "void"
       case Block(_)                       => "void"
@@ -458,7 +458,7 @@ object ShaderPrinter:
   private def processFunctionStatements(
       statements: List[ShaderAST],
       maybeReturnType: Option[String]
-  )(using pp: ShaderPrinter[_]): (List[String], String) =
+  )(using pp: ShaderPrinter[?]): (List[String], String) =
     val nonEmpty = statements
       .filterNot(_.isEmpty)
 

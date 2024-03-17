@@ -44,7 +44,7 @@ class ExtractUBOUtils[Q <: Quotes](using val qq: Q):
                 ),
                 _
               )
-            ) if isArray.matches(arrayInstanceName)  =>
+            ) if isArray.matches(arrayInstanceName) =>
           // e.g. "given_ShaderTypeOf_Float"
           val label = typeclassName.split("_").last match
             case "Int"   => "int"
@@ -87,6 +87,25 @@ class ExtractUBOUtils[Q <: Quotes](using val qq: Q):
                           _
                         )
                       )
+                    )
+                  ),
+                  _
+                ),
+                _
+              )
+            ) =>
+          List(label)
+          
+        case Inlined(
+              _,
+              _,
+              Typed(
+                Block(
+                  List(
+                    ValDef(
+                      _,
+                      _,
+                      Some(TypeApply(Select(Literal(StringConstant(label)), _), _))
                     )
                   ),
                   _
@@ -220,7 +239,10 @@ class ExtractUBOUtils[Q <: Quotes](using val qq: Q):
             uboName,
             pn.zip(lb.zip(tn)).map(p => UBOField(p._1, p._2._2, p._2._1))
           )
-        else throw ShaderError.UBORead("A UBO field was misread.")
+        else
+          throw ShaderError.UBORead(
+            "A UBO field was misread. " + Printer.TreeStructure.show(findTermsOf("summonLabels")(term).head)
+          )
 
       // General traversal
 

@@ -21,7 +21,7 @@ object UBOReader:
       case _: EmptyTuple => Nil
       case _: (t *: ts)  => summonInline[ValueOf[t]].value.asInstanceOf[String] :: summonLabels[ts]
 
-  inline private def summonTypeName[T <: Tuple]: List[ShaderTypeOf[_]] =
+  inline private def summonTypeName[T <: Tuple]: List[ShaderTypeOf[?]] =
     inline erasedValue[T] match
       case _: EmptyTuple => Nil
       case _: (t *: ts)  => summonInline[ShaderTypeOf[t]] :: summonTypeName[ts]

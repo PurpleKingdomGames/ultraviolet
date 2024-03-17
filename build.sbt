@@ -5,8 +5,9 @@ import org.typelevel.scalacoptions.ScalacOptions
 import indigoplugin.IndigoOptions
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
+Global / semanticdbEnabled := true
 
-val scala3Version = "3.3.1"
+val scala3Version = "3.4.2-RC1-bin-20240311-02c2a6e-NIGHTLY"
 
 ThisBuild / versionScheme                                  := Some("early-semver")
 ThisBuild / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.5.0"
@@ -19,6 +20,7 @@ lazy val commonSettings: Seq[sbt.Def.Setting[_]] = Seq(
   crossScalaVersions := Seq(scala3Version),
   organization       := "io.indigoengine",
   libraryDependencies ++= Shared.munit.value,
+  libraryDependencies += "org.scala-lang" %% "scala2-library-tasty-experimental" % scalaVersion.value,
   scalacOptions ++= Seq("-language:strictEquality"),
   scalafixOnCompile := true,
   semanticdbEnabled := true,
