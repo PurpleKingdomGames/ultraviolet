@@ -6,7 +6,7 @@ import indigoplugin.IndigoOptions
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
-val scala3Version = "3.3.1"
+val scala3Version = "3.4.1"
 
 ThisBuild / versionScheme                                  := Some("early-semver")
 ThisBuild / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.5.0"
