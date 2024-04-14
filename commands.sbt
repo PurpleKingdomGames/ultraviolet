@@ -170,7 +170,7 @@ addCommandAlias(
 )
 addCommandAlias(
   "crossLocalPublishUltraviolet",
-  applyCrossCommand(allProjects, "publishLocal")
+  applyCrossCommand(releaseProjects, "publishLocal")
 )
 addCommandAlias(
   "crossLocalPublishNoClean",
@@ -186,6 +186,11 @@ addCommandAlias(
   List(
     "crossTestUltraviolet"
   ).mkString(";", ";", "")
+)
+
+addCommandAlias(
+  "crossTestUltravioletOnlyNoClean",
+  applyCrossCommand(releaseProjects, "test")
 )
 
 addCommandAlias(
