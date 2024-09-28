@@ -23,7 +23,6 @@ object Misc {
     UsefulTask("buildAllNoClean", "Rebuild without cleaning").noAlias,
     UsefulTask("testAllNoClean", "Test all without cleaning").noAlias,
     UsefulTask("crossLocalPublishNoClean", "Locally publish the core modules").noAlias,
-    UsefulTask("sandboxRun", "Run the sandbox game (fastOptJS + Electron)").noAlias,
     UsefulTask("code", "Launch VSCode").noAlias
   )
 
