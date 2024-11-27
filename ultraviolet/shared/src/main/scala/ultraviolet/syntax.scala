@@ -91,4 +91,13 @@ object syntax extends ShaderDSLOps:
   def PrecisionMediumPFloat: ShaderHeader = ShaderHeader.PrecisionMediumPFloat
   def PrecisionLowPFloat: ShaderHeader    = ShaderHeader.PrecisionLowPFloat
 
+  extension (sc: StringContext)
+    def hex(args: String*): List[Float] =
+      sc.s(args*) match
+        case hex if hex.length == 6 =>
+          val ints = hex.grouped(2).map(h => Integer.parseInt(h, 16))
+          ints.map(i => i.floatValue / 255).toList
+        case hex if hex.length == 8 => Nil
+        case badHex                 => throw IllegalArgumentException("Invalid hex length")
+
 end syntax
