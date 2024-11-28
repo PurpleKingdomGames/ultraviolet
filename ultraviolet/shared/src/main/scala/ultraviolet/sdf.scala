@@ -11,6 +11,7 @@ object sdf:
     val d = abs(point) - halfSize
     length(max(d, 0.0f)) + min(max(d.x, d.y), 0.0f)
 
+  @SuppressWarnings(Array("scalafix:DisableSyntax.var"))
   inline def star(point: vec2, radius: Float, innerRadius: Float): Float =
     val k1: vec2 = vec2(0.809016994375f, -0.587785252292f)
     val k2: vec2 = vec2(-k1.x, k1.y)
