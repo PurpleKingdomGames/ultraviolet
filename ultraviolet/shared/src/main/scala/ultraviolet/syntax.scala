@@ -3,6 +3,7 @@ package ultraviolet
 import ultraviolet.datatypes.ShaderDSLOps
 import ultraviolet.macros.UBOReader
 
+import scala.util.matching.Regex
 import scala.annotation.StaticAnnotation
 import scala.annotation.nowarn
 import scala.deriving.Mirror
@@ -91,13 +92,23 @@ object syntax extends ShaderDSLOps:
   def PrecisionMediumPFloat: ShaderHeader = ShaderHeader.PrecisionMediumPFloat
   def PrecisionLowPFloat: ShaderHeader    = ShaderHeader.PrecisionLowPFloat
 
-  extension (sc: StringContext)
-    def hex(args: String*): List[Float] =
+  private val hexGroup: String = "([0-9A-F]{2})"
+  private val hex3: Regex      = s"(?i)$hexGroup$hexGroup$hexGroup".r
+  private val hex4: Regex      = s"(?i)$hexGroup$hexGroup$hexGroup$hexGroup".r
+
+  extension (sc: StringContext) {
+    private def toScaledFloat(string: String): Float =
+      Integer.parseInt(string, 16).floatValue / 255
+
+    def hex(args: Any*): vec3 =
       sc.s(args*) match
-        case hex if hex.length == 6 =>
-          val ints = hex.grouped(2).map(h => Integer.parseInt(h, 16))
-          ints.map(i => i.floatValue / 255).toList
-        case hex if hex.length == 8 => Nil
-        case badHex                 => throw IllegalArgumentException("Invalid hex length")
+        case hex3(r, g, b) => vec3(toScaledFloat(r), toScaledFloat(g), toScaledFloat(b))
+        case badHex        => throw IllegalArgumentException(s"Invalid hex $badHex")
+
+    def hexa(args: Any*): vec4 =
+      sc.s(args*) match
+        case hex4(r, g, b, a) => vec4(toScaledFloat(r), toScaledFloat(g), toScaledFloat(b), toScaledFloat(a))
+        case badHex           => throw IllegalArgumentException(s"Invalid hexa $badHex")
+  }
 
 end syntax
