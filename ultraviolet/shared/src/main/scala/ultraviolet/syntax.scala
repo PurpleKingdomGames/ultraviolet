@@ -111,10 +111,14 @@ object syntax extends ShaderDSLOps:
         case badHex           => throw IllegalArgumentException(s"Invalid hexa $badHex")
 
     def rgb(args: Int*): vec3 =
-      // TODO: Improve algorithm
       sc.s(args*).split(",").toList.map(i => i.toIntOption.filter(is8bit)) match
         case Some(r) :: Some(g) :: Some(b) :: Nil => vec3(r / 255f, g / 255f, b / 255f)
         case badRgb                               => throw IllegalArgumentException(s"Invalid rgb $args")
+
+    def rgba(args: Int*): vec4 =
+      sc.s(args*).split(",").toList.map(i => i.toIntOption.filter(is8bit)) match
+        case Some(r) :: Some(g) :: Some(b) :: Some(a) :: Nil => vec4(r / 255f, g / 255f, b / 255f, a / 255f)
+        case badRgb                                          => throw IllegalArgumentException(s"Invalid rgb $args")
   }
 
 end syntax

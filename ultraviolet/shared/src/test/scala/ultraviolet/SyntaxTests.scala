@@ -1,6 +1,7 @@
 package ultraviolet
 
 import syntax.*
+import scala.util.Random
 
 class SyntaxTests extends munit.FunSuite {
 
@@ -36,9 +37,21 @@ class SyntaxTests extends munit.FunSuite {
 
     intercept[IllegalArgumentException](rgb"0,0"): Unit
     intercept[IllegalArgumentException](rgb"0,0,0,0"): Unit
-    intercept[IllegalArgumentException](rgb"0, 0, 0"): Unit // TODO: Should this be ok?
+    intercept[IllegalArgumentException](rgb"0, 0, 0"): Unit
     intercept[IllegalArgumentException](rgb"-1,0,0"): Unit
     intercept[IllegalArgumentException](rgb"256,0,0"): Unit
   }
-  test("rgba interpolator") {}
+
+  test("rgba interpolator") {
+    assertEquals(rgba"0,0,0,0", vec4(0f, 0f, 0f, 0f))
+    assertEquals(rgba"255,0,255,0", vec4(1f, 0f, 1f, 0f))
+    val (int1, int2, int3, int4) = (0, 255, 0, 255)
+    assertEquals(rgba"$int1,$int2,$int3,$int4", vec4(0f, 1f, 0f, 1f))
+
+    intercept[IllegalArgumentException](rgba"0,0,0"): Unit
+    intercept[IllegalArgumentException](rgba"0,0,0,0,0"): Unit
+    intercept[IllegalArgumentException](rgba"0, 0, 0, 0"): Unit
+    intercept[IllegalArgumentException](rgba"-1,0,0,0"): Unit
+    intercept[IllegalArgumentException](rgba"256,0,0,0"): Unit
+  }
 }
