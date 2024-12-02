@@ -1,7 +1,8 @@
 package ultraviolet
 
-import syntax.*
 import scala.util.Random
+
+import syntax.*
 
 class SyntaxTests extends munit.FunSuite {
 

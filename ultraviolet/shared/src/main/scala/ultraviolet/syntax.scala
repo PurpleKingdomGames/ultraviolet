@@ -3,10 +3,10 @@ package ultraviolet
 import ultraviolet.datatypes.ShaderDSLOps
 import ultraviolet.macros.UBOReader
 
-import scala.util.matching.Regex
 import scala.annotation.StaticAnnotation
 import scala.annotation.nowarn
 import scala.deriving.Mirror
+import scala.util.matching.Regex
 
 object syntax extends ShaderDSLOps:
   type WebGL1 = ultraviolet.datatypes.ShaderPrinter.WebGL1
@@ -108,7 +108,7 @@ object syntax extends ShaderDSLOps:
     def hexa(args: Any*): vec4 =
       sc.s(args*) match
         case hex4(r, g, b, a) => vec4(toScaledFloat(r), toScaledFloat(g), toScaledFloat(b), toScaledFloat(a))
-        case badHex           => throw IllegalArgumentException(s"Invalid hexa $badHex")
+        case badHexa          => throw IllegalArgumentException(s"Invalid hexa $badHexa")
 
     def rgb(args: Int*): vec3 =
       sc.s(args*).split(",").toList.map(i => i.toIntOption.filter(is8bit)) match
@@ -118,7 +118,7 @@ object syntax extends ShaderDSLOps:
     def rgba(args: Int*): vec4 =
       sc.s(args*).split(",").toList.map(i => i.toIntOption.filter(is8bit)) match
         case Some(r) :: Some(g) :: Some(b) :: Some(a) :: Nil => vec4(r / 255f, g / 255f, b / 255f, a / 255f)
-        case badRgb                                          => throw IllegalArgumentException(s"Invalid rgb $args")
+        case badRgba                                         => throw IllegalArgumentException(s"Invalid rgba $args")
   }
 
 end syntax
