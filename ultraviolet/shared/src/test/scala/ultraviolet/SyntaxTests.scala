@@ -6,8 +6,6 @@ import syntax.*
 
 class SyntaxTests extends munit.FunSuite {
 
-  // TODO: Should the input be prefixed by '#'?
-  // TODO: Do we want shorthand notation (i.e. #000 to mean #000000)?
   test("hex interpolator") {
     assertEquals(hex"#00FF00", vec3(0f, 1f, 0f))
     assertEquals(hex"#ff00ff", vec3(1f, 0f, 1f))
