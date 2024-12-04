@@ -93,29 +93,29 @@ object syntax extends ShaderDSLOps:
   def PrecisionLowPFloat: ShaderHeader    = ShaderHeader.PrecisionLowPFloat
 
   private val hexGroup: String = "([0-9A-F]{2})"
-  private val hex3: Regex      = List.fill(3)(hexGroup).mkString("(?i)", "", "").r
-  private val hex4: Regex      = List.fill(4)(hexGroup).mkString("(?i)", "", "").r
+  private val hex3: Regex      = List.fill(3)(hexGroup).mkString("(?i)#", "", "").r
+  private val hex4: Regex      = List.fill(4)(hexGroup).mkString("(?i)#", "", "").r
 
   extension (sc: StringContext) {
     private def toScaledFloat(string: String): Float = Integer.parseInt(string, 16) / 255f
     private def is8bit(i: Int): Boolean              = i >= 0 && i < 256
 
-    def hex(args: Any*): vec3 =
+    infix def hex(args: Any*): vec3 =
       sc.s(args*) match
         case hex3(r, g, b) => vec3(toScaledFloat(r), toScaledFloat(g), toScaledFloat(b))
         case badHex        => throw IllegalArgumentException(s"Invalid hex $badHex")
 
-    def hexa(args: Any*): vec4 =
+    infix def hexa(args: Any*): vec4 =
       sc.s(args*) match
         case hex4(r, g, b, a) => vec4(toScaledFloat(r), toScaledFloat(g), toScaledFloat(b), toScaledFloat(a))
         case badHexa          => throw IllegalArgumentException(s"Invalid hexa $badHexa")
 
-    def rgb(args: Int*): vec3 =
+    infix def rgb(args: Int*): vec3 =
       sc.s(args*).split(",").toList.map(i => i.toIntOption.filter(is8bit)) match
         case Some(r) :: Some(g) :: Some(b) :: Nil => vec3(r / 255f, g / 255f, b / 255f)
         case badRgb                               => throw IllegalArgumentException(s"Invalid rgb $args")
 
-    def rgba(args: Int*): vec4 =
+    infix def rgba(args: Int*): vec4 =
       sc.s(args*).split(",").toList.map(i => i.toIntOption.filter(is8bit)) match
         case Some(r) :: Some(g) :: Some(b) :: Some(a) :: Nil => vec4(r / 255f, g / 255f, b / 255f, a / 255f)
         case badRgba                                         => throw IllegalArgumentException(s"Invalid rgba $args")
