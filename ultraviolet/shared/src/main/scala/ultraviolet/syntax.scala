@@ -97,8 +97,8 @@ object syntax extends ShaderDSLOps:
   private val hex4: Regex      = List.fill(4)(hexGroup).mkString("(?i)#", "", "").r
 
   extension (sc: StringContext) {
-    private def toScaledFloat(string: String): Float = Integer.parseInt(string, 16) / 255f
-    private def is8bit(i: Int): Boolean              = i >= 0 && i < 256
+    inline private def toScaledFloat(string: String): Float = Integer.parseInt(string, 16) / 255f
+    inline private def is8bit(i: Int): Boolean                     = i >= 0 && i < 256
 
     infix def hex(args: Any*): vec3 =
       sc.s(args*) match
