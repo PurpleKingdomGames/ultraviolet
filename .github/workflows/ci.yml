@@ -10,4 +10,4 @@ jobs:
       with:
         java-version: adopt@1.11
     - name: Compile & Test
-      run: bash build.sh
+      run: bash ci.sh
