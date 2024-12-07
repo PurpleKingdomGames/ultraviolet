@@ -76,9 +76,12 @@ object SandboxGame
           Shaders.circle,
           Shaders.external,
           Shaders.sea,
-          CircleShader.shader,
           BoxShader.shader,
-          StarShader.shader
+          CircleShader.shader,
+          HexagonShader.shader,
+          SegmentShader.shader,
+          StarShader.shader,
+          TriangleShader.shader
         )
     )
   }
