@@ -78,7 +78,7 @@ class sdfTests extends munit.FunSuite {
       Shader { _ =>
 
         import ultraviolet.sdf.*
-        
+
         def proxy: (vec2, Float, Float) => Float = (p, r, rf) => star(p, r, rf)
 
         proxy(vec2(0.5f), 1.5f, 1.0f)
