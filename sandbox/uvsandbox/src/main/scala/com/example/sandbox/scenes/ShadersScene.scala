@@ -8,8 +8,7 @@ import indigo.*
 import indigo.ShaderPrimitive.*
 import indigo.scenes.*
 
-object ShadersScene
-    extends Scene[SandboxStartupData, SandboxGameModel, SandboxViewModel] {
+object ShadersScene extends Scene[SandboxStartupData, SandboxGameModel, SandboxViewModel] {
 
   type SceneModel     = SandboxGameModel
   type SceneViewModel = SandboxViewModel
@@ -50,12 +49,18 @@ object ShadersScene
     Outcome(
       SceneUpdateFragment(
         Layer(
-          BlankEntity(100, 100, ShaderData(CircleShader.shader.id))
-            .moveTo(20, 20),
           BlankEntity(100, 100, ShaderData(BoxShader.shader.id))
-            .moveTo(100, 20),
+            .moveTo(0, 0),
+          BlankEntity(100, 100, ShaderData(CircleShader.shader.id))
+            .moveTo(100, 0),
+          BlankEntity(100, 100, ShaderData(HexagonShader.shader.id))
+            .moveTo(200, 0),
+          BlankEntity(100, 100, ShaderData(SegmentShader.shader.id))
+            .moveTo(0, 100),
           BlankEntity(100, 100, ShaderData(StarShader.shader.id))
-            .moveTo(20, 100)
+            .moveTo(100, 100),
+          BlankEntity(100, 100, ShaderData(TriangleShader.shader.id))
+            .moveTo(200, 100)
         ).withMagnification(1)
       )
     )
