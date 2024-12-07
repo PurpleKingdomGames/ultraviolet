@@ -1006,12 +1006,6 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
 
       // Read a field
 
-      case Select(Inlined(None, Nil, Ident(obj)), fieldName) =>
-        ShaderAST.Field(
-          ShaderAST.DataTypes.ident(obj),
-          ShaderAST.DataTypes.ident(fieldName)
-        )
-
       case Select(Ident(name), "unary_-") =>
         val n = proxies.lookUp(name).name
         ShaderAST.Neg(ShaderAST.DataTypes.ident(n))
@@ -1032,6 +1026,17 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
               ShaderAST.DataTypes.ident(ns),
               ShaderAST.DataTypes.ident(n)
             )
+
+      // Read a field - but of something inlined, negated, e.g. an argument of -position
+      case Select(Inlined(None, Nil, Ident(name)), "unary_-") =>
+        val n = proxies.lookUp(name).name
+        ShaderAST.Neg(ShaderAST.DataTypes.ident(n))
+
+      case Select(Inlined(None, Nil, Ident(obj)), fieldName) =>
+        ShaderAST.Field(
+          ShaderAST.DataTypes.ident(obj),
+          ShaderAST.DataTypes.ident(fieldName)
+        )
 
       // Read a field - but of something namespaced, negated, e.g. -position.x
       case Select(Select(Ident(namespace), name), "unary_-") =>
