@@ -6,6 +6,7 @@ import ultraviolet.macros.UBOReader
 import scala.annotation.StaticAnnotation
 import scala.annotation.nowarn
 import scala.deriving.Mirror
+import scala.util.matching.Regex
 
 object syntax extends ShaderDSLOps:
   type WebGL1 = ultraviolet.datatypes.ShaderPrinter.WebGL1
@@ -90,5 +91,34 @@ object syntax extends ShaderDSLOps:
   def PrecisionHighPFloat: ShaderHeader   = ShaderHeader.PrecisionHighPFloat
   def PrecisionMediumPFloat: ShaderHeader = ShaderHeader.PrecisionMediumPFloat
   def PrecisionLowPFloat: ShaderHeader    = ShaderHeader.PrecisionLowPFloat
+
+  private val hexGroup: String = "([0-9A-F]{2})"
+  private val hex3: Regex      = List.fill(3)(hexGroup).mkString("(?i)#", "", "").r
+  private val hex4: Regex      = List.fill(4)(hexGroup).mkString("(?i)#", "", "").r
+
+  extension (sc: StringContext) {
+    inline private def toScaledFloat(string: String): Float = Integer.parseInt(string, 16) / 255f
+    inline private def is8bit(i: Int): Boolean                     = i >= 0 && i < 256
+
+    infix def hex(args: Any*): vec3 =
+      sc.s(args*) match
+        case hex3(r, g, b) => vec3(toScaledFloat(r), toScaledFloat(g), toScaledFloat(b))
+        case badHex        => throw IllegalArgumentException(s"Invalid hex $badHex")
+
+    infix def hexa(args: Any*): vec4 =
+      sc.s(args*) match
+        case hex4(r, g, b, a) => vec4(toScaledFloat(r), toScaledFloat(g), toScaledFloat(b), toScaledFloat(a))
+        case badHexa          => throw IllegalArgumentException(s"Invalid hexa $badHexa")
+
+    infix def rgb(args: Int*): vec3 =
+      sc.s(args*).split(",").toList.map(i => i.toIntOption.filter(is8bit)) match
+        case Some(r) :: Some(g) :: Some(b) :: Nil => vec3(r / 255f, g / 255f, b / 255f)
+        case badRgb                               => throw IllegalArgumentException(s"Invalid rgb $args")
+
+    infix def rgba(args: Int*): vec4 =
+      sc.s(args*).split(",").toList.map(i => i.toIntOption.filter(is8bit)) match
+        case Some(r) :: Some(g) :: Some(b) :: Some(a) :: Nil => vec4(r / 255f, g / 255f, b / 255f, a / 255f)
+        case badRgba                                         => throw IllegalArgumentException(s"Invalid rgba $args")
+  }
 
 end syntax
