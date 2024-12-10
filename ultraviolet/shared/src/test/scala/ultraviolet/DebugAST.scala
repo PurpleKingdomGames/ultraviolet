@@ -18,3 +18,16 @@ object DebugAST:
 
     Expr("Done.")
   }
+
+  inline def anyToAST[In, Out](inline expr: Any): String = ${ anyToASTImpl('{ expr }) }
+
+  private def anyToASTImpl[In, Out: Type](expr: Expr[Any])(using Quotes): Expr[String] = {
+
+    import quotes.reflect.*
+
+    println(">>> Any/Everything")
+    println(Printer.TreeStructure.show(expr.asTerm))
+    println("<<<")
+
+    Expr("Done.")
+  }

@@ -35,9 +35,12 @@ class GLSLImportsTests extends munit.FunSuite {
       |int def0(in int i){
       |  return i+1;
       |}
+      |int addOneInline(in int value){
+      |  return value+1;
+      |}
       |int value=10;
       |def0(value);
-      |value+1;
+      |addOneInline(value);
       |""".stripMargin.trim
     )
   }

@@ -27,13 +27,16 @@ class GLSLNativeTests extends munit.FunSuite {
       fragment.toGLSL[WebGL2].toOutput.code
 
     // DebugAST.toAST(fragment)
-    // println(actual)
+    // println(actual) 
 
     assertEquals(
       actual,
       s"""
+      |float circleSdf(in vec2 val0,in float val1){
+      |  return length(val0)-3.0;
+      |}
       |float x=1.0;
-      |length(vec2(x,2.0))-3.0;
+      |circleSdf(vec2(x,2.0),3.0);
       |""".stripMargin.trim
     )
   }
