@@ -27,7 +27,7 @@ object ShaderMacros:
     val createAST = new CreateShaderAST[q.type](using q)
 
     val main =
-      createAST.walkTerm(expr.asTerm, None)
+      createAST.walkTerm(expr.asTerm, None, Map())
 
     val defs =
       createAST.shaderDefs.toList.filterNot(_.userDefined).map(_.fn)
