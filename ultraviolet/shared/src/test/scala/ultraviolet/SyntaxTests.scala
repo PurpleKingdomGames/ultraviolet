@@ -12,9 +12,9 @@ class SyntaxTests extends munit.FunSuite {
     val (hex1, hex2, hex3) = ("00", "ff", "00")
     assertEquals(hex"#$hex1$hex2$hex3", vec3(0f, 1f, 0f))
 
-    intercept[IllegalArgumentException](hex"00000"): Unit
-    intercept[IllegalArgumentException](hex"0000000"): Unit
-    intercept[IllegalArgumentException](hex"gggggg"): Unit
+    intercept[IllegalArgumentException](hex"#00000"): Unit
+    intercept[IllegalArgumentException](hex"#0000000"): Unit
+    intercept[IllegalArgumentException](hex"#gggggg"): Unit
   }
 
   test("hexa interpolator") {
@@ -23,9 +23,9 @@ class SyntaxTests extends munit.FunSuite {
     val (hex1, hex2, hex3, hex4) = ("00", "ff", "00", "ff")
     assertEquals(hexa"#$hex1$hex2$hex3$hex4", vec4(0f, 1f, 0f, 1f))
 
-    intercept[IllegalArgumentException](hexa"0000000"): Unit
-    intercept[IllegalArgumentException](hexa"000000000"): Unit
-    intercept[IllegalArgumentException](hexa"gggggggg"): Unit
+    intercept[IllegalArgumentException](hexa"#0000000"): Unit
+    intercept[IllegalArgumentException](hexa"#000000000"): Unit
+    intercept[IllegalArgumentException](hexa"#gggggggg"): Unit
   }
 
   test("rgb interpolator") {

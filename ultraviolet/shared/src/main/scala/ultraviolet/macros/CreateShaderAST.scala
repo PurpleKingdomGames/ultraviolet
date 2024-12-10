@@ -1231,6 +1231,32 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
           case _ =>
             throw ShaderError.Unsupported("Shaders do not support infix operator: " + op)
 
+      case Apply(
+            Apply(Ident(op), List(Apply(_, List(Typed(Repeated(List(Literal(StringConstant(value))), _), _))))),
+            _
+          ) =>
+        op match
+          case "hex" =>
+            val hexGroup                             = "([0-9A-F]{2})"
+            val hex3                                 = List.fill(3)(hexGroup).mkString("(?i)#", "", "").r
+            def toScaledFloat(string: String): Float = Integer.parseInt(string, 16) / 255f
+
+            value match
+              case hex3(r, g, b) =>
+                ShaderAST.DataTypes.vec3(toScaledFloat(r), toScaledFloat(g), toScaledFloat(b))
+
+              case _ =>
+                throw ShaderError.Unsupported("Shaders do not support hex colours that are not 3 characters long.")
+
+          case _ =>
+            throw ShaderError.Unsupported("Shaders do not support interpolators of type: " + op)
+
+      case Apply(
+            Apply(Ident(op), List(Apply(_, List(Typed(Repeated(_, _), _))))),
+            _
+          ) =>
+        throw ShaderError.Unsupported("Shader interpolated colours must be string literals, e.g. #ff0000")
+
       case Apply(Apply(Ident(op), List(l)), List(r)) =>
         op match
           case "<" | "<=" | ">" | ">=" | "==" | "!=" =>
