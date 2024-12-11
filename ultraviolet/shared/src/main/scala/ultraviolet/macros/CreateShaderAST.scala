@@ -1237,16 +1237,36 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
           ) =>
         op match
           case "hex" =>
-            val hexGroup                             = "([0-9A-F]{2})"
-            val hex3                                 = List.fill(3)(hexGroup).mkString("(?i)#", "", "").r
-            def toScaledFloat(string: String): Float = Integer.parseInt(string, 16) / 255f
+            import ultraviolet.syntax.interpolators.hex.*
+            value.toVec3.getOrElse {
+              throw ShaderError.Unsupported(
+                "Shaders do not support hex colours that are not 6 characters long (expected format '#FF00FF')."
+              )
+            }
 
-            value match
-              case hex3(r, g, b) =>
-                ShaderAST.DataTypes.vec3(toScaledFloat(r), toScaledFloat(g), toScaledFloat(b))
+          case "hexa" =>
+            import ultraviolet.syntax.interpolators.hex.*
+            value.toVec4.getOrElse {
+              throw ShaderError.Unsupported(
+                "Shaders do not support hexa colours that are not 8 characters long (expected format '#FF00FF00')."
+              )
+            }
 
-              case _ =>
-                throw ShaderError.Unsupported("Shaders do not support hex colours that are not 3 characters long.")
+          case "rgb" =>
+            import ultraviolet.syntax.interpolators.rgb.*
+            value.toVec3.getOrElse {
+              throw ShaderError.Unsupported(
+                "Shaders do not support rgb colours that are not 3 integers long (expected format '255,0,255')."
+              )
+            }
+
+          case "rgba" =>
+            import ultraviolet.syntax.interpolators.rgb.*
+            value.toVec4.getOrElse {
+              throw ShaderError.Unsupported(
+                "Shaders do not support rgba colours that are not 3 characters long (expected format '0,255,0,255')."
+              )
+            }
 
           case _ =>
             throw ShaderError.Unsupported("Shaders do not support interpolators of type: " + op)
