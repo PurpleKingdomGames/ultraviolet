@@ -1236,6 +1236,52 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
           case _ =>
             throw ShaderError.Unsupported("Shaders do not support infix operator: " + op)
 
+      case Apply(
+            Apply(Ident(op), List(Apply(_, List(Typed(Repeated(List(Literal(StringConstant(value))), _), _))))),
+            _
+          ) =>
+        op match
+          case "hex" =>
+            import ultraviolet.syntax.interpolators.hex.*
+            value.toVec3.getOrElse {
+              throw ShaderError.Unsupported(
+                "Shaders do not support hex colours that are not 6 characters long (expected format '#FF00FF')."
+              )
+            }
+
+          case "hexa" =>
+            import ultraviolet.syntax.interpolators.hex.*
+            value.toVec4.getOrElse {
+              throw ShaderError.Unsupported(
+                "Shaders do not support hexa colours that are not 8 characters long (expected format '#FF00FF00')."
+              )
+            }
+
+          case "rgb" =>
+            import ultraviolet.syntax.interpolators.rgb.*
+            value.toVec3.getOrElse {
+              throw ShaderError.Unsupported(
+                "Shaders do not support rgb colours that are not 3 integers long (expected format '255,0,255')."
+              )
+            }
+
+          case "rgba" =>
+            import ultraviolet.syntax.interpolators.rgb.*
+            value.toVec4.getOrElse {
+              throw ShaderError.Unsupported(
+                "Shaders do not support rgba colours that are not 3 characters long (expected format '0,255,0,255')."
+              )
+            }
+
+          case _ =>
+            throw ShaderError.Unsupported("Shaders do not support interpolators of type: " + op)
+
+      case Apply(
+            Apply(Ident(op), List(Apply(_, List(Typed(Repeated(_, _), _))))),
+            _
+          ) =>
+        throw ShaderError.Unsupported("Shader interpolated colours must be string literals, e.g. #ff0000")
+
       case Apply(Apply(Ident(op), List(l)), List(r)) =>
         op match
           case "<" | "<=" | ">" | ">=" | "==" | "!=" =>
