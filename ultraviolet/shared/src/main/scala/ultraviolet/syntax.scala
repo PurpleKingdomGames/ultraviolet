@@ -94,11 +94,6 @@ object syntax extends ShaderDSLOps:
 
   private[ultraviolet] object interpolators:
 
-    extension [A](e: Either[Throwable, A]) {
-      @SuppressWarnings(Array("scalafix:DisableSyntax.throw"))
-      def orThrow(): A = e.fold(throw _, identity)
-    }
-
     object hex:
       private val hexGroup: String = "([0-9A-F]{2})"
       private val hex3: Regex      = List.fill(3)(hexGroup).mkString("(?i)#", "", "").r
@@ -106,52 +101,59 @@ object syntax extends ShaderDSLOps:
 
       private def toScaledFloat(string: String): Float = Integer.parseInt(string, 16) / 255f
 
-      export interpolators.orThrow
-
       extension (string: String) {
-        def toVec3: Either[IllegalArgumentException, vec3] = string match
-          case hex3(r, g, b) => Right(vec3(toScaledFloat(r), toScaledFloat(g), toScaledFloat(b)))
-          case badHex        => Left(IllegalArgumentException(s"Invalid hex $badHex"))
+        def toVec3: Option[vec3] = Option(string).collect { case hex3(r, g, b) =>
+          vec3(toScaledFloat(r), toScaledFloat(g), toScaledFloat(b))
+        }
 
-        def toVec4: Either[IllegalArgumentException, vec4] = string match
-          case hex4(r, g, b, a) => Right(vec4(toScaledFloat(r), toScaledFloat(g), toScaledFloat(b), toScaledFloat(a)))
-          case badHexa          => Left(IllegalArgumentException(s"Invalid hexa $badHexa"))
+        def toVec4: Option[vec4] = Option(string).collect { case hex4(r, g, b, a) =>
+          vec4(toScaledFloat(r), toScaledFloat(g), toScaledFloat(b), toScaledFloat(a))
+        }
       }
 
     object rgb:
-      private def is8bit(i: Int): Boolean = i >= 0 && i < 256
-
-      export interpolators.orThrow
+      private def is8bit(i: Int): Boolean                      = i >= 0 && i < 256
+      private def toScaledFloat(string: String): Option[Float] = string.toIntOption.filter(is8bit).map(_ / 255f)
 
       extension (string: String) {
-        def toVec3: Either[IllegalArgumentException, vec3] =
-          string.split(",").toList.map(i => i.toIntOption.filter(is8bit).map(_ / 255f)) match
-            case Some(r) :: Some(g) :: Some(b) :: Nil => Right(vec3(r, g, b))
-            case badRgb                               => Left(IllegalArgumentException(s"Invalid rgb $string"))
+        def toVec3: Option[vec3] = Option(string.split(",").toList.map(toScaledFloat)).collect {
+          case Some(r) :: Some(g) :: Some(b) :: Nil => vec3(r, g, b)
+        }
 
-        def toVec4: Either[IllegalArgumentException, vec4] =
-          string.split(",").toList.map(i => i.toIntOption.filter(is8bit).map(_ / 255f)) match
-            case Some(r) :: Some(g) :: Some(b) :: Some(a) :: Nil => Right(vec4(r, g, b, a))
-            case badRgba => Left(IllegalArgumentException(s"Invalid rgba $string"))
+        def toVec4: Option[vec4] = Option(string.split(",").toList.map(toScaledFloat)).collect {
+          case Some(r) :: Some(g) :: Some(b) :: Some(a) :: Nil => vec4(r, g, b, a)
+        }
       }
 
   extension (sc: StringContext) {
 
+    @SuppressWarnings(Array("scalafix:DisableSyntax.throw"))
     def hex(args: Any*): vec3 =
       import interpolators.hex.*
-      sc.s(args*).toVec3.orThrow()
+      sc.s(args*).toVec3.getOrElse {
+        throw IllegalArgumentException(s"Invalid hex triplet ${args.mkString} (expected format '#00ff00')")
+      }
 
+    @SuppressWarnings(Array("scalafix:DisableSyntax.throw"))
     def hexa(args: Any*): vec4 =
       import interpolators.hex.*
-      sc.s(args*).toVec4.orThrow()
+      sc.s(args*).toVec4.getOrElse {
+        throw IllegalArgumentException(s"Invalid hex triplet ${args.mkString} (expected format '#00ff00ff')")
+      }
 
+    @SuppressWarnings(Array("scalafix:DisableSyntax.throw"))
     def rgb(args: Int*): vec3 =
       import interpolators.rgb.*
-      sc.s(args*).toVec3.orThrow()
+      sc.s(args*).toVec3.getOrElse {
+        throw IllegalArgumentException(s"Invalid hex triplet ${args.mkString} (expected format '0,255,0')")
+      }
 
+    @SuppressWarnings(Array("scalafix:DisableSyntax.throw"))
     def rgba(args: Int*): vec4 =
       import interpolators.rgb.*
-      sc.s(args*).toVec4.orThrow()
+      sc.s(args*).toVec4.getOrElse {
+        throw IllegalArgumentException(s"Invalid hex triplet ${args.mkString} (expected format '0,255,0,255')")
+      }
   }
 
 end syntax
