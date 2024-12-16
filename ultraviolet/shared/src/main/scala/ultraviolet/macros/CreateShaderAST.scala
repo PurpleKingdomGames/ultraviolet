@@ -290,9 +290,11 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
                 case _ =>
                   ShaderAST.Val(name, body, typeOf)
 
-            buildAnnotations(v, envVarName, vv) match
+            val ann = buildAnnotations(v, envVarName, vv)
+
+            ann match
               case a @ ShaderAST.Annotated(_, _, _) =>
-                annotationRegister += buildAnnotations(v, envVarName, vv)
+                annotationRegister += ann
                 ShaderAST.Empty()
 
               case a =>
@@ -302,9 +304,11 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
         val typeOf = ShaderAST.DataTypes.ident(extractInferredType(typ))
         val vv     = ShaderAST.Val(name, ShaderAST.Empty(), typeOf)
 
-        buildAnnotations(v, envVarName, vv) match
+        val ann = buildAnnotations(v, envVarName, vv)
+
+        ann match
           case a @ ShaderAST.Annotated(_, _, _) =>
-            annotationRegister += buildAnnotations(v, envVarName, vv)
+            annotationRegister += ann
             ShaderAST.Empty()
 
           case a =>
