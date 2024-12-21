@@ -26,7 +26,7 @@ lazy val uvsandbox =
     .settings( // Normal SBT settings
       name         := "uvsandbox",
       version      := "0.0.1",
-      scalaVersion := "3.5.0",
+      scalaVersion := "3.6.2",
       organization := "io.indigoengine",
       libraryDependencies ++= Seq(
         "org.scalameta" %%% "munit" % "0.7.29" % Test
