@@ -157,8 +157,9 @@ object TriangleShader:
 object FillColorHelper:
 
   import ultraviolet.syntax.*
+  import ultraviolet.colors.*
 
   inline def fill(uv: vec2, sdf: Float): vec4 =
-    val fill       = vec4(uv, 0.0f, 1.0f)
+    val fill       = vec4(uv, Blue.z, 1.0f)
     val fillAmount = (1.0f - step(0.0f, sdf)) * fill.w
     vec4(fill.xyz * fillAmount, fillAmount)
