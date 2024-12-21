@@ -6,7 +6,7 @@ import org.typelevel.scalacoptions.ScalacOptions
 Global / onChangedBuildSource := ReloadOnSourceChanges
 Global / semanticdbEnabled    := true
 
-val scala3Version = "3.5.0"
+val scala3Version = "3.6.2"
 
 ThisBuild / versionScheme := Some("early-semver")
 ThisBuild / scalaVersion  := scala3Version
@@ -21,8 +21,8 @@ lazy val commonSettings: Seq[sbt.Def.Setting[_]] = Seq(
   scalacOptions ++= Seq("-language:strictEquality"),
   // scalafixOnCompile := true, // Plays havoc with the sandbox, checked in CI.
   // semanticdbEnabled := true, // Plays havoc with the sandbox, checked in CI.
-  autoAPIMappings   := true,
-  logo              := name.value,
+  autoAPIMappings := true,
+  logo            := name.value,
   Test / tpolecatExcludeOptions ++= Set(
     ScalacOptions.warnValueDiscard,
     ScalacOptions.warnUnusedImports,
