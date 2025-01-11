@@ -61,7 +61,6 @@ lazy val ultravioletProject =
       neverPublish,
       commonSettings,
       name        := "UltravioletProject",
-      code        := codeTaskDefinition,
       usefulTasks := customTasksAliases,
       presentationSettings(version)
     )
