@@ -11,7 +11,7 @@ val scala3Version = "3.6.2"
 ThisBuild / versionScheme := Some("early-semver")
 ThisBuild / scalaVersion  := scala3Version
 
-lazy val ultravioletVersion = "0.3.1-SNAPSHOT"
+lazy val ultravioletVersion = "0.4.0"
 
 lazy val commonSettings: Seq[sbt.Def.Setting[_]] = Seq(
   version            := ultravioletVersion,
@@ -50,7 +50,9 @@ lazy val publishSettings = {
         email = "indigo@purplekingdomgames.com",
         url = url("https://github.com/davesmith00000")
       )
-    )
+    ),
+    sonatypeCredentialHost := "oss.sonatype.org",
+    sonatypeRepository := "https://oss.sonatype.org/service/local"
   )
 }
 
