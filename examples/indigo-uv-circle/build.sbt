@@ -37,7 +37,7 @@ lazy val mygame =
         "io.indigoengine" %%% "indigo-json-circe" % "0.15.0",
         "io.indigoengine" %%% "indigo"            % "0.15.0",
         "io.indigoengine" %%% "indigo-extras"     % "0.15.0",
-        "io.indigoengine" %%% "ultraviolet"       % "0.1.3"
+        "io.indigoengine" %%% "ultraviolet"       % "0.4.0"
       )
     )
     .settings(
