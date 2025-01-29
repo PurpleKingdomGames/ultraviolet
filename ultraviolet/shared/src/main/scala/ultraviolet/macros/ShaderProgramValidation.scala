@@ -155,7 +155,8 @@ object ShaderProgramValidation:
     case MultiStatements(typeOf, vals) =>
       val vs = vals.map {
         case Val(id, value, typeOf_) =>
-          // TODO: typeof
+          if typeOf_ != typeOf then
+            throw ShaderError.Validation(s"Type mismatch for ${id}. Expected ${typeOf}, found ${typeOf_}")
           if level == 0 then
             value.find {
               case ShaderAST.Function(_, _, _, _)                         => true
