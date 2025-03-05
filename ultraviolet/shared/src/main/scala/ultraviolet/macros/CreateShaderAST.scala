@@ -649,6 +649,70 @@ class CreateShaderAST[Q <: Quotes](using val qq: Q) extends ShaderMacroUtils:
             Apply(
               TypeApply(Ident(forLoopName), _),
               List(
+                Apply(
+                  TypeApply(Select(Ident(tupleIdent), "apply"), _),
+                  tupleArgs
+                ),
+                Block(
+                  List(DefDef("$anonfun", _, _, Some(condition))),
+                  Closure(Ident("$anonfun"), None)
+                ),
+                Block(
+                  List(DefDef("$anonfun", _, Inferred(), Some(Apply(_, nextArgs)))),
+                  Closure(Ident("$anonfun"), None)
+                )
+              )
+            ),
+            List(
+              Block(
+                Nil,
+                Block(
+                  List(
+                    DefDef(
+                      "$anonfun",
+                      List(TermParamClause(valdefs)),
+                      _,
+                      Some(body)
+                    )
+                  ),
+                  Closure(Ident("$anonfun"), None)
+                )
+              )
+            )
+          ) if (forLoopName == "cfor" || forLoopName == "_for") && isTuple.matches(tupleIdent) && valdefs.forall {
+            case ValDef(_, _, None) => true
+          } =>
+        val valNames = valdefs.map { case ValDef(name, _, _) =>
+          if name.contains("$") then proxies.makeVarName else name
+        }
+        val vals = tupleArgs.zip(valNames).map { case (init, name) =>
+          ShaderAST.Val(
+            name,
+            walkTerm(init, envVarName),
+            findReturnType(walkTerm(init, envVarName))
+          )
+        }
+        val retType   = findReturnType(vals.head)
+        val multiVals = ShaderAST.MultiStatements(retType, vals)
+
+        val n = ShaderAST.MultiStatements(
+          ShaderAST.Empty(),
+          (valNames zip nextArgs).map { (varName, next) =>
+            ShaderAST.Assign(
+              ShaderAST.DataTypes.ident(varName),
+              walkTerm(next, envVarName)
+            )
+          }
+        )
+
+        val b = walkTerm(body, envVarName)
+        val c = walkTerm(condition, envVarName)
+        ShaderAST.For(multiVals, c, n, b)
+
+      case Apply(
+            Apply(
+              TypeApply(Ident(forLoopName), _),
+              List(
                 initial,
                 Block(
                   List(DefDef("$anonfun", _, _, Some(condition))),

@@ -1,4 +1,4 @@
-//> using scala "3.3.1"
+//> using scala "3.3.5"
 //> using platform "js"
 //> using jsVersion "1.14.0"
 
