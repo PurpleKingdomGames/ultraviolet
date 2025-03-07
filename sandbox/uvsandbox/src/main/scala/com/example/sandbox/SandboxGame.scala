@@ -7,7 +7,6 @@ import indigo.json.Json
 import indigo.scenes.*
 import indigo.syntax.*
 import indigoextras.subsystems.FPSCounter
-import indigoextras.ui.simple.*
 
 import scala.scalajs.js.annotation.*
 
@@ -67,12 +66,6 @@ object SandboxGame
         SandboxAssets.assets ++
           Shaders.assets
       ).withFonts(Fonts.fontInfo)
-        .withSubSystems(
-          FPSCounter(
-            Point(5, 165),
-            BindingKey("fps counter")
-          )
-        )
         .withShaders(
           Shaders.circle,
           Shaders.external,
@@ -113,7 +106,6 @@ object SandboxGame
             Dude(
               aseprite,
               spriteAndAnimations.sprite
-                .withDepth(Depth(3))
                 .withRef(16, 16) // Initial offset, so when talk about his position it's the center of the sprite
                 .moveTo(
                   screenCenter
@@ -147,44 +139,13 @@ object SandboxGame
   def initialViewModel(
       startupData: SandboxStartupData,
       model: SandboxGameModel
-  ): Outcome[SandboxViewModel] = {
-    val assets =
-      InputFieldAssets(
-        Text(
-          "placeholder",
-          0,
-          0,
-          0,
-          Fonts.fontKey,
-          SandboxAssets.fontMaterial
-        ).alignLeft,
-        Graphic(
-          0,
-          0,
-          16,
-          16,
-          2,
-          Material
-            .ImageEffects(SandboxAssets.smallFontName)
-            .withTint(RGB(0, 0, 1))
-        )
-          .withCrop(188, 78, 14, 23)
-      )
-
+  ): Outcome[SandboxViewModel] =
     Outcome(
       SandboxViewModel(
         Point.zero,
-        InputField("single", assets)
-          .withKey(BindingKey("single"))
-          .makeSingleLine,
-        InputField("multi\nline", assets)
-          .withKey(BindingKey("multi"))
-          .makeMultiLine
-          .moveTo(5, 5),
         true
       )
     )
-  }
 
   def updateModel(
       context: Context[SandboxStartupData],
@@ -219,11 +180,7 @@ object SandboxGame
             viewModel.offset
         }
 
-      // more stuff
-      for {
-        single <- viewModel.single.update(context)
-        multi  <- viewModel.multi.update(context)
-      } yield viewModel.copy(updateOffset, single, multi)
+      Outcome(viewModel.copy(offset = updateOffset))
 
     case FullScreenEntered =>
       println("Entered full screen mode")
@@ -251,11 +208,7 @@ object SandboxGame
       viewModel: SandboxViewModel
   ): Outcome[SceneUpdateFragment] =
     Outcome(
-      SceneUpdateFragment(
-        "fps counter".toBindingKey -> Layer.empty
-          .withDepth(200.depth)
-          .withCamera(Camera.default)
-      )
+      SceneUpdateFragment.empty
     )
 
 final case class Dude(
@@ -267,8 +220,6 @@ final case class SandboxBootData(message: String, gameViewport: GameViewport)
 final case class SandboxStartupData(dude: Dude, viewportCenter: Point)
 final case class SandboxViewModel(
     offset: Point,
-    single: InputField,
-    multi: InputField,
     useLightingLayer: Boolean
 )
 

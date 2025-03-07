@@ -1,7 +1,6 @@
 package com.example.sandbox
 
 import indigo.*
-import indigoextras.ui.simple.InputFieldChange
 
 object SandboxModel {
 
@@ -17,10 +16,6 @@ object SandboxModel {
   ): GlobalEvent => Outcome[SandboxGameModel] = {
     case rd @ RendererDetails(_, _, _) =>
       println(rd)
-      Outcome(state)
-
-    case InputFieldChange(key, value) =>
-      println(s"Input field '${key.toString()}' changed: " + value)
       Outcome(state)
 
     case FrameTick =>

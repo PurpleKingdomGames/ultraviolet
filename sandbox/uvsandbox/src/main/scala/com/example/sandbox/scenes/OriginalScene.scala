@@ -57,40 +57,32 @@ object OriginalScene
           context.frame.input.mouse,
           context.services.bounds
         )
-        .addLayer(
-          Layer(
-            // viewModel.single.draw(context.frame.time, context.services.bounds) //|+|
-            viewModel.multi.draw(context.frame.time, context.services.bounds)
-          ).withDepth(Depth(1000))
-        )
 
     Outcome(
       SceneUpdateFragment.empty
         .addLayer(
-          BindingKey("bg") -> Layer.empty
+          LayerKey("bg") -> Layer.empty
             .withMagnification(1)
         ) |+| scene
         .addLayer(
-          BindingKey("bg") -> Layer(
+          LayerKey("bg") -> Layer(
             CustomShape(
               0,
               0,
               228 * 3,
               140 * 3,
-              Depth(10),
               ShaderData(Shaders.seaId)
             )
           )
         )
         .addLayer(
           Layer(
-            Graphic(120, 10, 32, 32, 1, SandboxAssets.dotsMaterial),
+            Graphic(120, 10, 32, 32, SandboxAssets.dotsMaterial),
             CustomShape(
               140,
               50,
               32,
               32,
-              Depth.zero,
               ShaderData(Shaders.circleId)
             ),
             CustomShape(
@@ -98,7 +90,6 @@ object OriginalScene
               50,
               32,
               32,
-              Depth.zero,
               ShaderData(
                 Shaders.externalId,
                 Batch(
@@ -117,7 +108,6 @@ object OriginalScene
               60,
               32,
               32,
-              Depth.zero,
               ShaderData(
                 Shaders.externalId,
                 Batch(
@@ -143,7 +133,6 @@ final case class CustomShape(
     y: Int,
     width: Int,
     height: Int,
-    depth: Depth,
     shader: ShaderData
 ) extends EntityNode[CustomShape]:
   val flip: Flip                    = Flip.default
@@ -153,9 +142,6 @@ final case class CustomShape(
   val rotation: Radians             = Radians.zero
   val scale: Vector2                = Vector2.one
   lazy val toShaderData: ShaderData = shader
-
-  def withDepth(newDepth: Depth): CustomShape =
-    this.copy(depth = newDepth)
 
   val eventHandlerEnabled: Boolean = false
   def eventHandler: ((CustomShape, GlobalEvent)) => Option[GlobalEvent] =

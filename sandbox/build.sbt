@@ -26,10 +26,10 @@ lazy val uvsandbox =
     .settings( // Normal SBT settings
       name         := "uvsandbox",
       version      := "0.0.1",
-      scalaVersion := "3.6.2",
+      scalaVersion := "3.6.3",
       organization := "io.indigoengine",
       libraryDependencies ++= Seq(
-        "org.scalameta" %%% "munit" % "1.0.4" % Test
+        "org.scalameta" %%% "munit" % "1.1.0" % Test
       ),
       testFrameworks += new TestFramework("munit.Framework"),
       scalafixOnCompile := true,
@@ -39,9 +39,9 @@ lazy val uvsandbox =
     .settings( // Indigo specific settings
       indigoOptions := gameOptions,
       libraryDependencies ++= Seq(
-        "io.indigoengine" %%% "indigo-json-circe" % "0.18.0",
-        "io.indigoengine" %%% "indigo"            % "0.18.0",
-        "io.indigoengine" %%% "indigo-extras"     % "0.18.0"
+        "io.indigoengine" %%% "indigo-json-circe" % "0.19.0",
+        "io.indigoengine" %%% "indigo"            % "0.19.0",
+        "io.indigoengine" %%% "indigo-extras"     % "0.19.0"
       )
     )
     .dependsOn(ultraviolet)

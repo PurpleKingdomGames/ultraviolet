@@ -31,13 +31,13 @@ object SandboxAssets {
     Graphic(32, 32, Material.Bitmap(dots))
 
   val redDot: Graphic[Material.Bitmap] =
-    Graphic(Rectangle(0, 0, 16, 16), 1, Material.Bitmap(dots)).withRef(8, 8)
+    Graphic(Rectangle(0, 0, 16, 16), Material.Bitmap(dots)).withRef(8, 8)
   val greenDot: Graphic[Material.Bitmap] =
-    Graphic(Rectangle(16, 0, 16, 16), 1, Material.Bitmap(dots)).withRef(8, 8)
+    Graphic(Rectangle(16, 0, 16, 16), Material.Bitmap(dots)).withRef(8, 8)
   val blueDot: Graphic[Material.Bitmap] =
-    Graphic(Rectangle(0, 16, 16, 16), 1, Material.Bitmap(dots)).withRef(8, 8)
+    Graphic(Rectangle(0, 16, 16, 16), Material.Bitmap(dots)).withRef(8, 8)
   val yellowDot: Graphic[Material.Bitmap] =
-    Graphic(Rectangle(16, 16, 16, 16), 1, Material.Bitmap(dots)).withRef(8, 8)
+    Graphic(Rectangle(16, 16, 16, 16), Material.Bitmap(dots)).withRef(8, 8)
 
   val junctionBoxAlbedo: AssetName    = AssetName("junctionbox_albedo")
   val junctionBoxEmission: AssetName  = AssetName("junctionbox_emission")
@@ -78,10 +78,6 @@ object SandboxAssets {
 
   def assets: Set[AssetType] =
     Set(
-      AssetType.Font(
-        pixelFont,
-        AssetPath(s"assets/fonts/${pixelFont.toString}.woff2")
-      ),
       AssetType.Image(smallFontName, AssetPath("assets/boxy_font.png")),
       AssetType.Image(light, AssetPath("assets/light_texture.png")),
       AssetType.Text(

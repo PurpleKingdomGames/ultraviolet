@@ -22,13 +22,11 @@ object SandboxView:
         Layer(
           gameLayer(model, viewModel) ++ uiLayer(bl)
         )
-          .withDepth(Depth(300))
-          // .withBlend(Blend.Alpha)
+        // .withBlend(Blend.Alpha)
       )
       .addLayer(
         if (viewModel.useLightingLayer)
           Layer(lightingLayer(mouse))
-            .withDepth(Depth(301))
             .withBlending(Blending.Lighting(RGBA.White.withAlpha(0.25)))
         else
           Layer.empty
@@ -93,7 +91,6 @@ object SandboxView:
         64 - 20,
         320,
         240,
-        1,
         SandboxAssets.lightMaterial.withTint(RGBA.Red)
       )
         .withRef(Point(160, 120)),
@@ -102,7 +99,6 @@ object SandboxView:
         64 + 20,
         320,
         240,
-        1,
         SandboxAssets.lightMaterial.withTint(RGBA.Green)
       )
         .withRef(Point(160, 120)),
@@ -111,7 +107,6 @@ object SandboxView:
         64 + 20,
         320,
         240,
-        1,
         SandboxAssets.lightMaterial.withTint(RGBA.Blue)
       )
         .withRef(Point(160, 120)),
@@ -120,7 +115,6 @@ object SandboxView:
         0,
         320,
         240,
-        1,
         SandboxAssets.lightMaterial.withTint(RGBA(1, 1, 0.0, 1)).withAlpha(1)
       )
         .withRef(Point(160, 120))
@@ -133,7 +127,6 @@ object SandboxView:
         "AB!\n!C",
         2,
         2,
-        5,
         Fonts.fontKey,
         SandboxAssets.fontMaterial.withAlpha(0.5)
       ).alignLeft,
@@ -141,7 +134,6 @@ object SandboxView:
         "AB!\n!C",
         100,
         2,
-        5,
         Fonts.fontKey,
         SandboxAssets.fontMaterial.withAlpha(0.5)
       ).alignCenter,
@@ -149,7 +141,6 @@ object SandboxView:
         "AB!\n!C",
         200,
         2,
-        5,
         Fonts.fontKey,
         SandboxAssets.fontMaterial.withAlpha(0.5)
       ).alignRight
