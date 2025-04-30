@@ -29,7 +29,7 @@ lazy val uvsandbox =
       scalaVersion := "3.6.3",
       organization := "io.indigoengine",
       libraryDependencies ++= Seq(
-        "org.scalameta" %%% "munit" % "1.1.0" % Test
+        "org.scalameta" %%% "munit" % "1.1.1" % Test
       ),
       testFrameworks += new TestFramework("munit.Framework"),
       scalafixOnCompile := true,
@@ -54,7 +54,7 @@ lazy val sandbox =
         UsefulTask("runGame", "Run the game").noAlias,
         UsefulTask("buildGame", "Build web version").noAlias,
         UsefulTask("runGameFull", "Run the fully optimised game").noAlias,
-        UsefulTask("buildGameFull", "Build the fully optimised web version").noAlias,
+        UsefulTask("buildGameFull", "Build the fully optimised web version").noAlias
       ),
       logoColor        := scala.Console.MAGENTA,
       aliasColor       := scala.Console.YELLOW,
