@@ -4,7 +4,7 @@ import sbt.{Def, _}
 object Dependencies {
 
   object Versions {
-    val munit = "1.1.0"
+    val munit = "1.1.1"
   }
 
   object Shared {
