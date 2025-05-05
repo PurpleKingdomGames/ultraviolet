@@ -1,7 +1,6 @@
 package ultraviolet.macros
 
 import ultraviolet.datatypes.*
-import ultraviolet.datatypes.ShaderAST
 import ultraviolet.datatypes.ShaderAST.Annotated
 import ultraviolet.datatypes.ShaderAST.Assign
 import ultraviolet.datatypes.ShaderAST.Block
