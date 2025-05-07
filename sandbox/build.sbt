@@ -39,9 +39,9 @@ lazy val uvsandbox =
     .settings( // Indigo specific settings
       indigoOptions := gameOptions,
       libraryDependencies ++= Seq(
-        "io.indigoengine" %%% "indigo-json-circe" % "0.20.0",
-        "io.indigoengine" %%% "indigo"            % "0.20.0",
-        "io.indigoengine" %%% "indigo-extras"     % "0.20.0"
+        "io.indigoengine" %%% "indigo-json-circe" % "0.21.0",
+        "io.indigoengine" %%% "indigo"            % "0.21.0",
+        "io.indigoengine" %%% "indigo-extras"     % "0.21.0"
       )
     )
     .dependsOn(ultraviolet)
