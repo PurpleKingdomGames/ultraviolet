@@ -1,4 +1,4 @@
-//> using scala "3.3.5"
+//> using scala "3.3.6"
 //> using lib "io.indigoengine::ultraviolet:0.1.3"
 //> using lib "com.lihaoyi::os-lib:0.11.4"
 
