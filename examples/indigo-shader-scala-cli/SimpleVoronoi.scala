@@ -2,7 +2,7 @@
 //> using platform "js"
 //> using jsVersion "1.14.0"
 
-//> using lib "io.indigoengine::ultraviolet::0.1.3"
+//> using lib "io.indigoengine::ultraviolet::0.6.0"
 //> using lib "io.indigoengine::indigo::0.15.0"
 
 import indigo.*
