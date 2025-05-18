@@ -6,7 +6,7 @@ import org.typelevel.scalacoptions.ScalacOptions
 Global / onChangedBuildSource := ReloadOnSourceChanges
 Global / semanticdbEnabled    := true
 
-val scala3Version = "3.6.4"
+val scala3Version = "3.7.0"
 
 ThisBuild / versionScheme := Some("early-semver")
 ThisBuild / scalaVersion  := scala3Version
