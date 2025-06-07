@@ -1,5 +1,6 @@
 package ultraviolet.datatypes
 
+import scala.annotation.nowarn
 import scala.quoted.*
 
 final case class ProceduralShader(
@@ -15,6 +16,7 @@ object ProceduralShader:
       '{ ProceduralShader(${ Expr(x.defs) }, ${ Expr(x.ubos) }, ${ Expr(x.annotationed) }, ${ Expr(x.main) }) }
   }
 
+  // Unused? See below.
   private val pIdentity: PartialFunction[ShaderAST, ShaderAST] = s => s
 
   extension (p: ProceduralShader)
@@ -39,6 +41,9 @@ object ProceduralShader:
           val renderedDefs = functions.map(d => ShaderPrinter.print(d).mkString("\n"))
           val renderedBody = ShaderPrinter.print(body)
 
+          // Unused? Leaving in due to a boring binary compatibility problem.
+          // Looks pretty suspicious, but is doing no harm.
+          @nowarn("msg=unused")
           val transformedBody: ShaderAST =
             body.traverse(printer.transformer.orElse(pIdentity))
 

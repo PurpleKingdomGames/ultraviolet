@@ -1,5 +1,7 @@
 package ultraviolet.datatypes
 
+import scala.annotation.nowarn
+
 /** Incomplete list of implementations for common built in GLSL operations.
   *
   * The full list is here: https://registry.khronos.org/OpenGL-Refpages/gl4/html/
@@ -108,17 +110,25 @@ trait ShaderDSLOps extends ShaderDSLTypeExtensions:
 
   // STUB
   // https://registry.khronos.org/OpenGL-Refpages/gl4/html/dFdx.xhtml
+  @nowarn("msg=unused")
   def dFdx(x: Float): Float = 0.0f
-  def dFdx(x: vec2): vec2   = vec2(0.0f)
-  def dFdx(x: vec3): vec3   = vec3(0.0f)
-  def dFdx(x: vec4): vec4   = vec4(0.0f)
+  @nowarn("msg=unused")
+  def dFdx(x: vec2): vec2 = vec2(0.0f)
+  @nowarn("msg=unused")
+  def dFdx(x: vec3): vec3 = vec3(0.0f)
+  @nowarn("msg=unused")
+  def dFdx(x: vec4): vec4 = vec4(0.0f)
 
   // STUB
   // https://registry.khronos.org/OpenGL-Refpages/gl4/html/dFdy.xhtml
+  @nowarn("msg=unused")
   def dFdy(x: Float): Float = 0.0f
-  def dFdy(x: vec2): vec2   = vec2(0.0f)
-  def dFdy(x: vec3): vec3   = vec3(0.0f)
-  def dFdy(x: vec4): vec4   = vec4(0.0f)
+  @nowarn("msg=unused")
+  def dFdy(x: vec2): vec2 = vec2(0.0f)
+  @nowarn("msg=unused")
+  def dFdy(x: vec3): vec3 = vec3(0.0f)
+  @nowarn("msg=unused")
+  def dFdy(x: vec4): vec4 = vec4(0.0f)
 
   // https://registry.khronos.org/OpenGL-Refpages/gl4/html/distance.xhtml
   def distance(x: Float, y: Float): Float = length(x - y)
@@ -519,7 +529,9 @@ trait ShaderDSLOps extends ShaderDSLTypeExtensions:
 
   // WebGL 2.0 converted `texture2D` and `textureCube` into `texture`, but it is more convenient for us to keep them separate.
   // https://registry.khronos.org/OpenGL-Refpages/gl4/html/texture.xhtml
-  def texture2D(sampler: sampler2D.type, coords: vec2): vec4     = vec4(0.0f)
+  @nowarn("msg=unused")
+  def texture2D(sampler: sampler2D.type, coords: vec2): vec4 = vec4(0.0f)
+  @nowarn("msg=unused")
   def textureCube(sampler: samplerCube.type, normal: vec3): vec4 = vec4(0.0f)
 
   // https://registry.khronos.org/OpenGL-Refpages/gl4/html/transpose.xhtml

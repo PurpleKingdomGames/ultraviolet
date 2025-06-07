@@ -644,6 +644,7 @@ object Foo {
   case class Env(id: Int, UV: vec2)
   case class Env2(id2: Int)
 
+  @nowarn("msg=unused")
   @SuppressWarnings(Array("scalafix:DisableSyntax.var", "scalafix:DisableSyntax.null"))
   inline def shader(inline f: vec4 => Shader[Env, vec4]): Shader[Env2, Unit] =
     Shader[Env2] { env =>

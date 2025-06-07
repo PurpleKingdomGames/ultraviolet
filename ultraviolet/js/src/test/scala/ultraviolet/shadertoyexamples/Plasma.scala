@@ -3,8 +3,11 @@ package ultraviolet.shadertoyexamples
 import ultraviolet.shadertoy.*
 import ultraviolet.syntax.*
 
+import scala.annotation.nowarn
+
 object Plasma:
 
+  @nowarn("msg=unused")
   inline def bufferA =
     Shader[ShaderToyEnv, Unit] { env =>
       @const val pi: Float = 3.1415926435f
@@ -30,6 +33,7 @@ object Plasma:
     |}
     |""".stripMargin.trim
 
+  @nowarn("msg=unused")
   inline def image =
     Shader[ShaderToyEnv, Unit] { env =>
       @const val vp: vec2 = vec2(320.0, 200.0)
