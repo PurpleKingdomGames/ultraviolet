@@ -7,3 +7,5 @@ sbt crossCleanAll crossTestAllNoClean "scalafix --check" scalafmtCheckAll
 cd sandbox
 
 sbt compile fastLinkJS
+
+cd ..

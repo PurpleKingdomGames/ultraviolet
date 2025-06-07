@@ -21,6 +21,7 @@ trait ShaderDSLTypes:
 
     def `unary_-`: vec2 = vec2(-x, -y)
 
+    @nowarn("msg=unused")
     def *(v: mat2): vec2 = vec2(0.0) // TODO: Replace stub
 
   object vec2:
@@ -44,6 +45,7 @@ trait ShaderDSLTypes:
 
     def `unary_-`: vec3 = vec3(-x, -y, -z)
 
+    @nowarn("msg=unused")
     def *(v: mat3): vec3 = vec3(0.0) // TODO: Replace stub
 
   object vec3:
@@ -74,6 +76,7 @@ trait ShaderDSLTypes:
 
     def `unary_-`: vec4 = vec4(-x, -y, -z, -w)
 
+    @nowarn("msg=unused")
     def *(v: mat4): vec4 = vec4(0.0) // TODO: Replace stub
 
   object vec4:
@@ -162,6 +165,7 @@ trait ShaderDSLTypes:
 
     def `unary_-`: ivec2 = ivec2(-x, -y)
 
+    @nowarn("msg=unused")
     def *(v: mat2): ivec2 = ivec2(0) // TODO: Replace stub
 
   object ivec2:
@@ -185,6 +189,7 @@ trait ShaderDSLTypes:
 
     def `unary_-`: ivec3 = ivec3(-x, -y, -z)
 
+    @nowarn("msg=unused")
     def *(v: mat3): ivec3 = ivec3(0) // TODO: Replace stub
 
   object ivec3:
@@ -215,6 +220,7 @@ trait ShaderDSLTypes:
 
     def `unary_-`: ivec4 = ivec4(-x, -y, -z, -w)
 
+    @nowarn("msg=unused")
     def *(v: mat4): ivec4 = ivec4(0) // TODO: Replace stub
 
   object ivec4:

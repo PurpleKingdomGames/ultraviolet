@@ -26,7 +26,7 @@ lazy val uvsandbox =
     .settings( // Normal SBT settings
       name         := "uvsandbox",
       version      := "0.0.1",
-      scalaVersion := "3.6.4",
+      scalaVersion := "3.7.0",
       organization := "io.indigoengine",
       libraryDependencies ++= Seq(
         "org.scalameta" %%% "munit" % "1.1.1" % Test
@@ -42,6 +42,10 @@ lazy val uvsandbox =
         "io.indigoengine" %%% "indigo-json-circe" % "0.21.0",
         "io.indigoengine" %%% "indigo"            % "0.21.0",
         "io.indigoengine" %%% "indigo-extras"     % "0.21.0"
+      ).map(
+        _ excludeAll (
+          ExclusionRule(organization = "io.indigoengine", name = "ultraviolet")
+        )
       )
     )
     .dependsOn(ultraviolet)
@@ -54,7 +58,10 @@ lazy val sandbox =
         UsefulTask("runGame", "Run the game").noAlias,
         UsefulTask("buildGame", "Build web version").noAlias,
         UsefulTask("runGameFull", "Run the fully optimised game").noAlias,
-        UsefulTask("buildGameFull", "Build the fully optimised web version").noAlias
+        UsefulTask(
+          "buildGameFull",
+          "Build the fully optimised web version"
+        ).noAlias
       ),
       logoColor        := scala.Console.MAGENTA,
       aliasColor       := scala.Console.YELLOW,

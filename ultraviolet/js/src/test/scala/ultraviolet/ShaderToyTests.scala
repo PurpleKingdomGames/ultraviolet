@@ -4,6 +4,9 @@ import ultraviolet.shadertoy.*
 import ultraviolet.shadertoyexamples.*
 import ultraviolet.syntax.*
 
+import scala.annotation.nowarn
+
+@nowarn("msg=unused")
 class ShaderToyTests extends munit.FunSuite {
 
   test("Able to fully define the default shadertoy example") {
