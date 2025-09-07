@@ -1,4 +1,4 @@
-addSbtPlugin("org.scala-js"        % "sbt-scalajs"  % "1.19.0")
+addSbtPlugin("org.scala-js"        % "sbt-scalajs"  % "1.20.1")
 addSbtPlugin("io.indigoengine"    %% "sbt-indigo"   % "0.21.0")
 addSbtPlugin("org.scalameta"       % "sbt-scalafmt" % "2.5.5")
 addSbtPlugin("ch.epfl.scala"       % "sbt-scalafix" % "0.14.0")
