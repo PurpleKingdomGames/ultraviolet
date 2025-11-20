@@ -3,6 +3,10 @@
 [![Discord Chat](https://img.shields.io/discord/716435281208672356?color=blue&label=discord)](https://discord.gg/b5CD47g)
 [![CI](https://github.com/PurpleKingdomGames/ultraviolet/actions/workflows/ci.yml/badge.svg)](https://github.com/PurpleKingdomGames/ultraviolet/actions/workflows/ci.yml)
 
+***ULTRAVIOLET HAS MOVED HOME!!!***
+
+Please head over to https://github.com/PurpleKingdomGames/indigoengine for the up to date source code.
+
 # Ultraviolet
 
 Ultraviolet is a Scala 3 to GLSL (versions 100 and 300) transpiler library built on top of Scala 3 inline macros.
